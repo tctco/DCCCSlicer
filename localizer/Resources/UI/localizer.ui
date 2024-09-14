@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>386</width>
-    <height>224</height>
+    <width>421</width>
+    <height>258</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -89,6 +89,13 @@
         </property>
        </widget>
       </item>
+      <item row="2" column="0">
+       <widget class="QPushButton" name="leftButton">
+        <property name="text">
+         <string>Add Left (Q)</string>
+        </property>
+       </widget>
+      </item>
       <item row="4" column="1">
        <widget class="QPushButton" name="applyLRButton">
         <property name="text">
@@ -96,10 +103,17 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QPushButton" name="leftButton">
+      <item row="5" column="0" colspan="2">
+       <widget class="QPushButton" name="calcCentiloidButton">
         <property name="text">
-         <string>Add Left (Q)</string>
+         <string>Calculate Centiloid</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="2">
+       <widget class="QPushButton" name="showImgButton">
+        <property name="text">
+         <string>Show Normalization Result</string>
         </property>
        </widget>
       </item>

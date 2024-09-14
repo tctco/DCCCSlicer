@@ -1,6 +1,8 @@
 import logging
 import os
 from typing import Annotated, Optional
+from pathlib import Path
+import subprocess
 
 import vtk
 
@@ -17,7 +19,7 @@ import qt
 
 
 #
-# localizer
+# localizer： created by tctco
 #
 
 
@@ -28,83 +30,24 @@ class localizer(ScriptedLoadableModule):
 
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = (
-            "localizer"  # TODO: make this more human readable by adding spaces
-        )
+        self.parent.title = "DeepCascadeCentiloidCalculator"  # TODO: make this more human readable by adding spaces
         self.parent.categories = [
-            "Examples"
+            "Centiloid"
         ]  # TODO: set categories (folders where the module shows up in the module selector)
         self.parent.dependencies = (
             []
         )  # TODO: add here list of module names that this module requires
         self.parent.contributors = [
-            "John Doe (AnyWare Corp.)"
+            "Cheng Tang (Dept. Nuclear Med, WHUH)"
         ]  # TODO: replace with "Firstname Lastname (Organization)"
         # TODO: update with short description of the module and a link to online module documentation
-        self.parent.helpText = """
-This is an example of scripted loadable module bundled in an extension.
-See more information in <a href="https://github.com/organization/projectname#localizer">module documentation</a>.
-"""
+        self.parent.helpText = "Simple module to calculate Centiloid value. Please note that this module is only for Windows. You may need to recomplie the source code for other platforms."
         # TODO: replace with organization, grant and thanks
-        self.parent.acknowledgementText = """
-This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc., Andras Lasso, PerkLab,
-and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.
-"""
+        self.parent.acknowledgementText = (
+            "This file was developed by Cheng Tang, Dept. Nuclear Med, WHUH."
+        )
 
         # Additional initialization step after application startup is complete
-        slicer.app.connect("startupCompleted()", registerSampleData)
-
-
-#
-# Register sample data sets in Sample Data module
-#
-
-
-def registerSampleData():
-    """
-    Add data sets to Sample Data module.
-    """
-    # It is always recommended to provide sample data for users to make it easy to try the module,
-    # but if no sample data is available then this method (and associated startupCompeted signal connection) can be removed.
-
-    import SampleData
-
-    iconsPath = os.path.join(os.path.dirname(__file__), "Resources/Icons")
-
-    # To ensure that the source code repository remains small (can be downloaded and installed quickly)
-    # it is recommended to store data sets that are larger than a few MB in a Github release.
-
-    # localizer1
-    SampleData.SampleDataLogic.registerCustomSampleDataSource(
-        # Category and sample name displayed in Sample Data module
-        category="localizer",
-        sampleName="localizer1",
-        # Thumbnail should have size of approximately 260x280 pixels and stored in Resources/Icons folder.
-        # It can be created by Screen Capture module, "Capture all views" option enabled, "Number of images" set to "Single".
-        thumbnailFileName=os.path.join(iconsPath, "localizer1.png"),
-        # Download URL and target file name
-        uris="https://github.com/Slicer/SlicerTestingData/releases/download/SHA256/998cb522173839c78657f4bc0ea907cea09fd04e44601f17c82ea27927937b95",
-        fileNames="localizer1.nrrd",
-        # Checksum to ensure file integrity. Can be computed by this command:
-        #  import hashlib; print(hashlib.sha256(open(filename, "rb").read()).hexdigest())
-        checksums="SHA256:998cb522173839c78657f4bc0ea907cea09fd04e44601f17c82ea27927937b95",
-        # This node name will be used when the data set is loaded
-        nodeNames="localizer1",
-    )
-
-    # localizer2
-    SampleData.SampleDataLogic.registerCustomSampleDataSource(
-        # Category and sample name displayed in Sample Data module
-        category="localizer",
-        sampleName="localizer2",
-        thumbnailFileName=os.path.join(iconsPath, "localizer2.png"),
-        # Download URL and target file name
-        uris="https://github.com/Slicer/SlicerTestingData/releases/download/SHA256/1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97",
-        fileNames="localizer2.nrrd",
-        checksums="SHA256:1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97",
-        # This node name will be used when the data set is loaded
-        nodeNames="localizer2",
-    )
 
 
 #
@@ -182,6 +125,8 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.rightButton.connect("clicked(bool)", self.onRightButton)
         self.ui.applyLRButton.connect("clicked(bool)", self.onApplyLRButton)
         self.ui.clearButton.connect("clicked(bool)", self.onClearButton)
+        self.ui.calcCentiloidButton.connect("clicked(bool)", self.onCalcCentiloidButton)
+        self.ui.showImgButton.connect("clicked(bool)", self.onShowImgButton)
         self.ui.inputSelector.connect(
             "currentNodeChanged(vtkMRMLNode*)", self.onInputVolumeChanged
         )
@@ -439,6 +384,81 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         else:
             print(f"{nodeName} point already exists:{self._getPointRAS(node)}")
 
+    def onCalcCentiloidButton(self) -> None:
+        volumes = slicer.util.getNodesByClass("vtkMRMLScalarVolumeNode")
+        if not volumes:
+            return  # 如果场景中没有Volume，直接返回
+
+        currentNode = self.ui.inputSelector.currentNode()
+        if not currentNode:
+            return
+        dim = currentNode.GetImageData().GetDimensions()
+        print(f"input dim: {dim}")
+        if len(dim) != 3:
+            slicer.util.errorDisplay(
+                f"A 3D input is required, but the given node is {dim}."
+            )
+        # plugin path
+        pluginPath = Path(os.path.dirname(__file__))
+
+        # pop up a dialog to show it is calculating
+        msg_box = qt.QMessageBox()
+        msg_box.setIcon(qt.QMessageBox.Information)
+        msg_box.setMinimumWidth(300)
+        msg_box.setText("Calculating, please wait...")
+        msg_box.setWindowTitle("Processing")
+        msg_box.setStandardButtons(qt.QMessageBox.NoButton)  # 不显示任何按钮
+        msg_box.show()
+
+        # save currentNode as tmp.nii
+        slicer.util.saveNode(currentNode, str(pluginPath / "tmp.nii"))
+        executablePath = pluginPath / "cpp" / "CentiloidCalculator.exe"
+        cmd = [
+            str(executablePath),
+            str(pluginPath / "tmp.nii"),
+            str(pluginPath / "Normalized.nii"),
+        ]
+        print(cmd)
+        result = subprocess.run(cmd, capture_output=True)
+
+        # close the dialog
+        msg_box.close()
+        if result.returncode != 0:
+            slicer.util.errorDisplay(
+                f"Failed to calculate Centiloid\n{result.stdout.decode()}"
+            )
+            return
+        slicer.util.infoDisplay(
+            f"Centiloid calculation finished:\n{result.stdout.decode()}"
+        )
+
+    def onShowImgButton(self) -> None:
+        # 指定本地 NIfTI 文件路径
+        pluginPath = Path(os.path.dirname(__file__))
+        nii_file_path = str(pluginPath / "Normalized.nii")
+        if not os.path.exists(nii_file_path):
+            slicer.util.errorDisplay(
+                f"IT seems that you haven't calculated Centiloid yet."
+            )
+            return
+
+        # 读取 NIfTI 文件并加载为 Slicer 的 Volume Node
+        volume_node = slicer.util.loadVolume(nii_file_path)
+
+        if not volume_node:
+            slicer.util.errorDisplay(
+                f"Failed to load volume from {nii_file_path}. This may be a bug :("
+            )
+            return
+
+        self.setViewBackgroundVolume(volume_node.GetID())
+
+        # set current node to the loaded volume
+        self.ui.inputSelector.setCurrentNode(volume_node)
+
+        # 更新视图以适应新加载的图像
+        slicer.app.applicationLogic().FitSliceToAll()
+
     def onACButton(self) -> None:
         """
         处理AC按钮点击事件。
@@ -505,6 +525,8 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     self._parameterNode.inputVolume,
                     [acNode, pcNode, leftNode, rightNode],
                 )
+            elif acCoord is not None and pcCoord is None:
+                self.logic.translateAC(acCoord, self._parameterNode.inputVolume, acNode)
 
     def onApplyLRButton(self):
         """
@@ -604,6 +626,32 @@ class localizerLogic(ScriptedLoadableModuleLogic):
 
     def getParameterNode(self):
         return localizerParameterNode(super().getParameterNode())
+
+    def translateAC(self, acCoord, targetNode, markupNode):
+        if targetNode is None:
+            logging.error("process: Invalid input node")
+            return
+        if self.transformTable.get(targetNode.GetID()):
+            transformNode = self.transformTable[targetNode.GetID()]
+            existingMatrix = vtk.vtkMatrix4x4()
+        else:
+            transformNode = slicer.vtkMRMLLinearTransformNode()
+            slicer.mrmlScene.AddNode(transformNode)
+            self.transformTable[targetNode.GetID()] = transformNode
+            if targetNode.GetName():
+                transformNodeName = targetNode.GetName() + "_Transform"
+                transformNode.SetName(transformNodeName)
+            existingMatrix = vtk.vtkMatrix4x4()
+        affineMatrix = create_translation_matrix(-np.array(acCoord))
+        vtkNewMatrix = slicer.util.vtkMatrixFromArray(affineMatrix)
+        compositeMatrix = vtk.vtkMatrix4x4()
+        vtk.vtkMatrix4x4.Multiply4x4(vtkNewMatrix, existingMatrix, compositeMatrix)
+        transformNode.SetMatrixTransformToParent(compositeMatrix)
+        targetNode.SetAndObserveTransformNodeID(transformNode.GetID())
+        slicer.vtkSlicerTransformLogic().hardenTransform(targetNode)
+        if markupNode is not None:
+            markupNode.SetAndObserveTransformNodeID(transformNode.GetID())
+            slicer.vtkSlicerTransformLogic().hardenTransform(markupNode)
 
     def transformACPC(
         self, acCoord: list, pcCoord: list, targetNode, markupNodes: list
