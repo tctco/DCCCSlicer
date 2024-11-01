@@ -418,6 +418,8 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             str(pluginPath / "tmp.nii"),
             str(pluginPath / "Normalized.nii"),
         ]
+        if self.ui.manualFOVCheckBox.isChecked():
+            cmd.append("-m")
         print(cmd)
         result = subprocess.run(cmd, capture_output=True)
 

@@ -1,1 +1,5 @@
 __pycache__/
+localizer/cpp/padded.nii
+localizer/cpp/preprocessed.nii
+localizer/Normalized.nii
+localizer/tmp.nii
