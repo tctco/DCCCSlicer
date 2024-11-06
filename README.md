@@ -4,6 +4,8 @@
 <img src="./DCCCSlicer.png" style="width:20%" alt="logo">
 </p>
 
+> Currently DCCCSlicer is only available on Windows
+
 A simple, fast, fully automated, and accurate method to calculate the Centiloid value for Amyloid PET images! Check out this demo!
 
 https://github.com/user-attachments/assets/eee48227-d61a-4971-9475-1ac4b6cfa6b4
