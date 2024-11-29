@@ -16,4 +16,4 @@ PS: You can also quickly align brain images with rigid transformation to the MNI
 
 > This project is open-sourced under a CC-BY-NC 4.0 license and therefore not allowed for commercial use. This project is for research only and is prohibited in clinical practice.
 
-<p style="text-align: center;"><img src="./demo/dept_logo.png" style="width:15%;" /></p>
+<p align="center"><img src="./demo/dept_logo.png" style="width:15%;" /></p>
