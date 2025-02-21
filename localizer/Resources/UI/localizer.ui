@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>421</width>
-    <height>259</height>
+    <height>368</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -62,6 +62,13 @@
         </property>
        </widget>
       </item>
+      <item row="2" column="0">
+       <widget class="QPushButton" name="leftButton">
+        <property name="text">
+         <string>Add Left (Q)</string>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="1">
        <widget class="QPushButton" name="rightButton">
         <property name="text">
@@ -89,13 +96,6 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QPushButton" name="leftButton">
-        <property name="text">
-         <string>Add Left (Q)</string>
-        </property>
-       </widget>
-      </item>
       <item row="4" column="1">
        <widget class="QPushButton" name="applyLRButton">
         <property name="text">
@@ -103,27 +103,98 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="0" colspan="2">
+      <item row="8" column="0">
+       <widget class="QCheckBox" name="manualFOVCheckBox">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use manual field of view (FOV) placement by skipping the deep learning based rigid transformation. You can use this option when automatic spatial normalization fails.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Manual FOV</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QPushButton" name="calcCentiloidButton">
+        <property name="text">
+         <string>Calculate Centiloid/CenTauR</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0" colspan="2">
        <widget class="QPushButton" name="showImgButton">
         <property name="text">
          <string>Show Normalization Result</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="1">
-       <widget class="QPushButton" name="calcCentiloidButton">
+      <item row="12" column="0">
+       <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Calculate Centiloid</string>
+         <string>Select a modality:</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
-       <widget class="QCheckBox" name="manualFOVCheckBox">
+      <item row="12" column="1">
+       <widget class="QComboBox" name="modalitySelector">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="toolTip">
-         <string>Use manual field of view (FOV) placement by skipping the deep learning based rigid transformation. You can use this option when automatic spatial normalization fails.</string>
+         <string>The modality of the input image, which is necessary for image &quot;
+          &quot;decouple. Currently we only support Abeta and Tau.</string>
+        </property>
+        <property name="currentText">
+         <string>Abeta</string>
+        </property>
+        <property name="placeholderText">
+         <string/>
+        </property>
+        <item>
+         <property name="text">
+          <string>Abeta</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Tau</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="14" column="0" colspan="2">
+       <widget class="QPushButton" name="decoupleButton">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Decouple the input image to extract AD related components.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Manual FOV</string>
+         <string>Decouple This Image</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0" colspan="2">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Check spatial normalization result</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="0" colspan="2">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Let Artificial Intelligence explain this image</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="enableIterativeCheckBox">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use iterative rigid transformation to improve the accuracy of the spatial normalization. This option is useful when the automatic spatial normalization fails, especially when the input contains a lot of non-brain structures (e.g. neck, shoulders, etc). This may costs a little more time.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Iterative Rigid</string>
         </property>
        </widget>
       </item>

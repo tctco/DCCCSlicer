@@ -3,5 +3,6 @@ localizer/cpp/padded.nii
 localizer/cpp/preprocessed.nii
 localizer/cpp/paddedProcessed.nii
 localizer/cpp/rigid.nii
-localizer/Normalized.nii
+localizer/cpp/ADNI_normalized.nii
+localizer/Normalized*.nii
 localizer/tmp.nii

@@ -23,6 +23,25 @@ import qt
 #
 
 
+class TimeConsumingMessageBox:
+    def __init__(self):
+        pass
+
+    def __enter__(self):
+        msg_box = qt.QMessageBox()
+        self.msg_box = msg_box
+        msg_box.setIcon(qt.QMessageBox.Information)
+        msg_box.setMinimumWidth(300)
+        msg_box.setText("Calculating, please wait...")
+        msg_box.setWindowTitle("Processing")
+        msg_box.setStandardButtons(qt.QMessageBox.NoButton)  # 不显示任何按钮
+        msg_box.show()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.msg_box.close()
+
+
 class localizer(ScriptedLoadableModule):
     """Uses ScriptedLoadableModule base class, available at:
     https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
@@ -86,6 +105,10 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._parameterNode = None
         self._parameterNodeGuiTag = None
 
+        self.PLUGIN_PATH = Path(os.path.dirname(__file__))
+        self.EXECUTABLE_PATH = self.PLUGIN_PATH / "cpp" / "CentiloidCalculator.exe"
+        self.EXECUTABLE_DIR = self.PLUGIN_PATH / "cpp"
+
     def setup(self) -> None:
         """
         Called when the user opens the module the first time and the widget is initialized.
@@ -130,6 +153,8 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.inputSelector.connect(
             "currentNodeChanged(vtkMRMLNode*)", self.onInputVolumeChanged
         )
+        self.ui.decoupleButton.connect("clicked(bool)", self.onDecoupleButton)
+
         self.setupShortcuts()
         self.setupReferenceBox()
 
@@ -384,73 +409,137 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         else:
             print(f"{nodeName} point already exists:{self._getPointRAS(node)}")
 
-    def onCalcCentiloidButton(self) -> None:
+    def _checkCurrentVolume(self) -> bool:
         volumes = slicer.util.getNodesByClass("vtkMRMLScalarVolumeNode")
         if not volumes:
-            return  # 如果场景中没有Volume，直接返回
+            return None  # 如果场景中没有Volume，直接返回
 
         currentNode = self.ui.inputSelector.currentNode()
         if not currentNode:
-            return
+            return None
         dim = currentNode.GetImageData().GetDimensions()
         print(f"input dim: {dim}")
         if len(dim) != 3:
             slicer.util.errorDisplay(
                 f"A 3D input is required, but the given node is {dim}."
             )
+            return None
+        return currentNode
+
+    def onCalcCentiloidButton(self) -> None:
+        currentNode = self._checkCurrentVolume()
+        if not currentNode:
+            return
         # plugin path
-        pluginPath = Path(os.path.dirname(__file__))
 
-        # pop up a dialog to show it is calculating
-        msg_box = qt.QMessageBox()
-        msg_box.setIcon(qt.QMessageBox.Information)
-        msg_box.setMinimumWidth(300)
-        msg_box.setText("Calculating, please wait...")
-        msg_box.setWindowTitle("Processing")
-        msg_box.setStandardButtons(qt.QMessageBox.NoButton)  # 不显示任何按钮
-        msg_box.show()
+        with TimeConsumingMessageBox():
+            # save currentNode as tmp.nii
+            slicer.util.saveNode(currentNode, str(self.PLUGIN_PATH / "tmp.nii"))
+            cmd = [
+                str(self.EXECUTABLE_PATH),
+                str(self.PLUGIN_PATH / "tmp.nii"),
+                str(self.PLUGIN_PATH / "Normalized.nii"),
+            ]
+            if self.ui.manualFOVCheckBox.isChecked():
+                cmd.append("-m")
+            if self.ui.enableIterativeCheckBox.isChecked():
+                cmd.append("-i")
+            print(cmd)
+            result = subprocess.run(cmd, capture_output=True)
 
-        # save currentNode as tmp.nii
-        slicer.util.saveNode(currentNode, str(pluginPath / "tmp.nii"))
-        executablePath = pluginPath / "cpp" / "CentiloidCalculator.exe"
-        cmd = [
-            str(executablePath),
-            str(pluginPath / "tmp.nii"),
-            str(pluginPath / "Normalized.nii"),
-        ]
-        if self.ui.manualFOVCheckBox.isChecked():
-            cmd.append("-m")
-        print(cmd)
-        result = subprocess.run(cmd, capture_output=True)
-
-        # close the dialog
-        msg_box.close()
         if result.returncode != 0:
             slicer.util.errorDisplay(
                 f"Failed to calculate Centiloid\n{result.stdout.decode()}"
             )
             return
         slicer.util.infoDisplay(
-            f"Centiloid calculation finished:\n{result.stdout.decode()}"
+            f"Semi-quantitative calculation finished:\n{self._polish_output(result)}"
         )
 
-    def onShowImgButton(self) -> None:
-        # 指定本地 NIfTI 文件路径
-        pluginPath = Path(os.path.dirname(__file__))
-        nii_file_path = str(pluginPath / "Normalized.nii")
-        if not os.path.exists(nii_file_path):
-            slicer.util.errorDisplay(
-                f"IT seems that you haven't calculated Centiloid yet."
-            )
+    def _polish_output(self, output):
+        result = output.stdout.decode()
+        result = result.replace("FBP", "FBP / AV45 / Florbetapir")
+        result = result.replace("FMM", "FMM / Flutemetamol")
+        result = result.replace("FBB", "FBB / Florbetaben")
+        result = result.replace("NAV", "NAV4694")
+        result = result.replace("FTP", "FTP / AV1451 / Flortaucipir")
+        result = result.replace("PM-PBB3", "PM-PBB3 / APN / Florzolotau")
+        return result
+
+    def onDecoupleButton(self) -> None:
+        currentNode = self._checkCurrentVolume()
+        modality = self.ui.modalitySelector.currentText
+        if not currentNode:
             return
 
-        # 读取 NIfTI 文件并加载为 Slicer 的 Volume Node
-        volume_node = slicer.util.loadVolume(nii_file_path)
+        with TimeConsumingMessageBox():
+            # save currentNode as tmp.nii
+            slicer.util.saveNode(currentNode, str(self.PLUGIN_PATH / "tmp.nii"))
+            cmd = [
+                str(self.EXECUTABLE_PATH),
+                str(self.PLUGIN_PATH / "tmp.nii"),
+                str(self.PLUGIN_PATH / "Normalized.nii"),
+                "-d",
+                modality,
+            ]
+            if self.ui.manualFOVCheckBox.isChecked():
+                cmd.append("-m")
+            if self.ui.enableIterativeCheckBox.isChecked():
+                cmd.append("-i")
+            print(cmd)
+            result = subprocess.run(cmd, capture_output=True)
+        if result.returncode != 0:
+            slicer.util.errorDisplay(f"Failed to decouple\n{result.stdout.decode()}")
+            return
 
-        if not volume_node:
+        foreground = self._loadVolume(
+            str(self.PLUGIN_PATH / "Normalized_AD_prob_map.nii")
+        )
+        background = self._loadVolume(str(self.EXECUTABLE_DIR / "ADNI_normalized.nii"))
+        stripped = self._loadVolume(
+            str(self.PLUGIN_PATH / "Normalized_stripped_image.nii")
+        )
+        if foreground is None or background is None or stripped is None:
+            return
+        self.ui.inputSelector.setCurrentNode(background)
+        foregroundDisplayNode = foreground.GetDisplayNode()
+        print(foregroundDisplayNode)
+        foregroundDisplayNode.SetAndObserveColorNodeID(
+            "vtkMRMLPETProceduralColorNodePET-DICOM"
+        )
+        foregroundDisplayNode.SetWindow(1)
+        foregroundDisplayNode.SetLevel(0.5)
+        backgroundDisplayNode = background.GetDisplayNode()
+        backgroundDisplayNode.SetAndObserveColorNodeID(
+            "vtkMRMLColorTableNodeInvertedGrey"
+        )
+
+        self.setViewBackgroundVolume(background.GetID())
+        slicer.util.setSliceViewerLayers(
+            foreground=foreground, background=background, foregroundOpacity=0.5
+        )
+        slicer.util.infoDisplay(
+            f"Semi-quantitative calculation finished:\n{self._polish_output(result)}"
+        )
+
+    def _loadVolume(self, path):
+        if not os.path.exists(path):
             slicer.util.errorDisplay(
-                f"Failed to load volume from {nii_file_path}. This may be a bug :("
+                f"File not found. It seems that you haven't done any calculation yet."
             )
+            return None
+        volumeNode = slicer.util.loadVolume(path)
+        if not volumeNode:
+            slicer.util.errorDisplay(
+                f"Failed to load volume from {path}. This may be a bug :("
+            )
+            return None
+        return volumeNode
+
+    def onShowImgButton(self) -> None:
+        nii_file_path = str(self.PLUGIN_PATH / "Normalized.nii")
+        volume_node = self._loadVolume(nii_file_path)
+        if volume_node is None:
             return
 
         self.setViewBackgroundVolume(volume_node.GetID())
