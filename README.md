@@ -22,4 +22,4 @@ PS: You can also quickly align brain images with rigid transformation to the MNI
 >
 > **IMPORTANT LICENSE UPDATE**: Since DCCCSlicer V2.0, we no longer allow results generated using DCCCSlicer to be published in closed-access journals. If you use our software in your research, please consider publishing your results in an open-access journal or making them publicly available from the journal press, unless you obtain our commercial use license in advance.
 
-<p style="text-align: center;"><img src="./demo/dept_logo.png" style="width:15%;" /></p>
+<p align="center"><img src="./demo/dept_logo.png" style="width:15%;" /></p>
