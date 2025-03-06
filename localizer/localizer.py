@@ -430,8 +430,19 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         currentNode = self._checkCurrentVolume()
         if not currentNode:
             return
-        # plugin path
+        nodeName = currentNode.GetName()
+        print(f"Node Name: {nodeName}")
 
+        additionalInformation = nodeName
+        instUids = currentNode.GetAttribute("DICOM.instanceUIDs")
+        if instUids:
+            instUids = instUids.split()
+            patientName = slicer.dicomDatabase.instanceValue(instUids[0], "0010,0010")
+            studyDescription = slicer.dicomDatabase.instanceValue(
+                instUids[0], "0008,1030"
+            )
+            studyDate = slicer.dicomDatabase.instanceValue(instUids[0], "0008,0020")
+            additionalInformation += f"\nPatient Name: {patientName}\nStudy Date: {studyDate}\n\nStudy Description: {studyDescription}"
         with TimeConsumingMessageBox():
             # save currentNode as tmp.nii
             slicer.util.saveNode(currentNode, str(self.PLUGIN_PATH / "tmp.nii"))
@@ -453,7 +464,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             )
             return
         slicer.util.infoDisplay(
-            f"Semi-quantitative calculation finished:\n{self._polish_output(result)}"
+            f"Semi-quantitative calculation finished:\n{additionalInformation}\n{self._polish_output(result)}"
         )
 
     def _polish_output(self, output):
