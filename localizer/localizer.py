@@ -426,15 +426,12 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             return None
         return currentNode
 
-    def onCalcCentiloidButton(self) -> None:
-        currentNode = self._checkCurrentVolume()
-        if not currentNode:
-            return
-        nodeName = currentNode.GetName()
+    def getAdditionalInfo(self, node):
+        nodeName = node.GetName()
         print(f"Node Name: {nodeName}")
 
         additionalInformation = nodeName
-        instUids = currentNode.GetAttribute("DICOM.instanceUIDs")
+        instUids = node.GetAttribute("DICOM.instanceUIDs")
         if instUids:
             instUids = instUids.split()
             patientName = slicer.dicomDatabase.instanceValue(instUids[0], "0010,0010")
@@ -443,6 +440,13 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             )
             studyDate = slicer.dicomDatabase.instanceValue(instUids[0], "0008,0020")
             additionalInformation += f"\nPatient Name: {patientName}\nStudy Date: {studyDate}\n\nStudy Description: {studyDescription}"
+        return additionalInformation
+
+    def onCalcCentiloidButton(self) -> None:
+        currentNode = self._checkCurrentVolume()
+        if not currentNode:
+            return
+        additionalInformation = self.getAdditionalInfo(currentNode)
         with TimeConsumingMessageBox():
             # save currentNode as tmp.nii
             slicer.util.saveNode(currentNode, str(self.PLUGIN_PATH / "tmp.nii"))
@@ -482,6 +486,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         modality = self.ui.modalitySelector.currentText
         if not currentNode:
             return
+        additionalInformation = self.getAdditionalInfo(currentNode)
 
         with TimeConsumingMessageBox():
             # save currentNode as tmp.nii
@@ -530,7 +535,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             foreground=foreground, background=background, foregroundOpacity=0.5
         )
         slicer.util.infoDisplay(
-            f"Semi-quantitative calculation finished:\n{self._polish_output(result)}"
+            f"Semi-quantitative calculation finished:\n{additionalInformation}\n{self._polish_output(result)}"
         )
 
     def _loadVolume(self, path):
