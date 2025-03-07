@@ -10,11 +10,11 @@ Abeta, tau, FDG, DAT, MET, synaptic density... you name it!
 
 > DCCCSlicer is currently only available on Windows. To use it on other platforms, you may need to recompile it from the [source](https://github.com/tctco/Beyond-Centiloid-code).
 
-Use DCCC to calculate Centiloid and CenTauRz for you!
+Use DCCC to calculate Centiloid and CenTauRz.
 
 https://github.com/user-attachments/assets/7ba5346a-3214-4a92-80f3-370f4c46f29c
 
-**Shiny new features!** DCCCSlicer can interpret input Abeta and tau PET images now! It not only help determine if a patient may have AD, but also identifies the regions of pathological deposition (you may need to adjust the window/level to get a better illustration)!
+**Shiny new features** DCCCSlicer can interpret input Abeta and tau PET images now. It not only help determine if a patient may have AD, but also identifies the regions of pathological deposition (you may need to adjust the window/level to get a better illustration).
 
 https://github.com/user-attachments/assets/680490d2-ebec-4846-871c-98fdc383b513
 
