@@ -24,13 +24,10 @@ PS: You can also quickly align brain images with rigid transformation to the MNI
 
 ## Metrics
 
-Relative SUVr error and time consumption on the Centiloid/CenTauRz projects.
+Relative SUV (ratio) error and time consumption on the Centiloid/CenTauRz projects.
 
 $$
-\begin{aligned}
-\mathrm{SUVr} = \frac{\mathrm{SUV_{ROI}}}{\mathrm{SUV_{Ref}}}\\
-\Delta \mathrm{SUVr} \ \\% = \frac{|\mathrm{SUVr_{GT} - \mathrm{SUVr_{Method}}|}}{\mathrm{SUVr_{GT}}}\times 100\\%
-\end{aligned}
+\Delta \mathrm{SUV} \ \\% = \frac{|\mathrm{SUV_{GT} - \mathrm{SUV_{Method}}|}}{\mathrm{SUVr_{GT}}}\times 100\\%
 $$
 
 | **Methods**        | **PiB (%)**  | **AV45 (%)**  | **FBB (%)**   | **FMM (%)**  | **NAV4694 (%)** | **FTP (%)**   | **Time (s)**   |
