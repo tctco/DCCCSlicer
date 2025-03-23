@@ -30,15 +30,16 @@ $$
 \Delta \mathrm{SUV} \ \\% = \frac{|\mathrm{SUV_{GT} - \mathrm{SUV_{Method}}|}}{\mathrm{SUV_{GT}}}\times 100\\%
 $$
 
-| **Methods**        | **PiB (%)**  | **AV45 (%)**  | **FBB (%)**   | **FMM (%)**  | **NAV4694 (%)** | **FTP (%)**   | **Time (s)**   |
-| :----------------: | :----------: | :-----------: | :-----------: | :----------: | :-------------: | :-----------: | :------------: |
-| SPM12              | 1.33 ± 1.07  | 1.66 ± 1.32   | 1.40 ± 0.85   | 3.00 ± 2.84  | 1.90 ± 2.77     | 1.07 ± 1.27   | 198.96 ± 59.37 |
-| SPM PET            | 8.14 ± 11.71 | 15.75 ± 36.98 | 14.18 ± 11.13 | 8.85 ± 5.89  | 16.43 ± 9.60    | 12.40 ± 11.39 | 5.77 ± 1.68    |
-| SPM PET (Template) | 3.97 ± 2.85  | 6.44 ± 3.83   | 6.16 ± 3.27   | 8.93 ± 3.38  | 5.43 ± 3.27     | 3.65 ± 2.78   | 4.47 ± 0.88    |
-| SNBPI              | **1.68 ± 1.49** | **2.24 ± 1.97**  | **2.85 ± 2.33**  | **2.74 ± 2.27** | 3.15 ± 2.66     | **1.41 ± 1.13**  | 130.33 ± 41.27 |
-| DCCC (Pytorch)     | 2.86 ± 1.66  | <ins>3.16 ± 2.74</ins>  | 2.95 ± 2.04   | <ins>3.21 ± 2.53</ins> | <ins>2.97 ± 2.65</ins>    | 2.61 ± 4.60   | **1.14 ± 0.75**   |
-| DCCC (Iterative)   | 2.93 ± 1.68  | 3.89 ± 3.76   | <ins>2.86 ± 2.24</ins>  | 3.21 ± 2.53  | **2.80 ± 2.25**    | 1.92 ± 1.66   | <ins>1.57 ± 1.16</ins>   |
-| DCCC (ONNX/Slicer) | <ins>2.78 ± 1.59</ins> | 3.67 ± 2.92   | 3.17 ± 2.41   | 3.63 ± 2.67  | 3.22 ± 2.54     | <ins>1.88 ± 1.42</ins>  | 15.94 ± 1.17   |
+
+| **Methods**        | **PiB (%)**   | **AV45 (%)**  | **FBB (%)**   | **FMM (%)**   | **NAV4694 (%)** | **FTP (%)**   | **Time (s)**  |
+| ------------------ | ------------- | ------------- | ------------- | ------------- | --------------- | ------------- | ------------- |
+| SPM12              | 1.33±1.07     | 1.66±1.32     | 1.40±0.85     | 3.00±2.84     | 1.90±2.77       | 1.07±1.27     | 198.96±59.37  |
+| SPM PET            | 8.14±11.71    | 15.75±36.98   | 14.18±11.13   | 8.85±5.89     | 16.43±9.60      | 12.40±11.39   | 5.77±1.68     |
+| SPM PET (Template) | 3.97±2.85     | 6.44±3.83     | 6.16±3.27     | 8.93±3.38     | 5.43±3.27       | 3.65±2.78     | 4.47±0.88     |
+| SNBPI              | **1.68±1.49** | **2.24±1.97** | 2.85±2.33     | **2.74±2.27** | 3.15±2.66       | <ins>1.41±1.13</ins>     | 130.33±41.27  |
+| Ours (Pytorch)     | 2.40±1.55     | <ins>2.67±2.22</ins>     | **2.56±2.23** | 3.68±3.40     | **2.59±2.13**   | 2.07±4.31     | **1.07±0.63** |
+| Ours (Iterative)   | 2.45±1.69     | 3.61±3.92     | 2.68±2.22     | 3.68±3.40     | <ins>2.62±2.09</ins>       | **1.40±1.35** | <ins>1.53±1.01</ins>     |
+| Ours (ONNX)        | <ins>2.29±1.50</ins>     | 3.11±2.15     | <ins>2.64±2.06</ins>     | <ins>3.51±3.31</ins>     | 2.63±2.15       | 1.44±1.26     | 15.85±2.30    |
 
 > The smallest error and shortest computation time are marked with **bold**, while the second smallest error and shortest computation time are <ins>underlined</ins>. SPM12 is employed to reproduce the original literature results using the standard pipeline and does not participate in result ranking; it provides a baseline for reproducibility. SPM PET refers to the PET-only spatial normalization algorithm provided by SPM5, utilizing the 15O-H2O template. SPM PET (Template) refers to the same algorithm, but the templates used are the average of each tracer in the Centiloid/CenTauR dataset after normalization. Check [SNBPI](https://github.com/ZhangTianhao1993/Spatial-Normalization-of-Brain-PET-Images) for their wonderful work!
 
