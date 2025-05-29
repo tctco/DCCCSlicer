@@ -45,7 +45,36 @@ $$
 
 ## Acknowledgements
 
-We thank Prof. Yulai Li from Xiangya Hospital for kindly providing the SV2A dataset.
+We sincerely thank the passionate and outstanding users and contributors of DCCC. Many of our contributors come from the medical community and may not be accustomed to using GitHub, so we would like to acknowledge their contributions here. Your valuable feedback has been the greatest driving force behind the continuous improvement of the project.
+
+
+<table width="100%" center>
+  <thead>
+    <tr>
+      <th width="33%">Yulai Li, MD, PhD @ Xiangya Hospital, Changsha, CHINA<br/><sup>For providing the SV2A dataset</sup></th>
+      <th width="33%">Chenpeng Zhang, MD, PhD @ Renji Hospital, Shanghai, CHINA<br/><sup>For reporting rigid registration failures</sup></th>
+      <th width="33%">Daoyan Hu, PhD @ The Second Affiliated Hospital Zhejiang University School of Medicine, Hangzhou, CHINA<br/><sup>For providing testing feedbacks with SPM</sup></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th width="33%"><img src="https://upload.wikimedia.org/wikipedia/zh/f/fc/%E6%B9%98%E9%9B%85%E5%8C%BB%E9%99%A2%E9%99%A2%E5%BE%BD.jpg" alt="Xiangya Hospital logo" width="160" /></th>
+      <th width="33%"><img src="Not authorized to use the hospital logo" alt="Renji Hospital" /></th>
+      <th width="33%"><img src="https://p3-sdbk2-media.byteimg.com/tos-cn-i-xv4ileqgde/8e3cdb956c3f4fb5a5e977e9bad931f8~tplv-xv4ileqgde-resize-w:750.image" alt="The Second Affiliated Hospital Zhejiang University School of Medicine" width="220"/></th>
+    </tr>
+    <tr>
+      <th width="33%">Fanglan Li, MD, PhD @ West China Hospital, Chengdu, CHINA<br><sup>For reporting rigid registration failures</sup></th>
+      <th width="33%">And more...</th>
+      <th width="33%"></th>
+    </tr>
+    <tr>
+      <th width="33%"><img src="https://media.licdn.com/dms/image/v2/C560BAQH784Gt17OeVg/company-logo_200_200/company-logo_200_200/0/1643080250401?e=2147483647&v=beta&t=egCFbtkNMfczQq8w1PE77L8Ha2h-9MgEBw_-V2Zg0rg" width="160" /></th>
+      <th width="33%">If you wanna try out DCCC, <br>
+      please don't hesitate to contact us!</th>
+      <th width="33%"></th>
+    </tr>
+  </tbody>
+</table>
 
 ## License
 
