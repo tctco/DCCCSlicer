@@ -68,7 +68,7 @@ We sincerely thank the passionate and outstanding users and contributors of DCCC
       <th width="33%"></th>
     </tr>
     <tr>
-      <th width="33%"><img src="https://media.licdn.com/dms/image/v2/C560BAQH784Gt17OeVg/company-logo_200_200/company-logo_200_200/0/1643080250401?e=2147483647&v=beta&t=egCFbtkNMfczQq8w1PE77L8Ha2h-9MgEBw_-V2Zg0rg" width="160" /></th>
+      <th width="33%"><img src="https://media.licdn.com/dms/image/v2/C560BAQH784Gt17OeVg/company-logo_200_200/company-logo_200_200/0/1643080250401?e=2147483647&v=beta&t=egCFbtkNMfczQq8w1PE77L8Ha2h-9MgEBw_-V2Zg0rg" width="190" /></th>
       <th width="33%">If you wanna try out DCCC, <br>
       please don't hesitate to contact us!</th>
       <th width="33%"></th>
