@@ -18,7 +18,16 @@ https://github.com/user-attachments/assets/7ba5346a-3214-4a92-80f3-370f4c46f29c
 
 https://github.com/user-attachments/assets/680490d2-ebec-4846-871c-98fdc383b513
 
-PS: You can also quickly align brain images with rigid transformation to the MNI space by localizing AC and PC. This step may be required for spatial normalization with [SPM](https://github.com/spm/spm12)/[rPOP](https://github.com/LeoIacca/rPOP/tree/master).
+## Quality control
+
+It’s always a good idea to manually verify that DCCC has performed spatial normalization correctly. After processing, click the `Show Normalization` button to inspect the normalization quality. Poorly normalized images will result in inaccurate semi-quantitative metrics - see this [issue](https://github.com/tctco/DCCCSlicer/issues/1) for details. This is especially important for PET scans containing substantial non-brain anatomy (e.g., neck, shoulders). If automatic spatial normalization proves suboptimal, **roll back to the original image and try one of these** rescue strategies:
+- Enable the `Iterative Rigid` option in the plugin interface
+- Or enable the `Manual FOV` option and perform a manual rigid registration (field-of-view placement). DCCC will crop this image, skip rigid registration, and go directly to Affine + Elastic normalization.
+
+<p align="center"><img src="https://github.com/user-attachments/assets/ba4457a3-4d71-4cb6-af17-c2f0a7df4463" width="800"/></p>
+
+
+> You can quickly align brain images with rigid transformation to the MNI space by localizing AC and PC. This step may be required for spatial normalization with [SPM](https://github.com/spm/spm12)/[rPOP](https://github.com/LeoIacca/rPOP/tree/master).
 
 <https://github.com/tctco/ACPCLocalizer/assets/45505657/c34980e6-c214-4200-9146-aac951fb7f4f>
 
