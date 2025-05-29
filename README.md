@@ -49,13 +49,13 @@ We sincerely thank the passionate and outstanding users and contributors of DCCC
 
 
 <table width="100%" center>
-  <thead>
+  <tbody>
     <tr>
       <th width="33%">Yulai Li, MD, PhD @ Xiangya Hospital, Changsha, CHINA<br/><sup>For providing the SV2A dataset</sup></th>
       <th width="33%">Chenpeng Zhang, MD, PhD @ Renji Hospital, Shanghai, CHINA<br/><sup>For reporting rigid registration failures</sup></th>
-      <th width="33%">Daoyan Hu, PhD @ The Second Affiliated Hospital Zhejiang University School of Medicine, Hangzhou, CHINA<br/><sup>For providing testing feedbacks with SPM</sup></th>
+      <th width="33%">Daoyan Hu, PhD @ The Second Affiliated Hospital Zhejiang University School of Medicine, Hangzhou, CHINA<br/><sup>For providing testing feedback with SPM</sup></th>
     </tr>
-  </thead>
+  </tbody>
   <tbody>
     <tr>
       <th width="33%"><img src="https://upload.wikimedia.org/wikipedia/zh/f/fc/%E6%B9%98%E9%9B%85%E5%8C%BB%E9%99%A2%E9%99%A2%E5%BE%BD.jpg" alt="Xiangya Hospital logo" width="160" /></th>
@@ -69,8 +69,7 @@ We sincerely thank the passionate and outstanding users and contributors of DCCC
     </tr>
     <tr>
       <th width="33%"><img src="https://media.licdn.com/dms/image/v2/C560BAQH784Gt17OeVg/company-logo_200_200/company-logo_200_200/0/1643080250401?e=2147483647&v=beta&t=egCFbtkNMfczQq8w1PE77L8Ha2h-9MgEBw_-V2Zg0rg" width="190" /></th>
-      <th width="33%">If you wanna try out DCCC, <br>
-      please don't hesitate to contact us!</th>
+      <th width="33%">Feel free to get in touch if you'd like to contribute, report a bug, share a poorly spatially normalized PET image, or suggest support for a new brain PET metric - we'll be sure to credit you!</th>
       <th width="33%"></th>
     </tr>
   </tbody>
