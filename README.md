@@ -53,6 +53,13 @@ $$
 
 > The smallest error and shortest computation time are marked with **bold**, while the second smallest error and shortest computation time are <ins>underlined</ins>. SPM12 is employed to reproduce the original literature results using the standard pipeline and does not participate in result ranking; it provides a baseline for reproducibility. SPM PET refers to the PET-only spatial normalization algorithm provided by SPM5, utilizing the 15O-H2O template. SPM PET (Template) refers to the same algorithm, but the templates used are the average of each tracer in the Centiloid/CenTauR dataset after normalization. Check [SNBPI](https://github.com/ZhangTianhao1993/Spatial-Normalization-of-Brain-PET-Images) for their wonderful work!
 
+## TODO
+
+- [ ] Add support for skipping spatial normalization to directly calculate Centiloid/CenTauR.
+- [ ] Support other brain PET semi-quantitative metrics, such as Z-scores and basal ganglia asymmetry index.
+- [ ] Add support for other spatial normalization algorithms.
+- [ ] Improve the UI.
+
 ## Acknowledgements
 
 We sincerely thank the passionate and outstanding users and contributors of DCCC. Many of our contributors come from the medical community and may not be accustomed to using GitHub, so we would like to acknowledge their contributions here. Your valuable feedback has been the greatest driving force behind the continuous improvement of the project.
