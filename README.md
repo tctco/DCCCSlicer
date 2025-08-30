@@ -18,7 +18,16 @@ https://github.com/user-attachments/assets/7ba5346a-3214-4a92-80f3-370f4c46f29c
 
 https://github.com/user-attachments/assets/680490d2-ebec-4846-871c-98fdc383b513
 
-PS: You can also quickly align brain images with rigid transformation to the MNI space by localizing AC and PC. This step may be required for spatial normalization with [SPM](https://github.com/spm/spm12)/[rPOP](https://github.com/LeoIacca/rPOP/tree/master).
+## Quality control
+
+It’s always a good idea to manually verify that DCCC has performed spatial normalization correctly. After processing, click the `Show Normalization` button to inspect the normalization quality. Poorly normalized images will result in inaccurate semi-quantitative metrics - see this [issue](https://github.com/tctco/DCCCSlicer/issues/1) for details. This is especially important for PET scans containing substantial non-brain anatomy (e.g., neck, shoulders). If automatic spatial normalization proves suboptimal, **roll back to the original image and try one of these** rescue strategies:
+- Enable the `Iterative Rigid` option in the plugin interface
+- Or enable the `Manual FOV` option and perform a manual rigid registration (field-of-view placement). DCCC will crop this image, skip rigid registration, and go directly to Affine + Elastic normalization.
+
+<p align="center"><img src="https://github.com/user-attachments/assets/ba4457a3-4d71-4cb6-af17-c2f0a7df4463" width="800"/></p>
+
+
+> You can quickly align brain images with rigid transformation to the MNI space by localizing AC and PC. This step may be required for spatial normalization with [SPM](https://github.com/spm/spm12)/[rPOP](https://github.com/LeoIacca/rPOP/tree/master).
 
 <https://github.com/tctco/ACPCLocalizer/assets/45505657/c34980e6-c214-4200-9146-aac951fb7f4f>
 
@@ -46,7 +55,35 @@ $$
 
 ## Acknowledgements
 
-We thank Prof. Yulai Li from Xiangya Hospital for kindly providing the SV2A dataset.
+We sincerely thank the passionate and outstanding users and contributors of DCCC. Many of our contributors come from the medical community and may not be accustomed to using GitHub, so we would like to acknowledge their contributions here. Your valuable feedback has been the greatest driving force behind the continuous improvement of the project.
+
+
+<table width="100%" center>
+  <tbody>
+    <tr>
+      <th width="33%">Yulai Li, MD, PhD @ Xiangya Hospital, Changsha, CHINA<br/><sup>For providing the SV2A dataset</sup></th>
+      <th width="33%">Chenpeng Zhang, MD, PhD @ Renji Hospital, Shanghai, CHINA<br/><sup>For reporting rigid registration failures</sup></th>
+      <th width="33%">Daoyan Hu, PhD @ The Second Affiliated Hospital Zhejiang University School of Medicine, Hangzhou, CHINA<br/><sup>For providing testing feedback with SPM</sup></th>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <th width="33%"><img src="https://upload.wikimedia.org/wikipedia/zh/f/fc/%E6%B9%98%E9%9B%85%E5%8C%BB%E9%99%A2%E9%99%A2%E5%BE%BD.jpg" alt="Xiangya Hospital logo" width="160" /></th>
+      <th width="33%"><img src="Not authorized to use the hospital logo" alt="Renji Hospital" /></th>
+      <th width="33%"><img src="https://p3-sdbk2-media.byteimg.com/tos-cn-i-xv4ileqgde/8e3cdb956c3f4fb5a5e977e9bad931f8~tplv-xv4ileqgde-resize-w:750.image" alt="The Second Affiliated Hospital Zhejiang University School of Medicine" width="220"/></th>
+    </tr>
+    <tr>
+      <th width="33%">Fanglan Li, MD, PhD @ West China Hospital, Chengdu, CHINA<br><sup>For reporting rigid registration failures</sup></th>
+      <th width="33%">And more...</th>
+      <th width="33%"></th>
+    </tr>
+    <tr>
+      <th width="33%"><img src="https://media.licdn.com/dms/image/v2/C560BAQH784Gt17OeVg/company-logo_200_200/company-logo_200_200/0/1643080250401?e=2147483647&v=beta&t=egCFbtkNMfczQq8w1PE77L8Ha2h-9MgEBw_-V2Zg0rg" width="190" /></th>
+      <th width="33%">Feel free to get in touch if you'd like to contribute, report a bug, share a poorly spatially normalized PET image, or suggest support for a new brain PET metric - we'll be sure to credit you!</th>
+      <th width="33%"></th>
+    </tr>
+  </tbody>
+</table>
 
 ## License
 
