@@ -7,3 +7,4 @@ localizer/cpp/ADNI_normalized.nii
 localizer/Normalized*.nii
 localizer/tmp.nii
 tracked_files.txt
+*archive*
