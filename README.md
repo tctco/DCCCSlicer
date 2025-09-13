@@ -56,7 +56,7 @@ $$
 > 
 > <sup>1</sup>: ANTsPy exhibited suboptimal performance on Aβ PET images, though results were more acceptable on FTP scans, possibly due to lower image quality in parts of the GAINN Centiloid Project dataset. We consulted the ANTsPy developers (issue [#832](https://github.com/ANTsX/ANTsPy/issues/832#issuecomment-3036727001)), but the problem remains unresolved. Readers should note that these atypical results may not reflect ANTsPy’s performance on higher-quality Aβ PET images.
 >
-> <sup>2</sup>: rPOP failed completely in spatial normalization on 3 PiB images (yielding infinite or undefined SUVr values). Only valid SUVr results were included in the relative error statistics reported in the table.
+> <sup>2</sup>: rPOP failed completely in spatial normalization on 3 PiB images (yielding infinite or undefined SUVr values) with its fully automated pipeline. Only valid SUVr results were included in the relative error statistics reported in the table.
 
 ## TODO
 
