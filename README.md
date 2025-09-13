@@ -58,6 +58,13 @@ $$
 >
 > <sup>2</sup>: rPOP failed completely in spatial normalization on 3 PiB images (yielding infinite or undefined SUVr values). Only valid SUVr results were included in the relative error statistics reported in the table.
 
+## TODO
+
+- [ ] Add support for skipping spatial normalization to directly calculate Centiloid/CenTauR.
+- [ ] Support other brain PET semi-quantitative metrics, such as Z-scores and basal ganglia asymmetry index.
+- [ ] Add support for other spatial normalization algorithms.
+- [ ] Improve the UI.
+
 ## Acknowledgements
 
 We sincerely thank the passionate and outstanding users and contributors of DCCC. Many of our contributors come from the medical community and may not be accustomed to using GitHub, so we would like to acknowledge their contributions here. Your valuable feedback has been the greatest driving force behind the continuous improvement of the project.
