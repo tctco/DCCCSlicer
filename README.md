@@ -58,11 +58,34 @@ $$
 >
 > <sup>2</sup>: rPOP failed completely in spatial normalization on 3 PiB images (yielding infinite or undefined SUVr values) with its fully automated pipeline. Only valid SUVr results were included in the relative error statistics reported in the table.
 
+## Supported metrics and algorithms
+
+Please cite these metrics/algorithms if you use them in your research
+
+Metrics:
+- `Centiloid`: Klunk WE, Koeppe RA, Price JC, Benzinger TL, Devous Sr. MD, Jagust WJ, et al. The Centiloid Project: Standardizing quantitative amyloid plaque estimation by PET. Alzheimer’s & Dementia. 2015;11(1):1-15.e4.
+- `CenTauR`: Leuzy A, Raket LL, Villemagne VL, Klein G, Tonietto M, Olafson E, et al. Harmonizing tau positron emission tomography in Alzheimer’s disease: The CenTauR scale and the joint propagation model. Alzheimer’s & Dementia. 2024;20(9):5833–48.
+- `CenTauRz`: Villemagne VL, Leuzy A, Bohorquez SS, Bullich S, Shimada H, Rowe CC, et al. CenTauR: Toward a universal scale and masks for standardizing tau imaging studies. Alzheimer’s & Dementia: Diagnosis, Assessment & Disease Monitoring. 2023;15(3):e12454.
+
+Spatial normalization algorithms:
+- `DCCC`: not published yet
+- `Fast and Accurate` (the following publications used the same algorithm):
+  - Kang SK, Kim D, Shin SA, Kim YK, Choi H, Lee JS. Fast and Accurate Amyloid Brain PET Quantification Without MRI Using Deep Neural Networks. Journal of Nuclear Medicine. 2023 Apr 1;64(4):659–66.
+  - Kim D, Kang SK, Shin SA, Choi H, Lee JS. Improving 18F-FDG PET Quantification Through a Spatial Normalization Method. Journal of Nuclear Medicine. 2024 Aug 29; Available from: https://jnm.snmjournals.org/content/early/2024/08/29/jnumed.123.267360
+  - Kang SK, Kim D, Shin SA, Kim YK, Choi H, Lee JS. Evaluation of BTXBrain-Tau, an AI-powered automated quantification software for Flortaucipir PET images. Alzheimer’s & Dementia. 2023;19(S16):e074520. 
+  - Yoo HB, Kang SK, Shin SA, Kim D, Choi H, Kim YK, et al. Artificial Intelligence–Powered Quantification of Flortaucipir PET for Detecting Tau Pathology. Journal of Nuclear Medicine. 2025 Sep 11; Available from: https://jnm.snmjournals.org/content/early/2025/09/11/jnumed.125.269636
+
+> Please note that Lee’s algorithm is not publicly available. The version we reproduced based on the DCCC framework may differ in network architecture and implementation details, and it has not yet undergone extensive validation. While Lee et al. achieved cross-modality applicability through transfer learning, our DCCC implementation was directly trained on more than 5,000 multimodal PET images to provide inherent multimodal support.
+
+
+
+
 ## TODO
 
-- [ ] Add support for skipping spatial normalization to directly calculate Centiloid/CenTauR.
+- [x] Add support for skipping spatial normalization to directly calculate Centiloid/CenTauR.
 - [ ] Support other brain PET semi-quantitative metrics, such as Z-scores and basal ganglia asymmetry index.
 - [ ] Add support for other spatial normalization algorithms.
+  - [x] Added support for Fast and Accurate Amyloid Brain PET Quantification Without MRI Using Deep Neural Networks
 - [ ] Improve the UI.
 
 ## Acknowledgements
