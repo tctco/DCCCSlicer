@@ -1,4 +1,5 @@
 __pycache__/
+.mypy_cache/
 localizer/cpp/padded.nii
 localizer/cpp/preprocessed.nii
 localizer/cpp/paddedProcessed.nii
