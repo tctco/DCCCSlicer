@@ -1,4 +1,5 @@
 # DCCCSlicer
+
 <p align="center">
 <img src="./DCCCSlicer.png" style="width:20%" alt="logo">
 </p>
@@ -21,11 +22,11 @@ https://github.com/user-attachments/assets/680490d2-ebec-4846-871c-98fdc383b513
 ## Quality control
 
 It’s always a good idea to manually verify that DCCC has performed spatial normalization correctly. After processing, click the `Show Normalization` button to inspect the normalization quality. Poorly normalized images will result in inaccurate semi-quantitative metrics - see this [issue](https://github.com/tctco/DCCCSlicer/issues/1) for details. This is especially important for PET scans containing substantial non-brain anatomy (e.g., neck, shoulders). If automatic spatial normalization proves suboptimal, **roll back to the original image and try one of these** rescue strategies:
+
 - Enable the `Iterative Rigid` option in the plugin interface
 - Or enable the `Manual FOV` option and perform a manual rigid registration (field-of-view placement). DCCC will crop this image, skip rigid registration, and go directly to Affine + Elastic normalization.
 
 <p align="center"><img src="https://github.com/user-attachments/assets/ba4457a3-4d71-4cb6-af17-c2f0a7df4463" width="800"/></p>
-
 
 > You can quickly align brain images with rigid transformation to the MNI space by localizing AC and PC. This step may be required for spatial normalization with [SPM](https://github.com/spm/spm12)/[rPOP](https://github.com/LeoIacca/rPOP/tree/master).
 
@@ -39,24 +40,27 @@ $$
 \Delta \mathrm{SUV} \ \\% = \frac{|\mathrm{SUV_{GT} - \mathrm{SUV_{Method}}|}}{\mathrm{SUV_{GT}}}\times 100\\%
 $$
 
+| **Methods**         | **PiB (%)**          | **AV45 (%)**         | **FBB (%)**          | **FMM (%)**          | **NAV4694 (%)**      | **FTP (%)**          | **Time (s)**         |
+| ------------------- | -------------------- | -------------------- | -------------------- | -------------------- | -------------------- | -------------------- | -------------------- |
+| SPM12               | 1.33±1.07            | 1.66±1.32            | 1.40±0.85            | 3.00±2.84            | 1.90±2.77            | 1.07±1.27            | 198.96±59.37         |
+| SPM PET             | 7.84±5.31            | 15.75±36.98          | 14.18±11.13          | 10.70±8.41           | 16.43±9.60           | 12.40±11.39          | 6.43±1.80            |
+| SPM PET (Template)  | 3.97±2.85            | 6.44±3.83            | 6.16±3.27            | 8.93±3.38            | 5.43±3.27            | 3.65±2.78            | 4.41±0.96            |
+| ANTs PET (Template)<sup>1</sup> | 21.27±19.06          | 15.04±7.89           | 19.05±9.68           | 21.89±7.24           | 21.59±8.21           | 6.68±4.58            | 10.07±1.72           |
+| rPOP<sup>2</sup>               | 3.13±2.37            | 5.04±8.44            | 3.51±2.74            | 4.76±4.09            | 5.72±11.29           | 5.92±5.38            | 5.32±1.05            |
+| SNBPI               | **2.29±1.91**        | **2.24±1.97**        | 2.85±2.33            | 3.83±2.98            | 3.15±2.66            | **1.41±1.13**        | 160.98±46.92         |
+| Ours (Pytorch)      | <ins>2.35±1.66</ins> | <ins>2.75±1.68</ins> | <ins>2.75±2.32</ins> | <ins>3.79±3.84</ins> | <ins>2.77±2.16</ins> | 1.50±1.64            | **1.22±0.64**        |
+| Ours (Iterative)    | 2.39±1.74            | 2.77±1.73            | 2.76±2.30            | 3.81±3.84            | **2.76±2.15**        | 1.50±1.72            | <ins>1.72±1.16</ins> |
+| Ours (ONNX)         | 2.42±1.76            | 2.78±1.71            | **2.72±2.29**        | **3.78±3.84**        | 2.78±2.17            | <ins>1.49±1.67</ins> | 16.60±1.41           |
 
-| **Methods**         | **PiB (%)**   | **AV45 (%)**  | **FBB (%)**   | **FMM (%)**   | **NAV4694 (%)** | **FTP (%)**   | **Time (s)**  |
-| ------------------- | ------------- | ------------- | ------------- | ------------- | --------------- | ------------- | ------------- |
-| SPM12               | 1.33±1.07     | 1.66±1.32     | 1.40±0.85     | 3.00±2.84     | 1.90±2.77       | 1.07±1.27     | 198.96±59.37  |
-| SPM PET             | 7.84±5.31     | 15.75±36.98   | 14.18±11.13   | 10.70±8.41    | 16.43±9.60      | 12.40±11.39   | 6.43±1.80     |
-| SPM PET (Template)  | 3.97±2.85     | 6.44±3.83     | 6.16±3.27     | 8.93±3.38     | 5.43±3.27       | 3.65±2.78     | 4.41±0.96     |
-| ANTs PET (Template) | 21.27±19.06   | 15.04±7.89    | 19.05±9.68    | 21.89±7.24    | 21.59±8.21      | 6.68±4.58     | 10.07±1.72    |
-| SNBPI               | **2.29±1.91** | **2.24±1.97** | 2.85±2.33     | 3.83±2.98     | 3.15±2.66       | **1.41±1.13** | 160.98±46.92  |
-| Ours (Pytorch)      | <ins>2.35±1.66</ins>     | <ins>2.75±1.68</ins>     | <ins>2.75±2.32</ins>     | <ins>3.79±3.84</ins>     | <ins>2.77±2.16</ins>       | 1.50±1.64     | **1.22±0.64** |
-| Ours (Iterative)    | 2.39±1.74     | 2.77±1.73     | 2.76±2.30     | 3.81±3.84     | **2.76±2.15**   | 1.50±1.72     | <ins>1.72±1.16</ins>     |
-| Ours (ONNX)         | 2.42±1.76     | 2.78±1.71     | **2.72±2.29** | **3.78±3.84** | 2.78±2.17       | <ins>1.49±1.67</ins>     | 16.60±1.41    |
-
-> The smallest error and shortest computation time are marked with **bold**, while the second smallest error and shortest computation time are <ins>underlined</ins>. SPM12 is employed to reproduce the original literature results using the standard pipeline and does not participate in result ranking; it provides a baseline for reproducibility. SPM PET refers to the PET-only spatial normalization algorithm provided by SPM5, utilizing the 15O-H2O template. SPM PET (Template) refers to the same algorithm, but the templates used are the average of each tracer in the Centiloid/CenTauR dataset after normalization. Check [SNBPI](https://github.com/ZhangTianhao1993/Spatial-Normalization-of-Brain-PET-Images) for their wonderful work!
+> The smallest error and shortest computation time are marked with **bold**, while the second smallest error and shortest computation time are <ins>underlined</ins>. SPM12 is employed to reproduce the original literature results using the standard pipeline and does not participate in result ranking; it provides a baseline for reproducibility. SPM PET refers to the PET-only spatial normalization algorithm provided by SPM5, utilizing the 15O-H2O template. SPM PET (Template) refers to the same algorithm, but the templates used are the average of each tracer in the Centiloid/CenTauR dataset after normalization. Check [SNBPI](https://github.com/ZhangTianhao1993/Spatial-Normalization-of-Brain-PET-Images) and [rPOP](https://github.com/LeoIacca/rPOP/) for their wonderful work!
+> 
+> <sup>1</sup>: ANTsPy exhibited suboptimal performance on Aβ PET images, though results were more acceptable on FTP scans, possibly due to lower image quality in parts of the GAINN Centiloid Project dataset. We consulted the ANTsPy developers (issue [#832](https://github.com/ANTsX/ANTsPy/issues/832#issuecomment-3036727001)), but the problem remains unresolved. Readers should note that these atypical results may not reflect ANTsPy’s performance on higher-quality Aβ PET images.
+>
+> <sup>2</sup>: rPOP failed completely in spatial normalization on 3 PiB images (yielding infinite or undefined SUVr values). Only valid SUVr results were included in the relative error statistics reported in the table.
 
 ## Acknowledgements
 
 We sincerely thank the passionate and outstanding users and contributors of DCCC. Many of our contributors come from the medical community and may not be accustomed to using GitHub, so we would like to acknowledge their contributions here. Your valuable feedback has been the greatest driving force behind the continuous improvement of the project.
-
 
 <table width="100%" center>
   <tbody>

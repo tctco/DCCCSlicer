@@ -6,25 +6,45 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>421</width>
-    <height>368</height>
+    <width>398</width>
+    <height>356</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton">
+    <widget class="ctkCollapsibleButton" name="CollapsibleButton_4">
      <property name="text">
-      <string>Inputs</string>
+      <string>Normalization parameters</string>
      </property>
-     <layout class="QFormLayout" name="formLayout_2">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="2" column="1" colspan="3">
+       <widget class="QComboBox" name="algorithmSelector">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>SPM12 style</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Fast and Accurate</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="QCheckBox" name="manualFOVCheckBox">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use manual field of view (FOV) placement by skipping the deep learning based rigid transformation. You can use this option when automatic spatial normalization fails.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
-         <string>Input volume (Space):</string>
+         <string>Manual FOV</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
+      <item row="0" column="1" colspan="3">
        <widget class="qMRMLNodeComboBox" name="inputSelector">
         <property name="toolTip">
          <string>Pick the input to the algorithm.</string>
@@ -49,41 +69,110 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QPushButton" name="acButton">
+       <widget class="QCheckBox" name="enableIterativeCheckBox">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use iterative rigid transformation to improve the accuracy of the spatial normalization. This option is useful when the automatic spatial normalization fails, especially when the input contains a lot of non-brain structures (e.g. neck, shoulders, etc). This may costs a little more time.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
-         <string>Add AC (A)</string>
+         <string>Iterative Rigid</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Algorithm:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Input volume (Space):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QCheckBox" name="skipCheckBox">
+        <property name="text">
+         <string>Skip Normalization</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="4">
+       <widget class="QPushButton" name="showImgButton">
+        <property name="text">
+         <string>Show Normalization Result</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton">
+     <property name="text">
+      <string>Imaging Biomarker</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="0">
+       <widget class="QComboBox" name="metricSelector">
+        <property name="toolTip">
+         <string>Select a semi-quantitative biomarker to calculate</string>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <property name="placeholderText">
+         <string>Imaging biomarker</string>
+        </property>
+        <item>
+         <property name="text">
+          <string>Centiloid</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>CenTauRz</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>CenTauR</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="QPushButton" name="calcMetricButton">
+        <property name="text">
+         <string>Calculate</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="CollapsibleButton">
+     <property name="text">
+      <string>Manual Image Alignment</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <property name="collapsed">
+      <bool>true</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_5">
+      <item row="0" column="1">
        <widget class="QPushButton" name="pcButton">
         <property name="text">
          <string>Add PC (D)</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QPushButton" name="leftButton">
-        <property name="text">
-         <string>Add Left (Q)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QPushButton" name="rightButton">
-        <property name="text">
-         <string>Add Right (E)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QPushButton" name="clearButton">
-        <property name="text">
-         <string>Clear Points (C)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
+      <item row="0" column="2">
        <widget class="QPushButton" name="applyButton">
         <property name="enabled">
          <bool>true</bool>
@@ -96,45 +185,64 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="1" column="2">
        <widget class="QPushButton" name="applyLRButton">
         <property name="text">
          <string>Apply Left-Right (W)</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="0">
-       <widget class="QCheckBox" name="manualFOVCheckBox">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use manual field of view (FOV) placement by skipping the deep learning based rigid transformation. You can use this option when automatic spatial normalization fails.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="rightButton">
         <property name="text">
-         <string>Manual FOV</string>
+         <string>Add Right (E)</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="1">
-       <widget class="QPushButton" name="calcCentiloidButton">
+      <item row="0" column="0">
+       <widget class="QPushButton" name="acButton">
         <property name="text">
-         <string>Calculate Centiloid/CenTauR</string>
+         <string>Add AC (A)</string>
         </property>
        </widget>
       </item>
-      <item row="10" column="0" colspan="2">
-       <widget class="QPushButton" name="showImgButton">
+      <item row="1" column="0">
+       <widget class="QPushButton" name="leftButton">
         <property name="text">
-         <string>Show Normalization Result</string>
+         <string>Add Left (Q)</string>
         </property>
        </widget>
       </item>
-      <item row="12" column="0">
+      <item row="2" column="0" colspan="3">
+       <widget class="QPushButton" name="clearButton">
+        <property name="text">
+         <string>Clear Points (C)</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="CollapsibleButton_2">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Artificial Intelligence</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
          <string>Select a modality:</string>
         </property>
        </widget>
       </item>
-      <item row="12" column="1">
+      <item row="0" column="1">
        <widget class="QComboBox" name="modalitySelector">
         <property name="enabled">
          <bool>true</bool>
@@ -161,7 +269,7 @@
         </item>
        </widget>
       </item>
-      <item row="14" column="0" colspan="2">
+      <item row="1" column="0" colspan="2">
        <widget class="QPushButton" name="decoupleButton">
         <property name="enabled">
          <bool>true</bool>
@@ -174,28 +282,136 @@
         </property>
        </widget>
       </item>
-      <item row="9" column="0" colspan="2">
-       <widget class="QLabel" name="label_3">
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="CollapsibleButton_3">
+     <property name="text">
+      <string>Select ROI and Ref to Calculate SUVr</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <property name="collapsed">
+      <bool>true</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="1" column="1">
+       <widget class="QPushButton" name="addROIButton">
         <property name="text">
-         <string>Check spatial normalization result</string>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="0" colspan="2">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Let Artificial Intelligence explain this image</string>
+         <string>Add ROI</string>
         </property>
        </widget>
       </item>
       <item row="4" column="0">
-       <widget class="QCheckBox" name="enableIterativeCheckBox">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use iterative rigid transformation to improve the accuracy of the spatial normalization. This option is useful when the automatic spatial normalization fails, especially when the input contains a lot of non-brain structures (e.g. neck, shoulders, etc). This may costs a little more time.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
+       <widget class="QLabel" name="label_4">
         <property name="text">
-         <string>Iterative Rigid</string>
+         <string>Region of Interest:</string>
         </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Reference:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QPushButton" name="addRefButton">
+        <property name="text">
+         <string>Add Ref</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1" colspan="2">
+       <widget class="qMRMLNodeComboBox" name="refSelector">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="nodeTypes">
+         <stringlist notr="true"/>
+        </property>
+        <property name="hideChildNodeTypes">
+         <stringlist notr="true"/>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="interactionNodeSingletonTag">
+         <string notr="true"/>
+        </property>
+        <property name="SlicerParameterName" stdset="0">
+         <string>inputVolume</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1" colspan="2">
+       <widget class="qMRMLNodeComboBox" name="roiSelector">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="nodeTypes">
+         <stringlist notr="true"/>
+        </property>
+        <property name="hideChildNodeTypes">
+         <stringlist notr="true"/>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="interactionNodeSingletonTag">
+         <string notr="true"/>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="3">
+       <widget class="QPushButton" name="calculateSUVrButton">
+        <property name="text">
+         <string>Calculate SUVr</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="loadAtlasButton">
+        <property name="text">
+         <string>Load Atlas</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="clearROIRefButton">
+        <property name="text">
+         <string>Clear</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="3">
+       <widget class="QPushButton" name="generateROIRefButton">
+        <property name="text">
+         <string>Generate ROI and Ref</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QComboBox" name="atlasSelector">
+        <item>
+         <property name="text">
+          <string>AAL.seg.nrrd</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>BN_Atlas_246_2mm.seg.nrrd</string>
+         </property>
+        </item>
        </widget>
       </item>
      </layout>

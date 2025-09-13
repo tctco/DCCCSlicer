@@ -2,7 +2,6 @@ import logging
 import os
 from typing import Annotated, Optional
 from pathlib import Path
-import subprocess
 
 import vtk
 
@@ -10,36 +9,23 @@ import slicer
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 from slicer.parameterNodeWrapper import (
-    parameterNodeWrapper,
-    WithinRange,
+    parameterNodeWrapper
 )
 
 from slicer import vtkMRMLScalarVolumeNode
 import qt
 
+# 导入lib中的功能模块
+from lib.image_alignment import ImageAlignmentLogic
+from lib.metric_calculator import MetricCalculatorLogic
+from lib.ai_decoupling import AIDecouplingLogic
+from lib.atlas_manager import AtlasManager
+from lib.ui_components import TimeConsumingMessageBox, MarkupManager
+
 
 #
 # localizer： created by tctco
 #
-
-
-class TimeConsumingMessageBox:
-    def __init__(self):
-        pass
-
-    def __enter__(self):
-        msg_box = qt.QMessageBox()
-        self.msg_box = msg_box
-        msg_box.setIcon(qt.QMessageBox.Information)
-        msg_box.setMinimumWidth(300)
-        msg_box.setText("Calculating, please wait...")
-        msg_box.setWindowTitle("Processing")
-        msg_box.setStandardButtons(qt.QMessageBox.NoButton)  # 不显示任何按钮
-        msg_box.show()
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.msg_box.close()
 
 
 class localizer(ScriptedLoadableModule):
@@ -49,18 +35,18 @@ class localizer(ScriptedLoadableModule):
 
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = "DeepCascadeCentiloidCalculator"  # TODO: make this more human readable by adding spaces
+        self.parent.title = "PET Metric Calculator"  # Semi-quantitative PET analysis
         self.parent.categories = [
-            "Centiloid"
-        ]  # TODO: set categories (folders where the module shows up in the module selector)
+            "PET Analysis"
+        ]  # Category for PET semi-quantitative analysis tools
         self.parent.dependencies = (
             []
         )  # TODO: add here list of module names that this module requires
         self.parent.contributors = [
             "Cheng Tang (Dept. Nuclear Med, WHUH)"
         ]  # TODO: replace with "Firstname Lastname (Organization)"
-        # TODO: update with short description of the module and a link to online module documentation
-        self.parent.helpText = "Simple module to calculate Centiloid value. Please note that this module is only for Windows. You may need to recomplie the source code for other platforms."
+        # Module description and help text
+        self.parent.helpText = "Module for PET semi-quantitative analysis including Centiloid, CenTauR, and CenTauRz calculations, plus AI-based decoupling. Note: This module is only for Windows. You may need to recompile the source code for other platforms."
         # TODO: replace with organization, grant and thanks
         self.parent.acknowledgementText = (
             "This file was developed by Cheng Tang, Dept. Nuclear Med, WHUH."
@@ -101,18 +87,24 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
         ScriptedLoadableModuleWidget.__init__(self, parent)
         VTKObservationMixin.__init__(self)  # needed for parameter node observation
-        self.logic = None
-        self._parameterNode = None
-        self._parameterNodeGuiTag = None
-
+        self._setNodes()
+        self._setPaths()
+    
+    def _setPaths(self):
         self.PLUGIN_PATH = Path(os.path.dirname(__file__))
         self.EXECUTABLE_PATH = self.PLUGIN_PATH / "cpp" / "CentiloidCalculator.exe"
         self.EXECUTABLE_DIR = self.PLUGIN_PATH / "cpp"
+    
+    def _setNodes(self):
+        self._parameterNode = None
+        self._parameterNodeGuiTag = None
 
     def setup(self) -> None:
         """
         Called when the user opens the module the first time and the widget is initialized.
         """
+        self._setPaths()
+        self._setNodes()
         ScriptedLoadableModuleWidget.setup(self)
 
         # Load widget from .ui file (created by Qt Designer).
@@ -125,10 +117,30 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
         # "setMRMLScene(vtkMRMLScene*)" slot.
         uiWidget.setMRMLScene(slicer.mrmlScene)
+        self.ui.refSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
+        self.ui.roiSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
+        self.ui.refSelector.setMRMLScene(slicer.mrmlScene)
+        self.ui.roiSelector.setMRMLScene(slicer.mrmlScene)
+        
+        # 设置Atlas选择器，如果存在的话
+        try:
+            if hasattr(self.ui, 'atlasSelector'):
+                available_atlases = self.atlas_manager.get_available_atlases()
+                self.ui.atlasSelector.clear()
+                self.ui.atlasSelector.addItems(available_atlases)
+                print(f"Atlas selector initialized with: {available_atlases}")
+        except AttributeError as e:
+            print(f"Atlas selector not found in UI: {e}")
+            print("Atlas selection will be available via dialog")
 
-        # Create logic class. Logic implements all computations that should be possible to run
+
+        # Create logic classes. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
         self.logic = localizerLogic()
+        self.image_alignment = ImageAlignmentLogic()
+        self.metric_calculator = MetricCalculatorLogic(self.PLUGIN_PATH)
+        self.ai_decoupling = AIDecouplingLogic(self.PLUGIN_PATH)
+        self.atlas_manager = AtlasManager(self.PLUGIN_PATH)
 
         # Connections
 
@@ -148,12 +160,24 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.rightButton.connect("clicked(bool)", self.onRightButton)
         self.ui.applyLRButton.connect("clicked(bool)", self.onApplyLRButton)
         self.ui.clearButton.connect("clicked(bool)", self.onClearButton)
-        self.ui.calcCentiloidButton.connect("clicked(bool)", self.onCalcCentiloidButton)
+        self.ui.calcMetricButton.connect("clicked(bool)", self.onCalcMetricButton)
+        self.ui.calculateSUVrButton.connect("clicked(bool)", self.onCalculateSUVrButton)
         self.ui.showImgButton.connect("clicked(bool)", self.onShowImgButton)
         self.ui.inputSelector.connect(
             "currentNodeChanged(vtkMRMLNode*)", self.onInputVolumeChanged
         )
         self.ui.decoupleButton.connect("clicked(bool)", self.onDecoupleButton)
+        
+        # Atlas相关按钮连接
+        try:
+            self.ui.loadAtlasButton.connect("clicked(bool)", self.onLoadAtlasButton)
+            self.ui.addROIButton.connect("clicked(bool)", self.onAddROIButton)
+            self.ui.addRefButton.connect("clicked(bool)", self.onAddRefButton)
+            self.ui.generateROIRefButton.connect("clicked(bool)", self.onGenerateROIRefButton)
+            self.ui.clearROIRefButton.connect("clicked(bool)", self.onClearROIRefButton)
+        except AttributeError as e:
+            print(f"Some Atlas UI buttons not found in UI file: {e}")
+            print("Atlas functionality will be available via Python console")
 
         self.setupShortcuts()
         self.setupReferenceBox()
@@ -256,7 +280,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             # 刷新视图以显示新的体积
             sliceLogic.FitSliceToAll()
-        self.removeSpecificMarkups(["AC", "PC", "Left", "Right"])
+        MarkupManager.remove_specific_markups(["AC", "PC", "Left", "Right"])
 
     def cleanup(self) -> None:
         """
@@ -296,7 +320,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         Called just before the scene is closed.
         """
         # Parameter node will be reset, do not use it anymore
-        self.removeSpecificMarkups(["AC", "PC", "Left", "Right"])
+        MarkupManager.remove_specific_markups(["AC", "PC", "Left", "Right"])
         self.setParameterNode(None)
 
     def onSceneEndClose(self, caller, event) -> None:
@@ -341,62 +365,25 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             # ui element that needs connection.
             self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
 
-    def removeSpecificMarkups(self, names):
-        """
-        Remove markups nodes with specific names.
-        :param names: List of names of markups nodes to be removed.
-        """
-        # 遍历场景中的所有Markups节点
-        noMore = False
-        while not noMore:
-            noMore = True
-            for i in range(
-                slicer.mrmlScene.GetNumberOfNodesByClass("vtkMRMLMarkupsFiducialNode")
-            ):
-                node = slicer.mrmlScene.GetNthNodeByClass(
-                    i, "vtkMRMLMarkupsFiducialNode"
-                )
-                if node is not None and node.GetName() in names:
-                    # 删除找到的节点
-                    slicer.mrmlScene.RemoveNode(node)
-                    # 由于节点被删除，索引将改变
-                    noMore = False
-
     def _findMarkupNodeByName(self, nodeName):
         """
         查找并返回给定名称的Markups节点。
         如果找不到，则返回None。
         """
-        for i in range(
-            slicer.mrmlScene.GetNumberOfNodesByClass("vtkMRMLMarkupsFiducialNode")
-        ):
-            node = slicer.mrmlScene.GetNthNodeByClass(i, "vtkMRMLMarkupsFiducialNode")
-            if node.GetName() == nodeName:
-                return node
-        print(f"Markup node '{nodeName}' not found.")
-        return None
+        return MarkupManager.find_markup_node_by_name(nodeName)
 
     def _getPointRAS(self, node):
         """
         获取给定标记点的RAS坐标。
         如果找不到或没有控制点，则返回None。
         """
-        if node is None:
-            print("Node is None")
-            return None
-        if node.GetNumberOfControlPoints() > 0:
-            pointRAS = [0.0, 0.0, 0.0]
-            node.GetNthControlPointPosition(0, pointRAS)
-            return pointRAS
-        else:
-            print(f"Node '{node.GetName()}' exists but has no control points.")
-            return None
+        return MarkupManager.get_point_ras(node)
 
     def onClearButton(self) -> None:
         """
         处理Clear按钮点击事件。
         """
-        self.removeSpecificMarkups(["AC", "PC", "Left", "Right"])
+        MarkupManager.remove_specific_markups(["AC", "PC", "Left", "Right"])
 
     def _nodeButtonClick(self, nodeName):
         """
@@ -409,7 +396,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         else:
             print(f"{nodeName} point already exists:{self._getPointRAS(node)}")
 
-    def _checkCurrentVolume(self) -> bool:
+    def _checkCurrentVolume(self):
         volumes = slicer.util.getNodesByClass("vtkMRMLScalarVolumeNode")
         if not volumes:
             return None  # 如果场景中没有Volume，直接返回
@@ -427,59 +414,89 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         return currentNode
 
     def getAdditionalInfo(self, node):
-        nodeName = node.GetName()
-        print(f"Node Name: {nodeName}")
+        return self.metric_calculator.get_additional_info(node)
 
-        additionalInformation = nodeName
-        instUids = node.GetAttribute("DICOM.instanceUIDs")
-        if instUids:
-            instUids = instUids.split()
-            patientName = slicer.dicomDatabase.instanceValue(instUids[0], "0010,0010")
-            studyDescription = slicer.dicomDatabase.instanceValue(
-                instUids[0], "0008,1030"
-            )
-            studyDate = slicer.dicomDatabase.instanceValue(instUids[0], "0008,0020")
-            additionalInformation += f"\nPatient Name: {patientName}\nStudy Date: {studyDate}\n\nStudy Description: {studyDescription}"
-        return additionalInformation
-
-    def onCalcCentiloidButton(self) -> None:
+    def onCalcMetricButton(self) -> None:
         currentNode = self._checkCurrentVolume()
         if not currentNode:
             return
         additionalInformation = self.getAdditionalInfo(currentNode)
+        
+        # Get selected metric and algorithm with fallbacks
+        try:
+            metric_type = self.ui.metricSelector.currentText
+        except AttributeError:
+            metric_type = "Centiloid"  # Default metric
+            print("metricSelector not found in UI, using default: Centiloid")
+            
+        try:
+            algorithm_style = self.ui.algorithmSelector.currentText
+        except AttributeError:
+            algorithm_style = "SPM style"  # Default algorithm
+            print("algorithmSelector not found in UI, using default: SPM style")
+        
         with TimeConsumingMessageBox():
-            # save currentNode as tmp.nii
-            slicer.util.saveNode(currentNode, str(self.PLUGIN_PATH / "tmp.nii"))
-            cmd = [
-                str(self.EXECUTABLE_PATH),
-                str(self.PLUGIN_PATH / "tmp.nii"),
-                str(self.PLUGIN_PATH / "Normalized.nii"),
-            ]
-            if self.ui.manualFOVCheckBox.isChecked():
-                cmd.append("-m")
-            if self.ui.enableIterativeCheckBox.isChecked():
-                cmd.append("-i")
-            print(cmd)
-            result = subprocess.run(cmd, capture_output=True)
-
-        if result.returncode != 0:
-            slicer.util.errorDisplay(
-                f"Failed to calculate Centiloid\n{result.stdout.decode()}"
+            success, result_text, error_message = self.metric_calculator.calculate_metric(
+                currentNode,
+                metric_type=metric_type,
+                algorithm_style=algorithm_style,
+                manual_fov=self.ui.manualFOVCheckBox.isChecked(),
+                iterative=self.ui.enableIterativeCheckBox.isChecked(),
+                skip_normalization=self.ui.skipCheckBox.isChecked()
             )
+
+        if not success:
+            slicer.util.errorDisplay(error_message)
             return
+            
         slicer.util.infoDisplay(
-            f"Semi-quantitative calculation finished:\n{additionalInformation}\n{self._polish_output(result)}"
+            f"Semi-quantitative calculation finished:\n{additionalInformation}\n{result_text}"
         )
 
-    def _polish_output(self, output):
-        result = output.stdout.decode()
-        result = result.replace("FBP", "FBP / AV45 / Florbetapir")
-        result = result.replace("FMM", "FMM / Flutemetamol")
-        result = result.replace("FBB", "FBB / Florbetaben")
-        result = result.replace("NAV", "NAV4694")
-        result = result.replace("FTP", "FTP / AV1451 / Flortaucipir")
-        result = result.replace("PM-PBB3", "PM-PBB3 / APN / Florzolotau")
-        return result
+    def onCalculateSUVrButton(self) -> None:
+        """Handle SUVr calculation button click"""
+        # Check current volume (PET image)
+        currentNode = self._checkCurrentVolume()
+        if not currentNode:
+            return
+            
+        # Check ROI selector
+        roiNode = self.ui.roiSelector.currentNode()
+        if not roiNode:
+            slicer.util.errorDisplay("Please select a ROI volume from ROI selector")
+            return
+            
+        # Check reference selector
+        refNode = self.ui.refSelector.currentNode()
+        if not refNode:
+            slicer.util.errorDisplay("Please select a reference volume from Reference selector")
+            return
+            
+        additionalInformation = self.getAdditionalInfo(currentNode)
+        
+        # Get algorithm style with fallback (same as other metric calculations)
+        try:
+            algorithm_style = self.ui.algorithmSelector.currentText
+        except AttributeError:
+            algorithm_style = "SPM style"  # Default algorithm
+            print("algorithmSelector not found in UI, using default: SPM style")
+        
+        with TimeConsumingMessageBox():
+            success, result_text, error_message = self.metric_calculator.calculate_suvr(
+                currentNode, roiNode, refNode,
+                algorithm_style=algorithm_style,
+                manual_fov=self.ui.manualFOVCheckBox.isChecked(),
+                iterative=self.ui.enableIterativeCheckBox.isChecked(),
+                skip_normalization=self.ui.skipCheckBox.isChecked()
+            )
+
+        if not success:
+            slicer.util.errorDisplay(error_message)
+            return
+            
+        slicer.util.infoDisplay(
+            f"SUVr calculation finished:\n{additionalInformation}\n{result_text}"
+        )
 
     def onDecoupleButton(self) -> None:
         currentNode = self._checkCurrentVolume()
@@ -489,72 +506,118 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         additionalInformation = self.getAdditionalInfo(currentNode)
 
         with TimeConsumingMessageBox():
-            # save currentNode as tmp.nii
-            slicer.util.saveNode(currentNode, str(self.PLUGIN_PATH / "tmp.nii"))
-            cmd = [
-                str(self.EXECUTABLE_PATH),
-                str(self.PLUGIN_PATH / "tmp.nii"),
-                str(self.PLUGIN_PATH / "Normalized.nii"),
-                "-d",
+            success, result_text, error_message, foreground, background, stripped = self.ai_decoupling.decouple_image(
+                currentNode,
                 modality,
-            ]
-            if self.ui.manualFOVCheckBox.isChecked():
-                cmd.append("-m")
-            if self.ui.enableIterativeCheckBox.isChecked():
-                cmd.append("-i")
-            print(cmd)
-            result = subprocess.run(cmd, capture_output=True)
-        if result.returncode != 0:
-            slicer.util.errorDisplay(f"Failed to decouple\n{result.stdout.decode()}")
+                manual_fov=self.ui.manualFOVCheckBox.isChecked(),
+                iterative=self.ui.enableIterativeCheckBox.isChecked()
+            )
+            
+        if not success:
+            slicer.util.errorDisplay(error_message)
             return
 
-        foreground = self._loadVolume(
-            str(self.PLUGIN_PATH / "Normalized_AD_prob_map.nii")
-        )
-        background = self._loadVolume(str(self.EXECUTABLE_DIR / "ADNI_normalized.nii"))
-        stripped = self._loadVolume(
-            str(self.PLUGIN_PATH / "Normalized_stripped_image.nii")
-        )
         if foreground is None or background is None or stripped is None:
             return
+            
         self.ui.inputSelector.setCurrentNode(background)
-        foregroundDisplayNode = foreground.GetDisplayNode()
-        print(foregroundDisplayNode)
-        foregroundDisplayNode.SetAndObserveColorNodeID(
-            "vtkMRMLPETProceduralColorNodePET-DICOM"
-        )
-        foregroundDisplayNode.SetWindow(1)
-        foregroundDisplayNode.SetLevel(0.5)
-        backgroundDisplayNode = background.GetDisplayNode()
-        backgroundDisplayNode.SetAndObserveColorNodeID(
-            "vtkMRMLColorTableNodeInvertedGrey"
-        )
-
-        self.setViewBackgroundVolume(background.GetID())
+        self.ai_decoupling.setup_display_properties(foreground, background)
+        self.ai_decoupling.set_view_background_volume(background.GetID())
+        
         slicer.util.setSliceViewerLayers(
             foreground=foreground, background=background, foregroundOpacity=0.5
         )
         slicer.util.infoDisplay(
-            f"Semi-quantitative calculation finished:\n{additionalInformation}\n{self._polish_output(result)}"
+            f"Semi-quantitative calculation finished:\n{additionalInformation}\n{result_text}"
         )
 
-    def _loadVolume(self, path):
-        if not os.path.exists(path):
-            slicer.util.errorDisplay(
-                f"File not found. It seems that you haven't done any calculation yet."
-            )
+    def onLoadAtlasButton(self) -> None:
+        """处理加载Atlas按钮点击事件"""
+        print("Loading Atlas...")
+        
+        # 获取用户选择的Atlas，如果atlasSelector存在的话
+        selected_atlas = None
+        try:
+            # 尝试从UI获取选择的Atlas
+            if hasattr(self.ui, 'atlasSelector'):
+                selected_atlas = self.ui.atlasSelector.currentText
+                print(f"Selected atlas from UI: {selected_atlas}")
+            else:
+                # 如果UI中没有atlasSelector，显示选择对话框
+                available_atlases = self.atlas_manager.get_available_atlases()
+                selected_atlas = self._show_atlas_selection_dialog(available_atlases)
+        except AttributeError:
+            # 如果UI组件不存在，使用默认Atlas或显示选择对话框
+            available_atlases = self.atlas_manager.get_available_atlases()
+            selected_atlas = self._show_atlas_selection_dialog(available_atlases)
+        
+        if not selected_atlas:
+            slicer.util.warningDisplay("No atlas selected")
+            return
+        
+        atlas_node = self.atlas_manager.load_atlas(selected_atlas)
+        if atlas_node:
+            slicer.util.infoDisplay(f"Successfully loaded atlas: {selected_atlas}")
+        else:
+            slicer.util.errorDisplay(f"Failed to load Atlas: {selected_atlas}")
+    
+    def _show_atlas_selection_dialog(self, available_atlases):
+        """显示Atlas选择对话框
+        
+        Args:
+            available_atlases: 可用Atlas列表
+            
+        Returns:
+            str: 选择的Atlas名称，如果取消则返回None
+        """
+        if not available_atlases:
+            slicer.util.errorDisplay("No atlases available")
             return None
-        volumeNode = slicer.util.loadVolume(path)
-        if not volumeNode:
-            slicer.util.errorDisplay(
-                f"Failed to load volume from {path}. This may be a bug :("
-            )
-            return None
-        return volumeNode
+        
+        # 创建简单的选择对话框
+        from qt import QInputDialog
+        
+        atlas_name, ok = QInputDialog.getItem(
+            None, 
+            "Select Atlas", 
+            "Choose an atlas to load:", 
+            available_atlases, 
+            0, 
+            False
+        )
+        
+        return atlas_name if ok else None
+
+    def onAddROIButton(self) -> None:
+        """处理添加ROI点按钮点击事件"""
+        self.atlas_manager.add_roi_point()
+
+    def onAddRefButton(self) -> None:
+        """处理添加Ref点按钮点击事件"""
+        self.atlas_manager.add_ref_point()
+
+    def onGenerateROIRefButton(self) -> None:
+        """处理生成ROI/Ref区域按钮点击事件"""
+        print("Generating ROI/Ref regions...")
+        
+        # 确保Atlas已加载
+        if not self.atlas_manager.atlas_node:
+            slicer.util.warningDisplay("Atlas not loaded. Loading now...")
+            atlas_node = self.atlas_manager.load_atlas()
+            if not atlas_node:
+                slicer.util.errorDisplay("Failed to load Atlas. Cannot proceed.")
+                return
+        
+        # 计算脑区
+        self.atlas_manager.generate_combined_regions()
+
+    def onClearROIRefButton(self) -> None:
+        """处理清除ROI/Ref点按钮点击事件"""
+        self.atlas_manager.clear_roi_ref_points()
+
 
     def onShowImgButton(self) -> None:
-        nii_file_path = str(self.PLUGIN_PATH / "Normalized.nii")
-        volume_node = self._loadVolume(nii_file_path)
+        volume_node = self.metric_calculator.load_normalized_volume()
         if volume_node is None:
             return
 
@@ -588,17 +651,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
         添加一个新的标记点并将其命名。
         """
-        markupFiducialNode = slicer.mrmlScene.AddNewNodeByClass(
-            "vtkMRMLMarkupsFiducialNode"
-        )
-        markupFiducialNode.SetName(name)
-        slicer.modules.markups.logic().SetActiveListID(markupFiducialNode)
-
-        # 自动进入放置模式
-        interactionNode = slicer.mrmlScene.GetNodeByID(
-            "vtkMRMLInteractionNodeSingleton"
-        )
-        interactionNode.SetCurrentInteractionMode(interactionNode.Place)
+        MarkupManager.add_new_fiducial(name)
 
     def onApplyButton(self):
         """
@@ -626,14 +679,14 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 print("PC Point not found.")
 
             if acCoord is not None and pcCoord is not None:
-                self.logic.transformACPC(
+                self.image_alignment.transform_acpc(
                     acCoord,
                     pcCoord,
                     self._parameterNode.inputVolume,
                     [acNode, pcNode, leftNode, rightNode],
                 )
             elif acCoord is not None and pcCoord is None:
-                self.logic.translateAC(acCoord, self._parameterNode.inputVolume, acNode)
+                self.image_alignment.translate_ac(acCoord, self._parameterNode.inputVolume, acNode)
 
     def onApplyLRButton(self):
         """
@@ -653,7 +706,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if leftCoord is not None and rightCoord is not None:
                 print("Left Point: RAS Coordinates = ", leftCoord)
                 print("Right Point: RAS Coordinates = ", rightCoord)
-                self.logic.transformLR(
+                self.image_alignment.transform_lr(
                     leftCoord,
                     rightCoord,
                     self._parameterNode.inputVolume,
@@ -664,54 +717,6 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 #
 # localizerLogic
 #
-import numpy as np
-
-
-def create_translation_matrix(translation):
-    """创建平移矩阵"""
-    T = np.eye(4)
-    T[:3, 3] = translation
-    return T
-
-
-def create_rotation_matrix(axis, angle):
-    """罗德里格斯旋转公式创建旋转矩阵"""
-    axis = axis / np.linalg.norm(axis)
-    K = np.array(
-        [[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]], [-axis[1], axis[0], 0]]
-    )
-    R = np.eye(3) + np.sin(angle) * K + (1 - np.cos(angle)) * np.dot(K, K)
-    rotation_matrix = np.eye(4)
-    rotation_matrix[:3, :3] = R
-    return rotation_matrix
-
-
-def create_affine_matrix(ac, bc):
-    import numpy as np
-
-    # 平移向量，使ac移动到原点
-    translation = -ac
-    T = create_translation_matrix(translation)
-
-    # 计算方向向量并规范化
-    direction = bc - ac
-    direction_normalized = direction / np.linalg.norm(direction)
-
-    # 计算需要旋转的轴和角度
-    y_axis = np.array([0, -1, 0])
-    axis = np.cross(direction_normalized, y_axis)
-    if np.linalg.norm(axis) != 0:  # 需要旋转
-        axis_normalized = axis / np.linalg.norm(axis)
-        angle = np.arccos(np.dot(direction_normalized, y_axis))
-    else:
-        axis_normalized = np.array([0, 0, 1])  # 任意轴，因为不需要旋转
-        angle = 0
-
-    R = create_rotation_matrix(axis_normalized, angle)
-
-    # 先平移后旋转
-    affine_matrix = np.dot(R, T)
-    return affine_matrix
 
 
 class localizerLogic(ScriptedLoadableModuleLogic):
@@ -729,107 +734,9 @@ class localizerLogic(ScriptedLoadableModuleLogic):
         Called when the logic class is instantiated. Can be used for initializing member variables.
         """
         ScriptedLoadableModuleLogic.__init__(self)
-        self.transformTable = {}  # volumeNodeID: transformNode
 
     def getParameterNode(self):
         return localizerParameterNode(super().getParameterNode())
-
-    def translateAC(self, acCoord, targetNode, markupNode):
-        if targetNode is None:
-            logging.error("process: Invalid input node")
-            return
-        if self.transformTable.get(targetNode.GetID()):
-            transformNode = self.transformTable[targetNode.GetID()]
-            existingMatrix = vtk.vtkMatrix4x4()
-        else:
-            transformNode = slicer.vtkMRMLLinearTransformNode()
-            slicer.mrmlScene.AddNode(transformNode)
-            self.transformTable[targetNode.GetID()] = transformNode
-            if targetNode.GetName():
-                transformNodeName = targetNode.GetName() + "_Transform"
-                transformNode.SetName(transformNodeName)
-            existingMatrix = vtk.vtkMatrix4x4()
-        affineMatrix = create_translation_matrix(-np.array(acCoord))
-        vtkNewMatrix = slicer.util.vtkMatrixFromArray(affineMatrix)
-        compositeMatrix = vtk.vtkMatrix4x4()
-        vtk.vtkMatrix4x4.Multiply4x4(vtkNewMatrix, existingMatrix, compositeMatrix)
-        transformNode.SetMatrixTransformToParent(compositeMatrix)
-        targetNode.SetAndObserveTransformNodeID(transformNode.GetID())
-        slicer.vtkSlicerTransformLogic().hardenTransform(targetNode)
-        if markupNode is not None:
-            markupNode.SetAndObserveTransformNodeID(transformNode.GetID())
-            slicer.vtkSlicerTransformLogic().hardenTransform(markupNode)
-
-    def transformACPC(
-        self, acCoord: list, pcCoord: list, targetNode, markupNodes: list
-    ) -> None:
-        if targetNode is None:
-            logging.error("process: Invalid input node")
-            return
-        print(f"AC: {acCoord}, PC: {pcCoord}")
-        if self.transformTable.get(targetNode.GetID()):
-            transformNode = self.transformTable[targetNode.GetID()]
-            existingMatrix = vtk.vtkMatrix4x4()
-        else:
-            transformNode = slicer.vtkMRMLLinearTransformNode()
-            slicer.mrmlScene.AddNode(transformNode)
-            self.transformTable[targetNode.GetID()] = transformNode
-            if targetNode.GetName():
-                transformNodeName = targetNode.GetName() + "_Transform"
-                transformNode.SetName(transformNodeName)
-            existingMatrix = vtk.vtkMatrix4x4()  # 默认为单位矩阵
-
-        affineMatrix = create_affine_matrix(np.array(acCoord), np.array(pcCoord))
-        # 将NumPy矩阵转换为VTK矩阵
-        vtkNewMatrix = slicer.util.vtkMatrixFromArray(affineMatrix)
-        compositeMatrix = vtk.vtkMatrix4x4()
-        vtk.vtkMatrix4x4.Multiply4x4(vtkNewMatrix, existingMatrix, compositeMatrix)
-        transformNode.SetMatrixTransformToParent(compositeMatrix)
-
-        targetNode.SetAndObserveTransformNodeID(transformNode.GetID())
-        slicer.vtkSlicerTransformLogic().hardenTransform(targetNode)
-        for node in markupNodes:
-            if node is None:
-                continue
-            node.SetAndObserveTransformNodeID(transformNode.GetID())
-            slicer.vtkSlicerTransformLogic().hardenTransform(node)
-
-    def transformLR(self, leftCoord, rightCoord, targetNode, markupNodes):
-        if self.transformTable.get(targetNode.GetID()):
-            transformNode = self.transformTable[targetNode.GetID()]
-            existingMatrix = vtk.vtkMatrix4x4()
-        else:
-            transformNode = slicer.vtkMRMLLinearTransformNode()
-            slicer.mrmlScene.AddNode(transformNode)
-            self.transformTable[targetNode.GetID()] = transformNode
-            if targetNode.GetName():
-                transformNodeName = targetNode.GetName() + "_Transform"
-                transformNode.SetName(transformNodeName)
-            existingMatrix = vtk.vtkMatrix4x4()  # 默认为单位矩阵
-
-        direction = np.array(rightCoord) - np.array(leftCoord)
-        normalised_direction = direction / np.linalg.norm(direction)
-        x_axis = np.array([-1, 0, 0])
-        axis = np.cross(normalised_direction, x_axis)
-        if np.linalg.norm(axis) != 0:  # 需要旋转
-            axis_normalized = axis / np.linalg.norm(axis)
-            angle = np.arccos(np.dot(normalised_direction, x_axis))
-        else:
-            axis_normalized = np.array([0, 0, 1])  # 任意轴，因为不需要旋转
-            angle = 0
-        rotationMatrix = create_rotation_matrix(axis_normalized, angle)
-        vtkNewMatrix = slicer.util.vtkMatrixFromArray(rotationMatrix)
-        compositeMatrix = vtk.vtkMatrix4x4()
-        vtk.vtkMatrix4x4.Multiply4x4(vtkNewMatrix, existingMatrix, compositeMatrix)
-        transformNode.SetMatrixTransformToParent(compositeMatrix)
-
-        targetNode.SetAndObserveTransformNodeID(transformNode.GetID())
-        slicer.vtkSlicerTransformLogic().hardenTransform(targetNode)
-        for node in markupNodes:
-            if node is None:
-                continue
-            node.SetAndObserveTransformNodeID(transformNode.GetID())
-            slicer.vtkSlicerTransformLogic().hardenTransform(node)
 
 
 #
@@ -852,6 +759,130 @@ class localizerTest(ScriptedLoadableModuleTest):
         """Run as few or as many tests as needed here."""
         self.setUp()
         self.test_localizer1()
+        self.testModuleComponents()
 
     def test_localizer1(self):
-        pass
+        """测试localizer的基本功能"""
+        self.delayDisplay("Starting localizer test")
+        
+        # 测试加载测试数据
+        test_volume = self.loadTestData()
+        self.assertIsNotNone(test_volume, "Failed to load test data")
+        
+        # 测试Widget创建
+        widget = self.createWidget()
+        self.assertIsNotNone(widget, "Failed to create widget")
+        
+        # 测试标记点功能
+        self.testMarkupFunctionality(widget)
+        
+        # 测试图像对齐功能
+        self.testImageAlignment(widget, test_volume)
+        
+        self.delayDisplay("Test passed!")
+
+    def loadTestData(self):
+        """加载测试数据"""
+        test_data_path = os.path.join(os.path.dirname(__file__), "Testing", "ED01_PET.nii")
+        if not os.path.exists(test_data_path):
+            self.delayDisplay(f"Test data not found at {test_data_path}")
+            return None
+            
+        volume_node = slicer.util.loadVolume(test_data_path)
+        self.delayDisplay(f"Loaded test volume: {volume_node.GetName()}")
+        return volume_node
+
+    def createWidget(self):
+        """创建并设置widget"""
+        widget = localizerWidget()
+        widget.setup()
+        return widget
+
+    def testMarkupFunctionality(self, widget):
+        """测试标记点功能"""
+        self.delayDisplay("Testing markup functionality")
+        
+        # 测试添加AC标记点
+        widget.addNewFiducial("AC")
+        ac_node = MarkupManager.find_markup_node_by_name("AC")
+        self.assertIsNotNone(ac_node, "Failed to create AC markup")
+        
+        # 手动设置AC点位置
+        ac_node.AddControlPoint([0, 0, 0])
+        ac_coord = MarkupManager.get_point_ras(ac_node)
+        self.assertIsNotNone(ac_coord, "Failed to get AC coordinates")
+        
+        # 测试添加PC标记点
+        widget.addNewFiducial("PC")
+        pc_node = MarkupManager.find_markup_node_by_name("PC")
+        self.assertIsNotNone(pc_node, "Failed to create PC markup")
+        
+        # 手动设置PC点位置
+        pc_node.AddControlPoint([0, -25, 0])
+        pc_coord = MarkupManager.get_point_ras(pc_node)
+        self.assertIsNotNone(pc_coord, "Failed to get PC coordinates")
+        
+        # 测试清除标记点
+        MarkupManager.remove_specific_markups(["AC", "PC"])
+        ac_node_after_clear = MarkupManager.find_markup_node_by_name("AC")
+        self.assertIsNone(ac_node_after_clear, "AC markup was not properly removed")
+
+    def testImageAlignment(self, widget, test_volume):
+        """测试图像对齐功能"""
+        if test_volume is None:
+            self.delayDisplay("Skipping image alignment test due to missing test data")
+            return
+            
+        self.delayDisplay("Testing image alignment functionality")
+        
+        # 设置输入体积
+        widget.ui.inputSelector.setCurrentNode(test_volume)
+        widget._parameterNode.inputVolume = test_volume
+        
+        # 创建测试用的AC/PC标记点
+        widget.addNewFiducial("AC")
+        ac_node = MarkupManager.find_markup_node_by_name("AC")
+        ac_node.AddControlPoint([0, 0, 0])
+        
+        widget.addNewFiducial("PC")
+        pc_node = MarkupManager.find_markup_node_by_name("PC")
+        pc_node.AddControlPoint([0, -25, 0])
+        
+        # 测试AC平移
+        original_origin = test_volume.GetOrigin()
+        widget.image_alignment.translate_ac([0, 0, 0], test_volume, ac_node)
+        
+        # 验证变换是否应用
+        self.delayDisplay("AC translation test completed")
+        
+        # 测试ACPC变换
+        widget.image_alignment.transform_acpc([0, 0, 0], [0, -25, 0], test_volume, [ac_node, pc_node])
+        self.delayDisplay("ACPC transformation test completed")
+        
+        # 清理
+        MarkupManager.remove_specific_markups(["AC", "PC"])
+
+    def testModuleComponents(self):
+        """测试各个组件模块"""
+        self.delayDisplay("Testing module components")
+        
+        # 测试数学工具
+        from lib.math_utils import create_translation_matrix, create_rotation_matrix
+        
+        # 测试平移矩阵
+        translation_matrix = create_translation_matrix([1, 2, 3])
+        self.assertEqual(translation_matrix.shape, (4, 4), "Translation matrix should be 4x4")
+        
+        # 测试旋转矩阵
+        import numpy as np
+        rotation_matrix = create_rotation_matrix([0, 0, 1], np.pi/4)
+        self.assertEqual(rotation_matrix.shape, (4, 4), "Rotation matrix should be 4x4")
+        
+        # 测试UI组件
+        from lib.ui_components import TimeConsumingMessageBox
+        
+        # 测试消息框（不显示，只测试创建）
+        msg_box = TimeConsumingMessageBox("Test message", "Test title")
+        self.assertIsNotNone(msg_box, "Failed to create TimeConsumingMessageBox")
+        
+        self.delayDisplay("Module components test completed")

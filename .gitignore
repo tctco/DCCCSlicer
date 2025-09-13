@@ -6,5 +6,7 @@ localizer/cpp/rigid.nii
 localizer/cpp/ADNI_normalized.nii
 localizer/Normalized*.nii
 localizer/tmp.nii
+localizer/ref.nii
+localizer/roi.nii
 tracked_files.txt
 *archive*
