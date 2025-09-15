@@ -85,6 +85,7 @@ Spatial normalization algorithms:
 
 - [x] Add support for skipping spatial normalization to directly calculate Centiloid/CenTauR.
 - [ ] Support other brain PET semi-quantitative metrics, such as Z-scores and basal ganglia asymmetry index.
+  - [ ] Add support for “Fill States”: PET-derived Markers of the Spatial Extent of Alzheimer Disease Pathology
 - [ ] Add support for other spatial normalization algorithms.
   - [x] Added support for Fast and Accurate Amyloid Brain PET Quantification Without MRI Using Deep Neural Networks
 - [ ] Improve the UI.
