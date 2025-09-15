@@ -66,9 +66,10 @@ Metrics:
 - `Centiloid`: Klunk WE, Koeppe RA, Price JC, Benzinger TL, Devous Sr. MD, Jagust WJ, et al. The Centiloid Project: Standardizing quantitative amyloid plaque estimation by PET. Alzheimer’s & Dementia. 2015;11(1):1-15.e4.
 - `CenTauR`: Leuzy A, Raket LL, Villemagne VL, Klein G, Tonietto M, Olafson E, et al. Harmonizing tau positron emission tomography in Alzheimer’s disease: The CenTauR scale and the joint propagation model. Alzheimer’s & Dementia. 2024;20(9):5833–48.
 - `CenTauRz`: Villemagne VL, Leuzy A, Bohorquez SS, Bullich S, Shimada H, Rowe CC, et al. CenTauR: Toward a universal scale and masks for standardizing tau imaging studies. Alzheimer’s & Dementia: Diagnosis, Assessment & Disease Monitoring. 2023;15(3):e12454.
+- `ADAD`: not published yet
 
 Spatial normalization algorithms:
-- `DCCC`: not published yet
+- `DCCC SPM12 style`: not published yet
 - `Fast and Accurate` (the following publications used the same algorithm):
   - Kang SK, Kim D, Shin SA, Kim YK, Choi H, Lee JS. Fast and Accurate Amyloid Brain PET Quantification Without MRI Using Deep Neural Networks. Journal of Nuclear Medicine. 2023 Apr 1;64(4):659–66.
   - Kim D, Kang SK, Shin SA, Choi H, Lee JS. Improving 18F-FDG PET Quantification Through a Spatial Normalization Method. Journal of Nuclear Medicine. 2024 Aug 29; Available from: https://jnm.snmjournals.org/content/early/2024/08/29/jnumed.123.267360
