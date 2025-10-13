@@ -5,8 +5,20 @@
 [models]
 rigid = "assets/models/registration/rigid.onnx"
 affine_voxelmorph = "assets/models/registration/affine_voxelmorph.fast_and_acc.onnx"
-abeta_decoupler = "assets/models/decouple/abeta.onnx"
-tau_decoupler = "assets/models/decouple/tau.onnx"
+abeta_decoupler = [
+  "assets/models/decouple/abeta_fold0.onnx",
+  "assets/models/decouple/abeta_fold1.onnx",
+  "assets/models/decouple/abeta_fold2.onnx",
+  "assets/models/decouple/abeta_fold3.onnx",
+  "assets/models/decouple/abeta_fold4.onnx",
+]
+tau_decoupler = [
+  "assets/models/decouple/tau_fold0.onnx",
+  "assets/models/decouple/tau_fold1.onnx",
+  "assets/models/decouple/tau_fold2.onnx",
+  "assets/models/decouple/tau_fold3.onnx",
+  "assets/models/decouple/tau_fold4.onnx",
+]
 
 # 模板文件路径
 [templates]

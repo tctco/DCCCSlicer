@@ -5,8 +5,20 @@
 [models]
 rigid = "assets/models/registration/rigid.onnx"
 affine_voxelmorph = "assets/models/registration/affine_voxelmorph.onnx"
-abeta_decoupler = "assets/models/decouple/abeta.onnx"
-tau_decoupler = "assets/models/decouple/tau.onnx"
+abeta_decoupler = [
+  "assets/models/decouple/abeta_fold0.onnx",
+  "assets/models/decouple/abeta_fold1.onnx",
+  "assets/models/decouple/abeta_fold2.onnx",
+  "assets/models/decouple/abeta_fold3.onnx",
+  "assets/models/decouple/abeta_fold4.onnx",
+]
+tau_decoupler = [
+  "assets/models/decouple/tau_fold0.onnx",
+  "assets/models/decouple/tau_fold1.onnx",
+  "assets/models/decouple/tau_fold2.onnx",
+  "assets/models/decouple/tau_fold3.onnx",
+  "assets/models/decouple/tau_fold4.onnx",
+]
 
 # 模板文件路径
 [templates]
@@ -102,6 +114,27 @@ intercept = -15.57
 [centaurz.tracers.pmpbb3]
 slope = 16.73
 intercept = -15.34
+
+# ADAD转换公式
+[adad_abeta.tracers.pib]
+slope = 1.0
+intercept = 0.0
+
+[adad_abeta.tracers.fbp]
+slope = 1.83
+intercept = -43.18
+
+[adad_abeta.tracers.fbb]
+slope = 1.52
+intercept = -9.72
+
+[adad_abeta.tracers.fmm]
+slope = 1.17
+intercept = 0.80
+
+[adad_abeta.tracers.nav]
+slope = 0.90
+intercept = 1.56
 
 # SUVr参数配置
 [suvr.regions.centiloid]
