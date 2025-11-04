@@ -92,7 +92,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     
     def _setPaths(self):
         self.PLUGIN_PATH = Path(os.path.dirname(__file__))
-        self.EXECUTABLE_PATH = self.PLUGIN_PATH / "cpp" / "CentiloidCalculator.exe"
+        self.EXECUTABLE_PATH = self.PLUGIN_PATH / "cpp" / "CentiloidCalculator"
         self.EXECUTABLE_DIR = self.PLUGIN_PATH / "cpp"
     
     def _setNodes(self):

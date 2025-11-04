@@ -34,7 +34,7 @@ class MetricCalculatorLogic:
             plugin_path: Plugin directory path
         """
         self.plugin_path = Path(plugin_path)
-        self.executable_path = self.plugin_path / "cpp" / "CentiloidCalculator.exe"
+        self.executable_path = self.plugin_path / "cpp" / "CentiloidCalculator"
         self.last_volume_name = None
     
     def calculate_metric(self, input_node, metric_type, algorithm_style="SPM style", 

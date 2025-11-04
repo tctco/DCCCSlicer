@@ -26,7 +26,7 @@ class AIDecouplingLogic:
             plugin_path: Plugin directory path
         """
         self.plugin_path = Path(plugin_path)
-        self.executable_path = self.plugin_path / "cpp" / "CentiloidCalculator.exe"
+        self.executable_path = self.plugin_path / "cpp" / "CentiloidCalculator"
         self.executable_dir = self.plugin_path / "cpp"
         self.last_volume_name = None
     
