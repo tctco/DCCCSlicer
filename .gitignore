@@ -11,3 +11,7 @@ localizer/ref.nii
 localizer/roi.nii
 tracked_files.txt
 *archive*
+
+localizer/src/tests/*.nii
+localizer/src/build/
+localizer/src/install/
