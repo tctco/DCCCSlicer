@@ -42,10 +42,16 @@ RigidRegistrationEngine::RigidRegistrationEngine(const std::string& modelPath)
     : env_(ORT_LOGGING_LEVEL_WARNING, "RigidRegistration"), session_(nullptr) {
     Ort::SessionOptions sessionOptions;
     sessionOptions.SetIntraOpNumThreads(1);
-    std::wstring w_modelPath = std::wstring(modelPath.begin(), modelPath.end());
+    const ORTCHAR_T* ortModelPath = nullptr;
+#ifdef _WIN32
+    std::wstring w_modelPath(modelPath.begin(), modelPath.end());
+    ortModelPath = w_modelPath.c_str();
+#else
+    ortModelPath = modelPath.c_str();
+#endif
 
     try {
-        session_ = new Ort::Session(env_, w_modelPath.c_str(), sessionOptions);
+        session_ = new Ort::Session(env_, ortModelPath, sessionOptions);
     } catch (const Ort::Exception& e) {
         std::cerr << "Error loading rigid registration model: " << e.what() << std::endl;
         throw std::runtime_error("Failed to load rigid registration model.");
