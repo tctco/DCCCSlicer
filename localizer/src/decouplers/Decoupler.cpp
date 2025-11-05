@@ -1,4 +1,5 @@
 ﻿#include "Decoupler.h"
+#include "../utils/onnx_path_utils.h"
 
 void DecoupledResult::SaveResults(const std::string& fpath) {
   Common::SaveImage(strippedImage,
@@ -26,10 +27,10 @@ Decoupler::Decoupler(const std::string& modelPath)
     : env(ORT_LOGGING_LEVEL_WARNING, "Decouple"), sessions() {
   Ort::SessionOptions sessionOptions;
   sessionOptions.SetIntraOpNumThreads(1);
-  std::wstring w_modelPath = std::wstring(modelPath.begin(), modelPath.end());
+  auto ortModelPath = OrtUtils::MakeOrtPath(modelPath);
   try {
     this->sessions.push_back(
-        new Ort::Session(this->env, w_modelPath.c_str(), sessionOptions));
+        new Ort::Session(this->env, ortModelPath.c_str(), sessionOptions));
   } catch (const Ort::Exception& e) {
     std::cerr << "Error loading mode: " << e.what() << std::endl;
     throw std::runtime_error("Filed to load model");
@@ -41,9 +42,9 @@ Decoupler::Decoupler(const std::vector<std::string>& modelPaths)
   sessionOptions.SetIntraOpNumThreads(1);
   try {
     for (const auto& p : modelPaths) {
-      std::wstring w_modelPath = std::wstring(p.begin(), p.end());
+      auto ortModelPath = OrtUtils::MakeOrtPath(p);
       this->sessions.push_back(
-          new Ort::Session(this->env, w_modelPath.c_str(), sessionOptions));
+          new Ort::Session(this->env, ortModelPath.c_str(), sessionOptions));
     }
   } catch (const Ort::Exception& e) {
     std::cerr << "Error loading mode: " << e.what() << std::endl;

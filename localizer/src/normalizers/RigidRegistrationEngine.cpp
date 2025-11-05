@@ -2,6 +2,7 @@
 #include <vnl/vnl_vector.h>
 #include <iostream>
 #include "itkCrossHelper.h"
+#include "../utils/onnx_path_utils.h"
 
 // Helper functions from original Rigid.cpp
 namespace {
@@ -42,10 +43,10 @@ RigidRegistrationEngine::RigidRegistrationEngine(const std::string& modelPath)
     : env_(ORT_LOGGING_LEVEL_WARNING, "RigidRegistration"), session_(nullptr) {
     Ort::SessionOptions sessionOptions;
     sessionOptions.SetIntraOpNumThreads(1);
-    std::wstring w_modelPath = std::wstring(modelPath.begin(), modelPath.end());
+    auto ortModelPath = OrtUtils::MakeOrtPath(modelPath);
 
     try {
-        session_ = new Ort::Session(env_, w_modelPath.c_str(), sessionOptions);
+        session_ = new Ort::Session(env_, ortModelPath.c_str(), sessionOptions);
     } catch (const Ort::Exception& e) {
         std::cerr << "Error loading rigid registration model: " << e.what() << std::endl;
         throw std::runtime_error("Failed to load rigid registration model.");
