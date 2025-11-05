@@ -17,6 +17,6 @@ class AppConan(ConanFile):
 
         # ---- conflict resolution: choose one Eigen for the whole graph ----
         # If the graph shows ORT wants 3.4.0, prefer:
-        self.requires("eigen/3.4.0", override=True)
+        self.requires("eigen/3.4.0")
         # If you decide to *force* a direct one instead (when you also require eigen directly):
         # self.requires("eigen/3.4.0", force=True)
