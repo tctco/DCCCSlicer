@@ -1,20 +1,15 @@
 #include "NonlinearRegistrationEngine.h"
 #include <iostream>
+#include "../utils/onnx_path_utils.h"
 
 NonlinearRegistrationEngine::NonlinearRegistrationEngine(const std::string& modelPath)
     : env_(ORT_LOGGING_LEVEL_WARNING, "NonlinearRegistration"), session_(nullptr) {
     Ort::SessionOptions sessionOptions;
     sessionOptions.SetIntraOpNumThreads(1);
-    const ORTCHAR_T* ortModelPath = nullptr;
-#ifdef _WIN32
-    std::wstring w_modelPath(modelPath.begin(), modelPath.end());
-    ortModelPath = w_modelPath.c_str();
-#else
-    ortModelPath = modelPath.c_str();
-#endif
+    auto ortModelPath = OrtUtils::MakeOrtPath(modelPath);
 
     try {
-        session_ = new Ort::Session(env_, ortModelPath, sessionOptions);
+        session_ = new Ort::Session(env_, ortModelPath.c_str(), sessionOptions);
     } catch (const Ort::Exception& e) {
         std::cerr << "Error loading nonlinear registration model: " << e.what() << std::endl;
         throw std::runtime_error("Failed to load nonlinear registration model.");
