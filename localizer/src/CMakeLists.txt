@@ -12,7 +12,7 @@ find_package(ITK CONFIG REQUIRED)
 find_package(argparse CONFIG REQUIRED)
 find_package(onnxruntime CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
-find_package(Eigen3 CONFIG REQUIRED)
+find_package(Eigen3 REQUIRED NO_MODULE)
 
 # Include directories
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR})
