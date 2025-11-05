@@ -129,13 +129,13 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          rm -rf localizer/src/build localizer/src/install
+          rm -rf localizer/src
 
       - name: Cleanup build and install dirs before packaging (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Remove-Item -Recurse -Force localizer/src/build, localizer/src/install -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force localizer/src -ErrorAction SilentlyContinue
 
       - name: Create distributable zip (entire project)
         uses: thedoctor0/zip-release@0.7.6

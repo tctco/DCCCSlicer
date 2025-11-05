@@ -7,12 +7,12 @@ project(CentiloidCalculator VERSION 2.4.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Dependencies via vcpkg
+# Dependencies via conan
 find_package(ITK CONFIG REQUIRED)
 find_package(argparse CONFIG REQUIRED)
 find_package(onnxruntime CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
-find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(Eigen3 CONFIG REQUIRED)
 
 # Include directories
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -86,8 +86,7 @@ target_sources(CentiloidCalculator PRIVATE
 )
 
 # Link libraries
-target_link_libraries(CentiloidCalculator 
-  PRIVATE
+target_link_libraries(CentiloidCalculator PRIVATE
     itk::itk
     onnxruntime::onnxruntime
     argparse::argparse
