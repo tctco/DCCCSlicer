@@ -43,7 +43,7 @@ jobs:
 
       - name: Setup CMake
         id: setup-cmake
-        uses: lukka/get-cmake@v3
+        uses: lukka/get-cmake@latest
         with:
           cmakeVersion: '3.27.9'
 
