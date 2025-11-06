@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -125,35 +127,60 @@ jobs:
           New-Item -ItemType Directory -Force -Path "$env:GITHUB_WORKSPACE/localizer/cpp" | Out-Null
           Copy-Item -Path install/bin/* -Destination "$env:GITHUB_WORKSPACE/localizer/cpp/" -Recurse -Force
 
-      - name: Cleanup build and install dirs before packaging (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Determine package metadata
+        id: package-metadata
         shell: bash
         run: |
-          rm -rf localizer/src
+          set -euo pipefail
 
-      - name: Cleanup build and install dirs before packaging (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Remove-Item -Recurse -Force localizer/src -ErrorAction SilentlyContinue
+          case "${{ runner.os }}" in
+            Linux)
+              platform="linux-x64"
+              ;;
+            Windows)
+              platform="windows-x64"
+              ;;
+            macOS)
+              platform="macos-arm64"
+              ;;
+            *)
+              platform="${{ runner.os }}"
+              ;;
+          esac
+
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            if latest_tag=$(git describe --tags --abbrev=0 2>/dev/null); then
+              version="${latest_tag#v}-dev-${GITHUB_RUN_NUMBER}"
+            else
+              version="0.0.0-dev-${GITHUB_RUN_NUMBER}"
+            fi
+          fi
+
+          echo "PACKAGE_VERSION=${version}" >> "$GITHUB_ENV"
+          echo "PACKAGE_PLATFORM=${platform}" >> "$GITHUB_ENV"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "platform=${platform}" >> "$GITHUB_OUTPUT"
 
       - name: Create distributable zip (entire project)
         uses: thedoctor0/zip-release@0.7.6
         with:
           type: 'zip'
-          filename: DCCCSlicer-${{ runner.os }}.zip
+          filename: DCCCSlicer-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}.zip
           path: .
           exclusions: |
-            *.git* 
-            localizer/src/build/** 
-            localizer/src/install/** 
+            *.git*
+            localizer/src/**
+            demo/**
+            ninja-build/**
             .github/**
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DCCCSlicer-${{ runner.os }}
-          path: DCCCSlicer-*.zip
+          name: DCCCSlicer-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}
+          path: DCCCSlicer-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}.zip
           if-no-files-found: error
 
   release:
