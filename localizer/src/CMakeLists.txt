@@ -14,6 +14,9 @@ find_package(onnxruntime CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
 
+# Attempt to locate oneTBB libraries that are required by the runtime
+find_package(onetbb CONFIG QUIET)
+
 # Include directories
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -94,6 +97,10 @@ target_link_libraries(CentiloidCalculator PRIVATE
     Eigen3::Eigen
 )
 
+if(TARGET onetbb::onetbb)
+    target_link_libraries(CentiloidCalculator PRIVATE onetbb::onetbb)
+endif()
+
 # Compile options
 if(MSVC)
     target_compile_options(CentiloidCalculator PRIVATE /W4)
@@ -107,22 +114,53 @@ set(CMAKE_INSTALL_PREFIX "E:/projects/paper/CentiloidCalculatorInstall" CACHE PA
 include(InstallRequiredSystemLibraries)
 include(GNUInstallDirs)
 
+if(APPLE)
+  set(_runtime_origin "@loader_path")
+else()
+  set(_runtime_origin "\$ORIGIN")
+endif()
+
+set_target_properties(CentiloidCalculator PROPERTIES
+  BUILD_RPATH "${_runtime_origin}"
+  INSTALL_RPATH "${_runtime_origin}"
+  INSTALL_RPATH_USE_LINK_PATH TRUE
+)
+
 install(TARGETS CentiloidCalculator
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT Runtime
+  RUNTIME_DEPENDENCY_SET CentiloidCalculatorRuntimeDeps
+)
+
+set(_runtime_dependency_args
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT Runtime
+)
+
+set(_runtime_dependency_directories)
+if(TARGET onnxruntime::onnxruntime)
+  list(APPEND _runtime_dependency_directories
+    $<TARGET_FILE_DIR:onnxruntime::onnxruntime>)
+endif()
+
+if(TARGET onetbb::onetbb)
+  list(APPEND _runtime_dependency_directories
+    $<TARGET_FILE_DIR:onetbb::onetbb>)
+endif()
+
+if(_runtime_dependency_directories)
+  list(APPEND _runtime_dependency_args
+    DIRECTORIES ${_runtime_dependency_directories})
+endif()
+
+install(RUNTIME_DEPENDENCY_SET CentiloidCalculatorRuntimeDeps
+  ${_runtime_dependency_args}
 )
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/"
   DESTINATION "${CMAKE_INSTALL_BINDIR}/assets"
   COMPONENT Runtime
 )
-
-# Install dependent runtime DLLs next to the executable (requires CMake 3.21+)
-if(WIN32)
-  install(FILES $<TARGET_RUNTIME_DLLS:CentiloidCalculator>
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-    COMPONENT Runtime)
-endif()
 
 # UCRT required for Windows
 
