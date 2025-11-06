@@ -41,15 +41,6 @@ jobs:
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v4
 
-      - name: Setup CMake
-        id: setup-cmake
-        uses: lukka/get-cmake@latest
-        with:
-          cmakeVersion: '3.27.9'
-
-      - name: Verify CMake version
-        run: cmake --version
-
       - name: Install GCC-12 (Ubuntu)
         if: runner.os == 'Linux'
         run: |
@@ -98,12 +89,22 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
+
+      - name: Setup CMake
+        id: setup-cmake
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: '3.27.9'
+
+      - name: Verify CMake version
+        run: cmake --version
           
       - name: Configure and build with CMake + Conan (Windows)
         if: runner.os == 'Windows'
         working-directory: localizer/src
         shell: pwsh
         run: |
+          cmake --version
           conan install . --output-folder=build --build=missing `
             -s build_type=Release `
             -s compiler.cppstd=17 `
