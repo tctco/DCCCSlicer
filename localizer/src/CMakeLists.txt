@@ -1,5 +1,5 @@
 # CMakeList.txt: CentiloidCalculator Refactored Version
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.16)
 
 project(CentiloidCalculator VERSION 2.4.0)
 
@@ -23,6 +23,9 @@ find_package(Eigen3 CONFIG REQUIRED)
 
 # Create executable
 add_executable(CentiloidCalculator main.cpp)
+
+set(CENTILOID_RUNTIME_DEPS_DIR "${CMAKE_CURRENT_BINARY_DIR}/runtime_deps")
+file(MAKE_DIRECTORY "${CENTILOID_RUNTIME_DEPS_DIR}")
 
 # Add interface headers
 target_sources(CentiloidCalculator PRIVATE
@@ -98,6 +101,17 @@ target_link_libraries(CentiloidCalculator PRIVATE
     Eigen3::Eigen
 )
 
+add_custom_command(TARGET CentiloidCalculator POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Collecting CentiloidCalculator runtime dependencies"
+    COMMAND ${CMAKE_COMMAND}
+        -DTARGET_FILE=$<TARGET_FILE:CentiloidCalculator>
+        -DOUTPUT_DIR=${CENTILOID_RUNTIME_DEPS_DIR}
+        -DADDITIONAL_SEARCH_DIRS=$<TARGET_FILE_DIR:CentiloidCalculator>
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyRuntimeDependencies.cmake"
+    BYPRODUCTS "${CENTILOID_RUNTIME_DEPS_DIR}"
+    VERBATIM
+)
+
 # Ensure the executable can discover bundled shared libraries at runtime
 if(APPLE)
     set_target_properties(CentiloidCalculator PROPERTIES
@@ -127,7 +141,6 @@ include(GNUInstallDirs)
 install(TARGETS CentiloidCalculator
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT Runtime
-  RUNTIME_DEPENDENCY_SET CentiloidCalculatorDeps
 )
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/"
@@ -135,13 +148,15 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/"
   COMPONENT Runtime
 )
 
-# Install dependent runtime libraries next to the executable (requires CMake 3.21+)
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
-  install(RUNTIME_DEPENDENCY_SET CentiloidCalculatorDeps
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-    COMPONENT Runtime
-  )
-endif()
+install(DIRECTORY "${CENTILOID_RUNTIME_DEPS_DIR}/"
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT Runtime
+  FILES_MATCHING
+    PATTERN "*.dll"
+    PATTERN "*.dylib"
+    PATTERN "*.so*"
+  OPTIONAL
+)
 
 # UCRT required for Windows
 
