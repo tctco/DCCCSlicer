@@ -38,6 +38,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install conan
 
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: ${{ runner.os }}-conan-${{ hashFiles('localizer/src/conanfile.py') }}
+          restore-keys: |
+            ${{ runner.os }}-conan-
+
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v4
 
@@ -63,17 +71,21 @@ jobs:
         run: |
           conan profile detect --force
 
-      - name: Configure and build with CMake + Conan (Linux/macOS)
+      - name: Conan install (Linux/macOS)
         if: runner.os != 'Windows'
         working-directory: localizer/src
         shell: bash
         run: |
-          set -e
           conan install . --output-folder=build --build=missing \
             -s build_type=Release \
             -s compiler.cppstd=17 \
             -c tools.cmake.cmaketoolchain:generator=Ninja
 
+      - name: Configure with CMake (Linux/macOS)
+        if: runner.os != 'Windows'
+        working-directory: localizer/src
+        shell: bash
+        run: |
           cmake -S . \
             -B build \
             -G "Ninja" \
@@ -81,8 +93,17 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="./install"
 
-          cmake --build build --config Release
-          cmake --install build --config Release
+      - name: Build with CMake (Linux/macOS)
+        if: runner.os != 'Windows'
+        working-directory: localizer/src
+        shell: bash
+        run: cmake --build build --config Release
+
+      - name: Install with CMake (Linux/macOS)
+        if: runner.os != 'Windows'
+        working-directory: localizer/src
+        shell: bash
+        run: cmake --install build --config Release
 
       - name: Set up MSVC Developer Command Prompt
         if: runner.os == 'Windows'
@@ -99,17 +120,22 @@ jobs:
       - name: Verify CMake version
         run: cmake --version
           
-      - name: Configure and build with CMake + Conan (Windows)
+      - name: Conan install (Windows)
         if: runner.os == 'Windows'
         working-directory: localizer/src
         shell: pwsh
         run: |
-          cmake --version
           conan install . --output-folder=build --build=missing `
             -s build_type=Release `
             -s compiler.cppstd=17 `
             -c tools.cmake.cmaketoolchain:generator=Ninja
 
+      - name: Configure with CMake (Windows)
+        if: runner.os == 'Windows'
+        working-directory: localizer/src
+        shell: pwsh
+        run: |
+          cmake --version
           cmake -S . `
             -B build `
             -G "Ninja" `
@@ -117,8 +143,17 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_INSTALL_PREFIX="./install"
 
-          cmake --build build --config Release
-          cmake --install build --config Release
+      - name: Build with CMake (Windows)
+        if: runner.os == 'Windows'
+        working-directory: localizer/src
+        shell: pwsh
+        run: cmake --build build --config Release
+
+      - name: Install with CMake (Windows)
+        if: runner.os == 'Windows'
+        working-directory: localizer/src
+        shell: pwsh
+        run: cmake --install build --config Release
 
       - name: Copy install/bin into localizer/cpp (Linux/macOS)
         if: runner.os != 'Windows'
