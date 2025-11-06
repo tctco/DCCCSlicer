@@ -42,9 +42,13 @@ jobs:
         uses: seanmiddleditch/gha-setup-ninja@v4
 
       - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v1
+        id: setup-cmake
+        uses: lukka/get-cmake@v3
         with:
-          cmake-version: '3.27.9'
+          cmakeVersion: '3.27.9'
+
+      - name: Verify CMake version
+        run: cmake --version
 
       - name: Install GCC-12 (Ubuntu)
         if: runner.os == 'Linux'
