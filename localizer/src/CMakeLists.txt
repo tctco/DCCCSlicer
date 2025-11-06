@@ -7,6 +7,10 @@ project(CentiloidCalculator VERSION 2.4.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(UNIX)
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif()
+
 # Dependencies via conan
 find_package(ITK CONFIG REQUIRED)
 find_package(argparse CONFIG REQUIRED)
@@ -94,6 +98,19 @@ target_link_libraries(CentiloidCalculator PRIVATE
     Eigen3::Eigen
 )
 
+# Ensure the executable can discover bundled shared libraries at runtime
+if(APPLE)
+    set_target_properties(CentiloidCalculator PROPERTIES
+        BUILD_RPATH "@loader_path"
+        INSTALL_RPATH "@loader_path"
+    )
+elseif(UNIX)
+    set_target_properties(CentiloidCalculator PROPERTIES
+        BUILD_RPATH "\$ORIGIN"
+        INSTALL_RPATH "\$ORIGIN"
+    )
+endif()
+
 # Compile options
 if(MSVC)
     target_compile_options(CentiloidCalculator PRIVATE /W4)
@@ -110,6 +127,7 @@ include(GNUInstallDirs)
 install(TARGETS CentiloidCalculator
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT Runtime
+  RUNTIME_DEPENDENCY_SET CentiloidCalculatorDeps
 )
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/"
@@ -117,11 +135,12 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/"
   COMPONENT Runtime
 )
 
-# Install dependent runtime DLLs next to the executable (requires CMake 3.21+)
-if(WIN32)
-  install(FILES $<TARGET_RUNTIME_DLLS:CentiloidCalculator>
+# Install dependent runtime libraries next to the executable (requires CMake 3.21+)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
+  install(RUNTIME_DEPENDENCY_SET CentiloidCalculatorDeps
     DESTINATION ${CMAKE_INSTALL_BINDIR}
-    COMPONENT Runtime)
+    COMPONENT Runtime
+  )
 endif()
 
 # UCRT required for Windows
