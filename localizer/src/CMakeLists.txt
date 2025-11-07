@@ -107,9 +107,41 @@ set(CMAKE_INSTALL_PREFIX "E:/projects/paper/CentiloidCalculatorInstall" CACHE PA
 include(InstallRequiredSystemLibraries)
 include(GNUInstallDirs)
 
-install(TARGETS CentiloidCalculator
+set(centiloid_runtime_dependency_args)
+set(centiloid_install_target_args
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT Runtime
+)
+
+if(APPLE)
+  set_target_properties(CentiloidCalculator PROPERTIES
+    BUILD_RPATH "@loader_path"
+    INSTALL_RPATH "@loader_path"
+  )
+
+  list(PREPEND centiloid_runtime_dependency_args
+    RUNTIME_DEPENDENCY_SET
+    calc_deps
+  )
+elseif(UNIX)
+  # Use $ORIGIN so the executable can locate co-located shared libraries.
+  set_target_properties(CentiloidCalculator PROPERTIES
+    BUILD_RPATH "$ORIGIN"
+    INSTALL_RPATH "$ORIGIN"
+  )
+
+  list(PREPEND centiloid_runtime_dependency_args
+    RUNTIME_DEPENDENCY_SET
+    calc_deps
+  )
+endif()
+
+if(centiloid_runtime_dependency_args)
+  list(PREPEND centiloid_install_target_args ${centiloid_runtime_dependency_args})
+endif()
+
+install(TARGETS CentiloidCalculator
+  ${centiloid_install_target_args}
 )
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/"
@@ -124,11 +156,20 @@ if(WIN32)
     COMPONENT Runtime)
 endif()
 
-# UCRT required for Windows
-
+if(UNIX)
+  install(RUNTIME_DEPENDENCY_SET calc_deps
+    PRE_EXCLUDE_REGEXES
+      "^libc\\.so" "^libm\\.so" "^libpthread\\.so" "^libdl\\.so"
+      "^librt\\.so" "^libgcc_s\\.so" "^libstdc\\+\\+\\.so" "^ld-linux.*\\.so"
+      "^libSystem\\.B\\.dylib" "^libobjc\\.A\\.dylib"
+    POST_INCLUDE_REGEXES
+      "libtbb.*" "libonnxruntime.*" "libITK.*"
+    LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
+endif()
 
 # Output information
 message(STATUS "ITK_LIBRARIES: ${ITK_LIBRARIES}")
 message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "Project configured for refactored CentiloidCalculator v${PROJECT_VERSION}")
-
