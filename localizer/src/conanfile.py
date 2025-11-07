@@ -13,7 +13,6 @@ class AppConan(ConanFile):
         self.requires("argparse/3.2")
         self.requires("itk/5.3.0")
         self.requires("onnxruntime/1.18.1")
-        self.requires("onetbb/2021.9.0")
         self.requires("tomlplusplus/3.4.0")
 
         # ---- conflict resolution: choose one Eigen for the whole graph ----
