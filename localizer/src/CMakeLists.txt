@@ -108,6 +108,10 @@ include(InstallRequiredSystemLibraries)
 include(GNUInstallDirs)
 
 set(centiloid_runtime_dependency_args)
+set(centiloid_install_target_args
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT Runtime
+)
 
 if(APPLE)
   set_target_properties(CentiloidCalculator PROPERTIES
@@ -115,8 +119,9 @@ if(APPLE)
     INSTALL_RPATH "@loader_path"
   )
 
-  set(centiloid_runtime_dependency_args
-    RUNTIME_DEPENDENCY_SET calc_deps
+  list(PREPEND centiloid_runtime_dependency_args
+    RUNTIME_DEPENDENCY_SET
+    calc_deps
   )
 elseif(UNIX)
   # Use $ORIGIN so the executable can locate co-located shared libraries.
@@ -125,15 +130,18 @@ elseif(UNIX)
     INSTALL_RPATH "$ORIGIN"
   )
 
-  set(centiloid_runtime_dependency_args
-    RUNTIME_DEPENDENCY_SET calc_deps
+  list(PREPEND centiloid_runtime_dependency_args
+    RUNTIME_DEPENDENCY_SET
+    calc_deps
   )
 endif()
 
+if(centiloid_runtime_dependency_args)
+  list(PREPEND centiloid_install_target_args ${centiloid_runtime_dependency_args})
+endif()
+
 install(TARGETS CentiloidCalculator
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  COMPONENT Runtime
-  ${centiloid_runtime_dependency_args}
+  ${centiloid_install_target_args}
 )
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/"
@@ -150,14 +158,14 @@ endif()
 
 if(UNIX)
   install(RUNTIME_DEPENDENCY_SET calc_deps
-    LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     PRE_EXCLUDE_REGEXES
       "^libc\\.so" "^libm\\.so" "^libpthread\\.so" "^libdl\\.so"
       "^librt\\.so" "^libgcc_s\\.so" "^libstdc\\+\\+\\.so" "^ld-linux.*\\.so"
       "^libSystem\\.B\\.dylib" "^libobjc\\.A\\.dylib"
     POST_INCLUDE_REGEXES
       "libtbb.*" "libonnxruntime.*" "libITK.*"
+    LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   )
 endif()
 
