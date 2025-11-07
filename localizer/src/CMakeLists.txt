@@ -156,6 +156,29 @@ if(WIN32)
     COMPONENT Runtime)
 endif()
 
+set(centiloid_runtime_dependency_dirs)
+
+if(TARGET onnxruntime::onnxruntime)
+  get_target_property(_centiloid_ort_type onnxruntime::onnxruntime TYPE)
+  if(NOT _centiloid_ort_type STREQUAL "INTERFACE_LIBRARY")
+    list(APPEND centiloid_runtime_dependency_dirs
+      "$<TARGET_FILE_DIR:onnxruntime::onnxruntime>")
+  endif()
+  unset(_centiloid_ort_type)
+endif()
+
+if(centiloid_runtime_dependency_dirs)
+  list(REMOVE_DUPLICATES centiloid_runtime_dependency_dirs)
+endif()
+
+set(centiloid_runtime_dependency_dir_args)
+if(centiloid_runtime_dependency_dirs)
+  set(centiloid_runtime_dependency_dir_args
+    DIRECTORIES
+    ${centiloid_runtime_dependency_dirs}
+  )
+endif()
+
 if(UNIX)
   install(RUNTIME_DEPENDENCY_SET calc_deps
     PRE_EXCLUDE_REGEXES
@@ -164,6 +187,7 @@ if(UNIX)
       "^libSystem\\.B\\.dylib" "^libobjc\\.A\\.dylib"
     POST_INCLUDE_REGEXES
       "libtbb.*" "libonnxruntime.*" "libITK.*"
+    ${centiloid_runtime_dependency_dir_args}
     LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   )
