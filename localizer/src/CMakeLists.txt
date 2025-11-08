@@ -112,6 +112,19 @@ set(centiloid_install_target_args
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT Runtime
 )
+set(centiloid_runtime_dependency_directories)
+set(centiloid_runtime_dependency_directories_args)
+
+if(DEFINED onetbb_LIBDIRS AND onetbb_LIBDIRS)
+  list(APPEND centiloid_runtime_dependency_directories ${onetbb_LIBDIRS})
+  message(STATUS "oneTBB lib dirs: ${onetbb_LIBDIRS}")
+endif()
+
+if(centiloid_runtime_dependency_directories)
+  set(centiloid_runtime_dependency_directories_args
+    DIRECTORIES ${centiloid_runtime_dependency_directories}
+  )
+endif()
 
 if(APPLE)
   set_target_properties(CentiloidCalculator PROPERTIES
@@ -164,6 +177,7 @@ if(UNIX)
       "^libSystem\\.B\\.dylib" "^libobjc\\.A\\.dylib"
     POST_INCLUDE_REGEXES
       "libtbb.*" "libonnxruntime.*" "libITK.*"
+    ${centiloid_runtime_dependency_directories_args}
     LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   )
