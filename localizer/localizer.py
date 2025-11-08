@@ -98,6 +98,21 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def _setNodes(self):
         self._parameterNode = None
         self._parameterNodeGuiTag = None
+        self._metric_busy_dialog = None
+        self._suvr_busy_dialog = None
+        self._pending_metric_info = ""
+        self._pending_suvr_info = ""
+
+    def _show_busy_dialog(self, attribute_name, message):
+        self._close_busy_dialog(attribute_name)
+        dialog = TimeConsumingMessageBox(message=message)
+        setattr(self, attribute_name, dialog.show())
+
+    def _close_busy_dialog(self, attribute_name):
+        dialog = getattr(self, attribute_name, None)
+        if dialog:
+            dialog.close()
+            setattr(self, attribute_name, None)
 
     def setup(self) -> None:
         """
@@ -434,23 +449,35 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         except AttributeError:
             algorithm_style = "SPM style"  # Default algorithm
             print("algorithmSelector not found in UI, using default: SPM style")
-        
-        with TimeConsumingMessageBox():
-            success, result_text, error_message = self.metric_calculator.calculate_metric(
-                currentNode,
-                metric_type=metric_type,
-                algorithm_style=algorithm_style,
-                manual_fov=self.ui.manualFOVCheckBox.isChecked(),
-                iterative=self.ui.enableIterativeCheckBox.isChecked(),
-                skip_normalization=self.ui.skipCheckBox.isChecked()
-            )
+
+        self._pending_metric_info = additionalInformation or ""
+        self.ui.calcMetricButton.setEnabled(False)
+        self._show_busy_dialog("_metric_busy_dialog", "Calculating metric, please wait...")
+
+        self.metric_calculator.calculate_metric_async(
+            currentNode,
+            metric_type=metric_type,
+            algorithm_style=algorithm_style,
+            manual_fov=self.ui.manualFOVCheckBox.isChecked(),
+            iterative=self.ui.enableIterativeCheckBox.isChecked(),
+            skip_normalization=self.ui.skipCheckBox.isChecked(),
+            callback=self._on_metric_calculation_finished
+        )
+
+    def _on_metric_calculation_finished(self, success, result_text, error_message):
+        self._close_busy_dialog("_metric_busy_dialog")
+        self.ui.calcMetricButton.setEnabled(True)
 
         if not success:
-            slicer.util.errorDisplay(error_message)
+            self._pending_metric_info = ""
+            if error_message:
+                slicer.util.errorDisplay(error_message)
             return
-            
+
+        additional_info = self._pending_metric_info
+        self._pending_metric_info = ""
         slicer.util.infoDisplay(
-            f"Semi-quantitative calculation finished:\n{additionalInformation}\n{result_text}"
+            f"Semi-quantitative calculation finished:\n{additional_info}\n{result_text}"
         )
 
     def onCalculateSUVrButton(self) -> None:
@@ -481,21 +508,35 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             algorithm_style = "SPM style"  # Default algorithm
             print("algorithmSelector not found in UI, using default: SPM style")
         
-        with TimeConsumingMessageBox():
-            success, result_text, error_message = self.metric_calculator.calculate_suvr(
-                currentNode, roiNode, refNode,
-                algorithm_style=algorithm_style,
-                manual_fov=self.ui.manualFOVCheckBox.isChecked(),
-                iterative=self.ui.enableIterativeCheckBox.isChecked(),
-                skip_normalization=self.ui.skipCheckBox.isChecked()
-            )
+        self._pending_suvr_info = additionalInformation or ""
+        self.ui.calculateSUVrButton.setEnabled(False)
+        self._show_busy_dialog("_suvr_busy_dialog", "Calculating SUVr, please wait...")
+
+        self.metric_calculator.calculate_suvr_async(
+            currentNode,
+            roiNode,
+            refNode,
+            algorithm_style=algorithm_style,
+            manual_fov=self.ui.manualFOVCheckBox.isChecked(),
+            iterative=self.ui.enableIterativeCheckBox.isChecked(),
+            skip_normalization=self.ui.skipCheckBox.isChecked(),
+            callback=self._on_suvr_calculation_finished
+        )
+
+    def _on_suvr_calculation_finished(self, success, result_text, error_message):
+        self._close_busy_dialog("_suvr_busy_dialog")
+        self.ui.calculateSUVrButton.setEnabled(True)
 
         if not success:
-            slicer.util.errorDisplay(error_message)
+            self._pending_suvr_info = ""
+            if error_message:
+                slicer.util.errorDisplay(error_message)
             return
-            
+
+        additional_info = self._pending_suvr_info
+        self._pending_suvr_info = ""
         slicer.util.infoDisplay(
-            f"SUVr calculation finished:\n{additionalInformation}\n{result_text}"
+            f"SUVr calculation finished:\n{additional_info}\n{result_text}"
         )
 
     def onDecoupleButton(self) -> None:
