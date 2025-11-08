@@ -79,7 +79,9 @@ jobs:
           conan install . --output-folder=build --build=missing \
             -s build_type=Release \
             -s compiler.cppstd=17 \
-            -c tools.cmake.cmaketoolchain:generator=Ninja
+            -c tools.cmake.cmaketoolchain:generator=Ninja \
+            -o onetbb/*:tbbmalloc=False \
+            -o onetbb/*:tbbproxy=False
 
       - name: Configure with CMake (Linux/macOS)
         if: runner.os != 'Windows'
@@ -128,7 +130,9 @@ jobs:
           conan install . --output-folder=build --build=missing `
             -s build_type=Release `
             -s compiler.cppstd=17 `
-            -c tools.cmake.cmaketoolchain:generator=Ninja
+            -c tools.cmake.cmaketoolchain:generator=Ninja `
+            -o onetbb/*:tbbmalloc=False `
+            -o onetbb/*:tbbproxy=False
 
       - name: Configure with CMake (Windows)
         if: runner.os == 'Windows'
@@ -208,18 +212,51 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "platform=${platform}" >> "$GITHUB_OUTPUT"
 
+      - name: Clean packaging workspace (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf \
+            .git \
+            .github \
+            demo \
+            ninja-build \
+            localizer/src \
+            "DCCCSlicer-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}" \
+            "DCCCSlicer-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}.zip"
+          rm -f .gitmodules
+
+      - name: Clean packaging workspace (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $pathsToRemove = @(
+            '.git',
+            '.github',
+            'demo',
+            'ninja-build',
+            'localizer\src',
+            "DCCCSlicer-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM",
+            "DCCCSlicer-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM.zip"
+          )
+
+          foreach ($path in $pathsToRemove) {
+            if (Test-Path $path) {
+              Remove-Item $path -Recurse -Force
+            }
+          }
+
+          if (Test-Path '.gitmodules') {
+            Remove-Item '.gitmodules' -Force
+          }
+
       - name: Create distributable zip (entire project)
         uses: thedoctor0/zip-release@0.7.6
         with:
           type: 'zip'
           filename: DCCCSlicer-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}.zip
           path: .
-          exclusions: |
-            *.git*
-            localizer/src/**
-            demo/**
-            ninja-build/**
-            .github/**
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
