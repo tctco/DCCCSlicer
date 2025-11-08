@@ -108,6 +108,10 @@ set(CMAKE_INSTALL_PREFIX "E:/projects/paper/CentiloidCalculatorInstall" CACHE PA
 include(InstallRequiredSystemLibraries)
 include(GNUInstallDirs)
 
+# Helper that inspects an imported target (e.g. a Conan-provided shared library)
+# and appends its resolved on-disk directory to an accumulator list variable.
+# This lets us feed the actual runtime locations into RUNTIME_DEPENDENCIES so
+# CMake can bundle the corresponding shared objects during installation.
 function(centiloid_append_imported_target_directories out_var target)
   if(NOT TARGET ${target})
     return()
