@@ -219,23 +219,16 @@ jobs:
           set -euo pipefail
           package_name="DCCCSlicer-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}"
 
-          rm -rf localizer/src demo ninja-build "$package_name"
-
-          mkdir "$package_name"
-          shopt -s dotglob nullglob
-          for entry in *; do
-            case "$entry" in
-              .|..|.git|.github|"$package_name")
-                continue
-                ;;
-            esac
-
-            if [[ "$entry" == *.git* ]]; then
-              continue
-            fi
-
-            cp -R "$entry" "$package_name/"
-          done
+          # zip -x cannot drop directory entries on *nix, so stage a clean tree first
+          rsync -a --delete \
+            --exclude='.git/' \
+            --exclude='.gitmodules' \
+            --exclude='.github/' \
+            --exclude='localizer/src/' \
+            --exclude='demo/' \
+            --exclude='ninja-build/' \
+            --exclude="${package_name}/" \
+            ./ "$package_name/"
 
       - name: Prepare package contents (Windows)
         if: runner.os == 'Windows'
@@ -243,19 +236,21 @@ jobs:
         run: |
           $packageName = "DCCCSlicer-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM"
 
-          foreach ($path in @("localizer/src", "demo", "ninja-build", $packageName)) {
-            if (Test-Path $path) {
-              Remove-Item $path -Recurse -Force
-            }
+          # zip -x cannot drop directory entries on Windows either, so mirror into a clean folder
+          if (Test-Path $packageName) {
+            Remove-Item $packageName -Recurse -Force
           }
 
-          New-Item -ItemType Directory -Path $packageName | Out-Null
+          $excludeDirs = @('.git', '.github', 'localizer\src', 'demo', 'ninja-build')
+          $excludeFiles = @('.gitmodules')
+          $excludeArgs = $excludeDirs | ForEach-Object { '/XD', $_ }
+          $excludeArgs += $excludeFiles | ForEach-Object { '/XF', $_ }
 
-          Get-ChildItem -Force | Where-Object {
-            $_.Name -notin @('.', '..', '.git', '.github', $packageName) -and $_.Name -notlike '*.git*'
-          } | ForEach-Object {
-            $destination = Join-Path $packageName $_.Name
-            Copy-Item -Path $_.FullName -Destination $destination -Recurse -Force
+          $arguments = @('.', $packageName, '/MIR', '/NFL', '/NDL', '/NJH', '/NJS', '/NP') + $excludeArgs
+          robocopy @arguments
+
+          if ($LASTEXITCODE -gt 7) {
+            throw "robocopy failed with exit code $LASTEXITCODE"
           }
 
       - name: Create distributable zip (entire project)
