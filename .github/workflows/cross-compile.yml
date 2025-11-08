@@ -212,57 +212,51 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "platform=${platform}" >> "$GITHUB_OUTPUT"
 
-      - name: Prepare package contents (Linux/macOS)
+      - name: Clean packaging workspace (Linux/macOS)
         if: runner.os != 'Windows'
         shell: bash
         run: |
           set -euo pipefail
-          package_name="DCCCSlicer-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}"
+          rm -rf \
+            .git \
+            .github \
+            demo \
+            ninja-build \
+            localizer/src \
+            "DCCCSlicer-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}" \
+            "DCCCSlicer-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}.zip"
+          rm -f .gitmodules
 
-          # zip -x cannot drop directory entries on *nix, so stage a clean tree first
-          rsync -a --delete \
-            --exclude='.git/' \
-            --exclude='.gitmodules' \
-            --exclude='.github/' \
-            --exclude='localizer/src/' \
-            --exclude='demo/' \
-            --exclude='ninja-build/' \
-            --exclude="${package_name}/" \
-            ./ "$package_name/"
-
-      - name: Prepare package contents (Windows)
+      - name: Clean packaging workspace (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $packageName = "DCCCSlicer-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM"
+          $pathsToRemove = @(
+            '.git',
+            '.github',
+            'demo',
+            'ninja-build',
+            'localizer\src',
+            "DCCCSlicer-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM",
+            "DCCCSlicer-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM.zip"
+          )
 
-          # zip -x cannot drop directory entries on Windows either, so mirror into a clean folder
-          if (Test-Path $packageName) {
-            Remove-Item $packageName -Recurse -Force
+          foreach ($path in $pathsToRemove) {
+            if (Test-Path $path) {
+              Remove-Item $path -Recurse -Force
+            }
           }
 
-          $excludeDirs = @('.git', '.github', 'localizer\src', 'demo', 'ninja-build')
-          $excludeFiles = @('.gitmodules')
-          $excludeArgs = $excludeDirs | ForEach-Object { '/XD', $_ }
-          $excludeArgs += $excludeFiles | ForEach-Object { '/XF', $_ }
-
-          $arguments = @('.', $packageName, '/MIR', '/NFL', '/NDL', '/NJH', '/NJS', '/NP') + $excludeArgs
-          robocopy @arguments
-
-          $robocopyExit = $LASTEXITCODE
-          if ($robocopyExit -gt 7) {
-            throw "robocopy failed with exit code $robocopyExit"
+          if (Test-Path '.gitmodules') {
+            Remove-Item '.gitmodules' -Force
           }
-
-          # Prevent robocopy's informational exit codes (1-7) from failing the step
-          $global:LASTEXITCODE = 0
 
       - name: Create distributable zip (entire project)
         uses: thedoctor0/zip-release@0.7.6
         with:
           type: 'zip'
           filename: DCCCSlicer-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}.zip
-          path: DCCCSlicer-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}
+          path: .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
