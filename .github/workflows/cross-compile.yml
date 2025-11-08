@@ -249,9 +249,13 @@ jobs:
           $arguments = @('.', $packageName, '/MIR', '/NFL', '/NDL', '/NJH', '/NJS', '/NP') + $excludeArgs
           robocopy @arguments
 
-          if ($LASTEXITCODE -gt 7) {
-            throw "robocopy failed with exit code $LASTEXITCODE"
+          $robocopyExit = $LASTEXITCODE
+          if ($robocopyExit -gt 7) {
+            throw "robocopy failed with exit code $robocopyExit"
           }
+
+          # Prevent robocopy's informational exit codes (1-7) from failing the step
+          $global:LASTEXITCODE = 0
 
       - name: Create distributable zip (entire project)
         uses: thedoctor0/zip-release@0.7.6
