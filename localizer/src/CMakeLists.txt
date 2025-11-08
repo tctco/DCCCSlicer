@@ -13,6 +13,7 @@ find_package(argparse CONFIG REQUIRED)
 find_package(onnxruntime CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
+find_package(TBB CONFIG REQUIRED)
 
 # Include directories
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -107,18 +108,76 @@ set(CMAKE_INSTALL_PREFIX "E:/projects/paper/CentiloidCalculatorInstall" CACHE PA
 include(InstallRequiredSystemLibraries)
 include(GNUInstallDirs)
 
+function(centiloid_append_imported_target_directories out_var target)
+  if(NOT TARGET ${target})
+    return()
+  endif()
+
+  set(_candidate_locations)
+  get_target_property(_imported_configs ${target} IMPORTED_CONFIGURATIONS)
+  if(_imported_configs)
+    foreach(_config ${_imported_configs})
+      string(TOUPPER "${_config}" _config_upper)
+      get_target_property(_loc ${target} IMPORTED_LOCATION_${_config_upper})
+      if(NOT _loc)
+        get_target_property(_loc ${target} IMPORTED_LOCATION_${_config})
+      endif()
+      if(_loc AND NOT _loc STREQUAL "NOTFOUND")
+        list(APPEND _candidate_locations "${_loc}")
+      endif()
+    endforeach()
+  endif()
+
+  if(NOT _candidate_locations)
+    get_target_property(_loc ${target} IMPORTED_LOCATION)
+    if(NOT _loc OR _loc STREQUAL "NOTFOUND")
+      get_target_property(_loc ${target} LOCATION)
+    endif()
+    if(_loc AND NOT _loc STREQUAL "NOTFOUND")
+      list(APPEND _candidate_locations "${_loc}")
+    endif()
+  endif()
+
+  if(NOT _candidate_locations)
+    return()
+  endif()
+
+  set(_candidate_directories)
+  foreach(_loc ${_candidate_locations})
+    get_filename_component(_dir "${_loc}" DIRECTORY)
+    if(_dir)
+      list(APPEND _candidate_directories "${_dir}")
+    endif()
+  endforeach()
+
+  if(NOT _candidate_directories)
+    return()
+  endif()
+
+  set(_updated_directories ${${out_var}})
+  list(APPEND _updated_directories ${_candidate_directories})
+  list(REMOVE_DUPLICATES _updated_directories)
+  set(${out_var} ${_updated_directories} PARENT_SCOPE)
+
+  foreach(_dir ${_candidate_directories})
+    message(STATUS "${target} runtime directory: ${_dir}")
+  endforeach()
+endfunction()
+
 set(centiloid_runtime_dependency_args)
 set(centiloid_install_target_args
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   COMPONENT Runtime
 )
-set(centiloid_runtime_dependency_directories)
 set(centiloid_runtime_dependency_directories_args)
 
-if(DEFINED onetbb_LIBDIRS AND onetbb_LIBDIRS)
-  list(APPEND centiloid_runtime_dependency_directories ${onetbb_LIBDIRS})
-  message(STATUS "oneTBB lib dirs: ${onetbb_LIBDIRS}")
-endif()
+set(centiloid_runtime_dependency_directories
+  "$<TARGET_FILE_DIR:CentiloidCalculator>"
+  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+)
+centiloid_append_imported_target_directories(centiloid_runtime_dependency_directories TBB::tbbmalloc)
+centiloid_append_imported_target_directories(centiloid_runtime_dependency_directories TBB::tbbmalloc_proxy)
+list(REMOVE_DUPLICATES centiloid_runtime_dependency_directories)
 
 if(centiloid_runtime_dependency_directories)
   set(centiloid_runtime_dependency_directories_args
