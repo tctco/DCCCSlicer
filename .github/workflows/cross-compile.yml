@@ -212,18 +212,58 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "platform=${platform}" >> "$GITHUB_OUTPUT"
 
+      - name: Prepare package contents (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_name="DCCCSlicer-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}"
+
+          rm -rf localizer/src demo ninja-build "$package_name"
+
+          mkdir "$package_name"
+          shopt -s dotglob nullglob
+          for entry in *; do
+            case "$entry" in
+              .|..|.git|.github|"$package_name")
+                continue
+                ;;
+            esac
+
+            if [[ "$entry" == *.git* ]]; then
+              continue
+            fi
+
+            cp -R "$entry" "$package_name/"
+          done
+
+      - name: Prepare package contents (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $packageName = "DCCCSlicer-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM"
+
+          foreach ($path in @("localizer/src", "demo", "ninja-build", $packageName)) {
+            if (Test-Path $path) {
+              Remove-Item $path -Recurse -Force
+            }
+          }
+
+          New-Item -ItemType Directory -Path $packageName | Out-Null
+
+          Get-ChildItem -Force | Where-Object {
+            $_.Name -notin @('.', '..', '.git', '.github', $packageName) -and $_.Name -notlike '*.git*'
+          } | ForEach-Object {
+            $destination = Join-Path $packageName $_.Name
+            Copy-Item -Path $_.FullName -Destination $destination -Recurse -Force
+          }
+
       - name: Create distributable zip (entire project)
         uses: thedoctor0/zip-release@0.7.6
         with:
           type: 'zip'
           filename: DCCCSlicer-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}.zip
-          path: .
-          exclusions: |
-            *.git*
-            localizer/src/**
-            demo/**
-            ninja-build/**
-            .github/**
+          path: DCCCSlicer-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
