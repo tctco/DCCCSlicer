@@ -112,11 +112,12 @@ class MetricCalculatorLogic:
             )
 
         if self._current_process is not None:
-            return self._finalize_async_callback(
-                False, "",
-                "Another calculation is already running. Please wait for it to finish.",
-                callback
+            error_message = (
+                "Another calculation is already running. Please wait for it to finish."
             )
+            if callback:
+                callback(False, "", error_message)
+            return False
 
         try:
             self.last_volume_name = input_node.GetName()
@@ -500,11 +501,12 @@ class MetricCalculatorLogic:
         if not ref_node:
             return self._finalize_async_callback(False, "", "Invalid reference mask node", callback)
         if self._current_process is not None:
-            return self._finalize_async_callback(
-                False, "",
-                "Another calculation is already running. Please wait for it to finish.",
-                callback
+            error_message = (
+                "Another calculation is already running. Please wait for it to finish."
             )
+            if callback:
+                callback(False, "", error_message)
+            return False
 
         try:
             self.last_volume_name = input_node.GetName()
