@@ -1,7 +1,7 @@
 # CMakeList.txt: CentiloidCalculator Refactored Version
 cmake_minimum_required(VERSION 3.21)
 
-project(CentiloidCalculator VERSION 2.4.0)
+project(CentiloidCalculator VERSION 3.2.0)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)

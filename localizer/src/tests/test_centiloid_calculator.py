@@ -158,7 +158,7 @@ ref_mask = "whole_cerebral"
         result = self._run_command(["--version"], expect_success=False)
         # Version info may return non-zero, check if version is mentioned
         output = result.stdout + result.stderr
-        self.assertTrue("2.4.0" in output or "version" in output.lower())
+        self.assertTrue("3.2.0" in output or "version" in output.lower())
     
     def test_no_subcommand(self):
         """Test behavior when no subcommand is provided"""
