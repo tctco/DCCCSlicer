@@ -210,16 +210,25 @@ class MetricCalculatorLogic:
             return
         data = self._current_process.readAllStandardOutput()
         if data:
-            self._process_stdout.append(bytes(data).decode("utf-8", errors="ignore"))
+            try:
+                text = data.data().decode("utf-8", errors="ignore")
+            except AttributeError:
+                # Fallback for PyQt implementations where QByteArray lacks data()
+                text = bytearray(data).decode("utf-8", errors="ignore")
+            self._process_stdout.append(text)
 
     def _handle_async_stderr(self):
         if not self._current_process:
             return
         data = self._current_process.readAllStandardError()
         if data:
-            self._process_stderr.append(bytes(data).decode("utf-8", errors="ignore"))
+            try:
+                text = data.data().decode("utf-8", errors="ignore")
+            except AttributeError:
+                text = bytearray(data).decode("utf-8", errors="ignore")
+            self._process_stderr.append(text)
 
-    def _on_async_finished(self, exit_code, exit_status):
+    def _on_async_finished(self, exit_code, exit_status=qt.QProcess.NormalExit):
         if self._current_process is None:
             return
 
