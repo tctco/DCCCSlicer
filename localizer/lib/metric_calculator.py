@@ -8,6 +8,8 @@ using the new subcommand-based CentiloidCalculator executable
 import os
 import subprocess
 from pathlib import Path
+
+import qt
 import slicer
 
 
@@ -36,8 +38,13 @@ class MetricCalculatorLogic:
         self.plugin_path = Path(plugin_path)
         self.executable_path = self.plugin_path / "cpp" / "CentiloidCalculator"
         self.last_volume_name = None
+        self._current_process = None
+        self._process_stdout = []
+        self._process_stderr = []
+        self._async_callback = None
+        self._async_context = None
     
-    def calculate_metric(self, input_node, metric_type, algorithm_style="SPM style", 
+    def calculate_metric(self, input_node, metric_type, algorithm_style="SPM style",
                         manual_fov=False, iterative=False, skip_normalization=False, **kwargs):
         """Calculate specified metric for input volume
         
@@ -90,6 +97,48 @@ class MetricCalculatorLogic:
             
         except Exception as e:
             return False, "", f"Error during {metric_type} calculation: {str(e)}"
+
+    def calculate_metric_async(self, input_node, metric_type, algorithm_style="SPM style",
+                               manual_fov=False, iterative=False, skip_normalization=False,
+                               callback=None, **kwargs):
+        """Asynchronously calculate specified metric for input volume."""
+
+        if not input_node:
+            return self._finalize_async_callback(False, "", "Invalid input node", callback)
+
+        if metric_type not in self.METRIC_SUBCOMMANDS:
+            return self._finalize_async_callback(
+                False, "", f"Unsupported metric type: {metric_type}", callback
+            )
+
+        if self._current_process is not None:
+            error_message = (
+                "Another calculation is already running. Please wait for it to finish."
+            )
+            if callback:
+                callback(False, "", error_message)
+            return False
+
+        try:
+            self.last_volume_name = input_node.GetName()
+            tmp_path = str(self.plugin_path / "tmp.nii")
+            slicer.util.saveNode(input_node, tmp_path)
+
+            output_path = str(self.plugin_path / "Normalized.nii")
+            cmd = self._build_command(
+                metric_type, tmp_path, output_path, algorithm_style,
+                manual_fov, iterative, skip_normalization
+            )
+
+            context = {
+                "failure_message": f"Failed to calculate {metric_type}",
+                "operation": "metric"
+            }
+            return self._start_async_process(cmd, callback, context)
+        except Exception as e:
+            return self._finalize_async_callback(
+                False, "", f"Error during {metric_type} calculation: {str(e)}", callback
+            )
     
     def _build_command(self, metric_type, input_path, output_path, algorithm_style,
                       manual_fov, iterative, skip_normalization):
@@ -130,8 +179,130 @@ class MetricCalculatorLogic:
             cmd.append("--iterative")
         if skip_normalization:
             cmd.append("--skip-normalization")
-            
+
         return cmd
+
+    def _start_async_process(self, cmd, callback, context):
+        """Start external command asynchronously."""
+
+        process = qt.QProcess()
+        process.setProgram(cmd[0])
+        process.setArguments(cmd[1:])
+        process.setWorkingDirectory(str(self.plugin_path))
+        process.setProcessChannelMode(qt.QProcess.SeparateChannels)
+
+        self._current_process = process
+        self._async_callback = callback
+        self._async_context = context or {}
+        self._process_stdout = []
+        self._process_stderr = []
+
+        process.readyReadStandardOutput.connect(self._handle_async_stdout)
+        process.readyReadStandardError.connect(self._handle_async_stderr)
+        process.finished.connect(self._on_async_finished)
+        process.errorOccurred.connect(self._on_async_error)
+        process.start()
+
+        return True
+
+    def _handle_async_stdout(self):
+        if not self._current_process:
+            return
+        data = self._current_process.readAllStandardOutput()
+        if data:
+            try:
+                text = data.data().decode("utf-8", errors="ignore")
+            except AttributeError:
+                # Fallback for PyQt implementations where QByteArray lacks data()
+                text = bytearray(data).decode("utf-8", errors="ignore")
+            self._process_stdout.append(text)
+
+    def _handle_async_stderr(self):
+        if not self._current_process:
+            return
+        data = self._current_process.readAllStandardError()
+        if data:
+            try:
+                text = data.data().decode("utf-8", errors="ignore")
+            except AttributeError:
+                text = bytearray(data).decode("utf-8", errors="ignore")
+            self._process_stderr.append(text)
+
+    def _on_async_finished(self, exit_code, exit_status=qt.QProcess.NormalExit):
+        if self._current_process is None:
+            return
+
+        stdout = "".join(self._process_stdout)
+        stderr = "".join(self._process_stderr)
+        context = self._async_context or {}
+        failure_message = context.get("failure_message", "Process failed")
+
+        if exit_status == qt.QProcess.NormalExit and exit_code == 0:
+            result_text = self._polish_output(stdout)
+            self._finalize_async_callback(True, result_text, "")
+        else:
+            error_msg = failure_message
+            if stderr.strip():
+                error_msg += f"\nError: {stderr.strip()}"
+            if stdout.strip():
+                error_msg += f"\nOutput: {stdout.strip()}"
+            self._finalize_async_callback(False, "", error_msg)
+
+    def _on_async_error(self, process_error):
+        if self._current_process is None:
+            return
+
+        error_map = {
+            qt.QProcess.FailedToStart: "Failed to start external process. Check executable permissions.",
+            qt.QProcess.Crashed: "The external process crashed during execution.",
+            qt.QProcess.Timedout: "The external process timed out.",
+            qt.QProcess.WriteError: "Write error occurred while communicating with the process.",
+            qt.QProcess.ReadError: "Read error occurred while communicating with the process."
+        }
+
+        context = self._async_context or {}
+        failure_message = context.get("failure_message", "Process failed")
+        specific_message = error_map.get(process_error, "An unknown process error occurred.")
+        stderr = "".join(self._process_stderr).strip()
+        if stderr:
+            specific_message += f"\nError: {stderr}"
+
+        self._finalize_async_callback(False, "", f"{failure_message}\n{specific_message}")
+
+    def _finalize_async_callback(self, success, result_text, error_message, callback_override=None):
+        """Finalize asynchronous execution, clean up process, and invoke callback."""
+
+        callback = callback_override or self._async_callback
+        process = self._current_process
+        if process:
+            try:
+                process.readyReadStandardOutput.disconnect(self._handle_async_stdout)
+            except TypeError:
+                pass
+            try:
+                process.readyReadStandardError.disconnect(self._handle_async_stderr)
+            except TypeError:
+                pass
+            try:
+                process.finished.disconnect(self._on_async_finished)
+            except TypeError:
+                pass
+            try:
+                process.errorOccurred.disconnect(self._on_async_error)
+            except TypeError:
+                pass
+            process.deleteLater()
+
+        self._current_process = None
+        self._async_callback = None
+        self._async_context = None
+        self._process_stdout = []
+        self._process_stderr = []
+
+        if callback:
+            callback(success, result_text, error_message)
+
+        return success
     
     def _execute_command(self, cmd):
         """Execute the metric calculation command
@@ -266,7 +437,7 @@ class MetricCalculatorLogic:
             
         return volume_node
     
-    def calculate_suvr(self, input_node, roi_node, ref_node, algorithm_style="SPM style", 
+    def calculate_suvr(self, input_node, roi_node, ref_node, algorithm_style="SPM style",
                       manual_fov=False, iterative=False, skip_normalization=False, **kwargs):
         """Calculate SUVr using specified ROI and reference masks
         
@@ -325,6 +496,52 @@ class MetricCalculatorLogic:
             
         except Exception as e:
             return False, "", f"Error during SUVr calculation: {str(e)}"
+
+    def calculate_suvr_async(self, input_node, roi_node, ref_node,
+                              algorithm_style="SPM style", manual_fov=False,
+                              iterative=False, skip_normalization=False, callback=None,
+                              **kwargs):
+        """Asynchronously calculate SUVr using specified ROI and reference masks."""
+
+        if not input_node:
+            return self._finalize_async_callback(False, "", "Invalid input node", callback)
+        if not roi_node:
+            return self._finalize_async_callback(False, "", "Invalid ROI mask node", callback)
+        if not ref_node:
+            return self._finalize_async_callback(False, "", "Invalid reference mask node", callback)
+        if self._current_process is not None:
+            error_message = (
+                "Another calculation is already running. Please wait for it to finish."
+            )
+            if callback:
+                callback(False, "", error_message)
+            return False
+
+        try:
+            self.last_volume_name = input_node.GetName()
+            input_path = str(self.plugin_path / "tmp.nii")
+            roi_path = str(self.plugin_path / "roi.nii")
+            ref_path = str(self.plugin_path / "ref.nii")
+            output_path = str(self.plugin_path / "Normalized.nii")
+
+            slicer.util.saveNode(input_node, input_path)
+            slicer.util.saveNode(roi_node, roi_path)
+            slicer.util.saveNode(ref_node, ref_path)
+
+            cmd = self._build_suvr_command(
+                input_path, output_path, roi_path, ref_path, algorithm_style,
+                manual_fov, iterative, skip_normalization
+            )
+
+            context = {
+                "failure_message": "Failed to calculate SUVr",
+                "operation": "suvr"
+            }
+            return self._start_async_process(cmd, callback, context)
+        except Exception as e:
+            return self._finalize_async_callback(
+                False, "", f"Error during SUVr calculation: {str(e)}", callback
+            )
     
     def _build_suvr_command(self, input_path, output_path, roi_path, ref_path, algorithm_style,
                            manual_fov, iterative, skip_normalization):

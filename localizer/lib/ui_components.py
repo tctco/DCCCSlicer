@@ -9,10 +9,10 @@ import qt
 
 class TimeConsumingMessageBox:
     """耗时操作的消息框上下文管理器"""
-    
+
     def __init__(self, message="Calculating, please wait...", title="Processing"):
         """初始化消息框
-        
+
         Args:
             message: 显示的消息
             title: 窗口标题
@@ -21,8 +21,14 @@ class TimeConsumingMessageBox:
         self.title = title
         self.msg_box = None
 
-    def __enter__(self):
-        """进入上下文时显示消息框"""
+    def show(self):
+        """显示消息框
+
+        返回自身以便与上下文管理器行为保持一致。
+        """
+        if self.msg_box:
+            return self
+
         msg_box = qt.QMessageBox()
         self.msg_box = msg_box
         msg_box.setIcon(qt.QMessageBox.Information)
@@ -33,10 +39,19 @@ class TimeConsumingMessageBox:
         msg_box.show()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        """退出上下文时关闭消息框"""
+    def close(self):
+        """关闭消息框"""
         if self.msg_box:
             self.msg_box.close()
+            self.msg_box = None
+
+    def __enter__(self):
+        """进入上下文时显示消息框"""
+        return self.show()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """退出上下文时关闭消息框"""
+        self.close()
 
 
 class MarkupManager:
