@@ -179,21 +179,26 @@ jobs:
       - name: Determine package metadata
         id: package-metadata
         shell: bash
+        env:
+          MATRIX_OS: ${{ matrix.os }}
         run: |
           set -euo pipefail
 
-          case "${{ runner.os }}" in
-            Linux)
-              platform="linux-x64"
+          case "${MATRIX_OS:-$RUNNER_OS}" in
+            macos-14)
+              platform="macos-14-arm64"
               ;;
-            Windows)
-              platform="windows-x64"
-              ;;
-            macOS)
+            macos-latest|macOS)
               platform="macos-arm64"
               ;;
+            ubuntu-latest|Linux)
+              platform="linux-x64"
+              ;;
+            windows-latest|Windows)
+              platform="windows-x64"
+              ;;
             *)
-              platform="${{ runner.os }}"
+              platform="${MATRIX_OS:-$RUNNER_OS}"
               ;;
           esac
 
