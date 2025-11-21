@@ -185,16 +185,22 @@ jobs:
           set -euo pipefail
 
           case "${MATRIX_OS:-$RUNNER_OS}" in
-            macos-14)
-              platform="macos-14-arm64"
+            macos-*)
+              platform="${MATRIX_OS:-macos}-arm64"
               ;;
-            macos-latest|macOS)
+            ubuntu-*)
+              platform="${MATRIX_OS:-linux}-x64"
+              ;;
+            windows-*)
+              platform="${MATRIX_OS:-windows}-x64"
+              ;;
+            macOS)
               platform="macos-arm64"
               ;;
-            ubuntu-latest|Linux)
+            Linux)
               platform="linux-x64"
               ;;
-            windows-latest|Windows)
+            Windows)
               platform="windows-x64"
               ;;
             *)
