@@ -8,6 +8,10 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
+#elif __APPLE__
+#include <mach-o/dyld.h>
+#include <limits.h>
+#include <unistd.h>
 #else
 #include <limits.h>
 #include <unistd.h>
@@ -16,14 +20,30 @@
 namespace Common {
 
 std::string getExecutablePath() {
+  std::string executablePath;
+
 #ifdef _WIN32
   char buffer[MAX_PATH];
   GetModuleFileNameA(NULL, buffer, MAX_PATH);
-  std::string executablePath(buffer);
+  executablePath = buffer;
+#elif __APPLE__
+  char path[PATH_MAX];
+  uint32_t size = sizeof(path);
+  if (_NSGetExecutablePath(path, &size) == 0) {
+    char resolvedPath[PATH_MAX];
+    if (realpath(path, resolvedPath) != nullptr) {
+      executablePath = resolvedPath;
+    }
+  }
+
+  // Fallback to current directory if we cannot resolve the executable path
+  if (executablePath.empty()) {
+    executablePath = std::filesystem::current_path().string();
+  }
 #else
   char result[PATH_MAX];
   ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-  std::string executablePath(result, (count > 0) ? count : 0);
+  executablePath = std::string(result, (count > 0) ? count : 0);
 #endif
   return std::filesystem::path(executablePath).parent_path().string();
 }
