@@ -15,3 +15,6 @@ tracked_files.txt
 localizer/src/tests/*.nii
 localizer/src/build/
 localizer/src/install/
+
+build/
+.VSCodeCounter/
