@@ -13,6 +13,7 @@ find_package(argparse CONFIG REQUIRED)
 find_package(onnxruntime CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
+find_package(rapidcsv CONFIG REQUIRED)
 
 # Include directories
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -71,6 +72,8 @@ target_sources(CentiloidCalculator PRIVATE
 target_sources(CentiloidCalculator PRIVATE
     pipeline/ProcessingPipeline.h
     pipeline/ProcessingPipeline.cpp
+    pipeline/BatchProcessor.h
+    pipeline/BatchProcessor.cpp
 )
 
 # Add utility sources

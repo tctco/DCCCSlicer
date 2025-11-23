@@ -8,8 +8,11 @@
 // New architecture components
 #include "config/Configuration.h"
 #include "pipeline/ProcessingPipeline.h"
+#include "pipeline/BatchProcessor.h"
 #include "calculators/SUVrCalculator.h"
 #include "utils/common.h"
+
+const std::string SOFTWARE_VERSION = "3.0.0";
 
 /**
  * @brief Command-specific option structures
@@ -20,6 +23,7 @@ struct BaseCommandOptions {
     std::string configPath;
     bool enableDebugOutput = false;
     std::string debugOutputBasePath;
+    bool batchMode = false;
 };
 
 /**
@@ -84,16 +88,20 @@ void addSpatialNormalizationArguments(argparse::ArgumentParser& parser) {
  */
 void addBaseArguments(argparse::ArgumentParser& parser) {
     parser.add_argument("--input")
-        .help("Input PET image path")
+        .help("Input PET image path (or directory in batch mode)")
         .required();
     parser.add_argument("--output")
-        .help("Output processed image path")
+        .help("Output processed image path (or directory in batch mode)")
         .required();
     parser.add_argument("--config")
         .help("Configuration file path")
         .default_value("config.toml");
     parser.add_argument("--debug")
         .help("Enable debug mode")
+        .default_value(false)
+        .implicit_value(true);
+    parser.add_argument("--batch")
+        .help("Enable batch processing mode")
         .default_value(false)
         .implicit_value(true);
 }
@@ -159,6 +167,7 @@ SUVrDerivedMetricOptions parseSUVrDerivedMetricOptions(const argparse::ArgumentP
     options.useIterativeRigid = program.get<bool>("--iterative");
     options.useManualFOV = program.get<bool>("--manual-fov");
     options.enableDebugOutput = program.get<bool>("--debug");
+    options.batchMode = program.get<bool>("--batch");
     options.metricType = metricType;
     
     setupDebugOutput(options);
@@ -168,7 +177,7 @@ SUVrDerivedMetricOptions parseSUVrDerivedMetricOptions(const argparse::ArgumentP
 /**
  * @brief Execute SUVr-derived metric command (generic)
  */
-int executeSUVrDerivedMetricCommand(const argparse::ArgumentParser& program, const std::string& metricType) {
+int executeSUVrDerivedMetricCommand(const argparse::ArgumentParser& program, const std::string& metricType, const std::string& fullCommand) {
     SUVrDerivedMetricOptions options = parseSUVrDerivedMetricOptions(program, metricType);
     
     // Initialize configuration
@@ -186,7 +195,26 @@ int executeSUVrDerivedMetricCommand(const argparse::ArgumentParser& program, con
     // The includeSUVr flag will be handled by the metric result printing logic
     procOptions.selectedMetric = metricType;
     
-    // Execute processing
+    if (options.batchMode) {
+        // Batch processing
+        auto processor = [config, procOptions](const std::string& inputPath, const std::string& outputPath) -> ProcessingResult {
+            ProcessingPipeline pipeline(config);
+            return pipeline.process(inputPath, outputPath, procOptions);
+        };
+        
+        std::cout << "Starting " << metricType << " batch processing..." << std::endl;
+        return BatchProcessor::runBatch(
+            options.inputPath, 
+            options.outputPath, 
+            options.configPath, 
+            SOFTWARE_VERSION,
+            fullCommand,
+            options.skipRegistration, 
+            processor
+        );
+    }
+
+    // Execute single file processing
     ProcessingPipeline pipeline(config);
     std::cout << "Starting " << metricType << " calculation: " << options.inputPath << std::endl;
     ProcessingResult result = pipeline.process(options.inputPath, options.outputPath, procOptions);
@@ -217,28 +245,28 @@ int executeSUVrDerivedMetricCommand(const argparse::ArgumentParser& program, con
 /**
  * @brief Execute centiloid command
  */
-int executeCentiloidCommand(const argparse::ArgumentParser& centiloid_parser) {
-    return executeSUVrDerivedMetricCommand(centiloid_parser, "centiloid");
+int executeCentiloidCommand(const argparse::ArgumentParser& centiloid_parser, const std::string& fullCommand) {
+    return executeSUVrDerivedMetricCommand(centiloid_parser, "centiloid", fullCommand);
 }
 
 /**
  * @brief Execute CenTauR command
  */
-int executeCenTauRCommand(const argparse::ArgumentParser& centaur_parser) {
-    return executeSUVrDerivedMetricCommand(centaur_parser, "centaur");
+int executeCenTauRCommand(const argparse::ArgumentParser& centaur_parser, const std::string& fullCommand) {
+    return executeSUVrDerivedMetricCommand(centaur_parser, "centaur", fullCommand);
 }
 
 /**
  * @brief Execute CenTauRz command
  */
-int executeCenTauRzCommand(const argparse::ArgumentParser& centaurz_parser) {
-    return executeSUVrDerivedMetricCommand(centaurz_parser, "centaurz");
+int executeCenTauRzCommand(const argparse::ArgumentParser& centaurz_parser, const std::string& fullCommand) {
+    return executeSUVrDerivedMetricCommand(centaurz_parser, "centaurz", fullCommand);
 }
 
 /**
  * @brief Execute SUVr command
  */
-int executeSUVrCommand(const argparse::ArgumentParser& suvr_parser) {
+int executeSUVrCommand(const argparse::ArgumentParser& suvr_parser, const std::string& fullCommand) {
     SUVrCommandOptions options;
     options.inputPath = suvr_parser.get<std::string>("--input");
     options.outputPath = suvr_parser.get<std::string>("--output");
@@ -247,12 +275,52 @@ int executeSUVrCommand(const argparse::ArgumentParser& suvr_parser) {
     options.configPath = suvr_parser.get<std::string>("--config");
     options.skipRegistration = suvr_parser.get<bool>("--skip-normalization");
     options.enableDebugOutput = suvr_parser.get<bool>("--debug");
+    options.batchMode = suvr_parser.get<bool>("--batch");
     
     setupDebugOutput(options);
     
     // Initialize configuration
     auto config = loadConfigurationWithLogging(options.configPath, options.enableDebugOutput);
     
+    if (options.batchMode) {
+        auto processor = [config, options](const std::string& inputPath, const std::string& outputPath) -> ProcessingResult {
+            ImageType::Pointer inputImage;
+             if (options.skipRegistration) {
+                inputImage = Common::LoadNii(inputPath);
+            } else {
+                ProcessingOptions procOptions;
+                procOptions.skipRegistration = false;
+                procOptions.enableDebugOutput = options.enableDebugOutput;
+                procOptions.debugOutputBasePath = options.debugOutputBasePath;
+                procOptions.selectedMetric = ""; // Don't calculate standard metrics
+                
+                ProcessingPipeline pipeline(config);
+                ProcessingResult result = pipeline.process(inputPath, outputPath, procOptions);
+                inputImage = result.spatiallyNormalizedImage;
+            }
+            
+            double suvr = SUVrCalculator::calculateSUVr(inputImage, options.voiMaskPath, options.refMaskPath);
+            
+            ProcessingResult result;
+            MetricResult metric;
+            metric.metricName = "CustomSUVr";
+            metric.suvr = suvr;
+            result.metricResults.push_back(metric);
+            return result;
+        };
+
+        std::cout << "Starting SUVr batch processing..." << std::endl;
+         return BatchProcessor::runBatch(
+             options.inputPath, 
+             options.outputPath, 
+             options.configPath, 
+             SOFTWARE_VERSION,
+             fullCommand,
+             options.skipRegistration, 
+             processor
+         );
+    }
+
     // Load and process image
     ImageType::Pointer inputImage;
     if (options.skipRegistration) {
@@ -296,6 +364,7 @@ int executeNormalizeCommand(const argparse::ArgumentParser& normalize_parser) {
     options.useManualFOV = normalize_parser.get<bool>("--manual-fov");
     options.enableADNIStyle = normalize_parser.get<bool>("--ADNI-PET-core");
     options.enableDebugOutput = normalize_parser.get<bool>("--debug");
+    // Normalize doesn't support batch for metrics as per requirement (metric-only)
     
     setupDebugOutput(options);
     
@@ -366,9 +435,19 @@ int executeDecoupleCommand(const argparse::ArgumentParser& decouple_parser) {
  */
 int main(int argc, char* argv[]) {
     itk::NiftiImageIOFactory::RegisterOneFactory();
+    
+    // Reconstruct full command line for logging
+    std::string fullCommand;
+    if (argc > 0) {
+        fullCommand = argv[0];
+        for (int i = 1; i < argc; ++i) {
+            fullCommand += " " + std::string(argv[i]);
+        }
+    }
+
     try {
         // Setup main program with subcommands
-        argparse::ArgumentParser program("CentiloidCalculator", "3.0.0");
+        argparse::ArgumentParser program("CentiloidCalculator", SOFTWARE_VERSION);
         program.add_description("PET image analysis toolkit for quantitative biomarker calculation");
         
         // Create subcommand parsers in main function to ensure proper lifetime
@@ -442,13 +521,13 @@ int main(int argc, char* argv[]) {
         
         // Execute appropriate subcommand
         if (program.is_subcommand_used("centiloid")) {
-            return executeCentiloidCommand(centiloid_cmd);
+            return executeCentiloidCommand(centiloid_cmd, fullCommand);
         } else if (program.is_subcommand_used("centaur")) {
-            return executeCenTauRCommand(centaur_cmd);
+            return executeCenTauRCommand(centaur_cmd, fullCommand);
         } else if (program.is_subcommand_used("centaurz")) {
-            return executeCenTauRzCommand(centaurz_cmd);
+            return executeCenTauRzCommand(centaurz_cmd, fullCommand);
         } else if (program.is_subcommand_used("suvr")) {
-            return executeSUVrCommand(suvr_cmd);
+            return executeSUVrCommand(suvr_cmd, fullCommand);
         } else if (program.is_subcommand_used("normalize")) {
             return executeNormalizeCommand(normalize_cmd);
         } else if (program.is_subcommand_used("decouple")) {
@@ -466,4 +545,3 @@ int main(int argc, char* argv[]) {
     
     return EXIT_SUCCESS;
 }
-

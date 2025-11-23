@@ -14,6 +14,7 @@ class AppConan(ConanFile):
         self.requires("itk/5.3.0")
         self.requires("onnxruntime/1.18.1")
         self.requires("tomlplusplus/3.4.0")
+        self.requires("rapidcsv/8.84")
 
         # ---- conflict resolution: choose one Eigen for the whole graph ----
         # If the graph shows ORT wants 3.4.0, prefer:
