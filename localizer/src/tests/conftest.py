@@ -5,13 +5,7 @@ from pathlib import Path
 import shutil
 
 # Import the global results list so tests can append to it
-try:
-    from .conftest_plugins import ACC_TEST_RESULTS, pytest_terminal_summary
-except ImportError:
-    # Fallback if conftest_plugins is not found (should not happen in valid structure)
-    ACC_TEST_RESULTS = []
-    def pytest_terminal_summary(terminalreporter, exitstatus, config):
-        pass
+from conftest_plugins import ACC_TEST_RESULTS, pytest_terminal_summary
 
 # Common constants
 TEST_DIR = Path(__file__).parent.resolve()
