@@ -13,8 +13,6 @@ tracked_files.txt
 *archive*
 
 localizer/src/tests/*.nii
-localizer/src/tests/inputs
-localizer/src/tests/outputs
 localizer/src/build/
 localizer/src/install/
 

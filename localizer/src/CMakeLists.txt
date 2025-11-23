@@ -1,7 +1,7 @@
 # CMakeList.txt: CentiloidCalculator Refactored Version
 cmake_minimum_required(VERSION 3.21)
 
-project(CentiloidCalculator VERSION 3.2.0)
+project(CentiloidCalculator VERSION 3.3.0)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -18,6 +18,13 @@ find_package(rapidcsv CONFIG REQUIRED)
 # Include directories
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+# Configure version header
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/config/Version.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/config/Version.h
+    @ONLY
+)
+
 # Create executable
 add_executable(CentiloidCalculator main.cpp)
 
@@ -32,6 +39,7 @@ target_sources(CentiloidCalculator PRIVATE
 target_sources(CentiloidCalculator PRIVATE
     config/Configuration.h
     config/Configuration.cpp
+    config/Version.h
 )
 
 # Add metric calculators
@@ -80,6 +88,10 @@ target_sources(CentiloidCalculator PRIVATE
 target_sources(CentiloidCalculator PRIVATE
     utils/common.h
     utils/common.cpp
+    cli/Options.h
+    cli/Options.cpp
+    cli/Commands.h
+    cli/Commands.cpp
 )
 
 # Add decoupler sources

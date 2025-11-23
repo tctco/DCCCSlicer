@@ -1,0 +1,13 @@
+﻿image,metric,tracer,value
+AD03_19500101_FTP_80100.nii,centaurz,FTP,12.89173103
+CU03_19500101_FTP_80100.nii,centaurz,FTP,-1.232005878
+AD01_PiB_5070.nii,centiloid,PiB,102.3
+YC101_PiB_5070.nii,centiloid,PiB,-4.3
+YC03_PET.nii,centiloid,FBP,-11.14953921
+ED02_PET.nii,centiloid,FBP,13.11007938
+GE_F18_FMT_AD_106_NIFTI.nii,centiloid,FMM,89.69480503
+GE_F18_FMT_YHV_001_NIFTI.nii,centiloid,FMM,8.353397017
+E001_PET_NAV.nii,centiloid,NAV,42.27886352
+Y001_PET_NAV.nii,centiloid,NAV,-2.350256466
+1008_PET_FBB.nii,centiloid,FBB,42.93570896
+Y1001_PET_FBB.nii,centiloid,FBB,-1.140296806
