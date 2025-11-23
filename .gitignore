@@ -13,6 +13,8 @@ tracked_files.txt
 *archive*
 
 localizer/src/tests/*.nii
+!localizer/src/tests/voi_mask.nii
+!localizer/src/tests/ref_mask.nii
 localizer/src/build/
 localizer/src/install/
 
