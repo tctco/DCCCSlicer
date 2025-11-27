@@ -1,6 +1,6 @@
 #pragma once
 #include "../utils/common.h"
-#include "ImagePreprocessor.h"
+#include "../preprocessing/ImagePreprocessor.h"
 #include "RigidRegistrationEngine.h"
 #include "NonlinearRegistrationEngine.h"
 #include <memory>

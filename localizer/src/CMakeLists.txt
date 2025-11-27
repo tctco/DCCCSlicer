@@ -60,12 +60,16 @@ target_sources(CentiloidCalculator PRIVATE
     normalizers/RigidVoxelMorphNormalizer.cpp
     normalizers/RegistrationPipeline.h
     normalizers/RegistrationPipeline.cpp
-    normalizers/ImagePreprocessor.h
-    normalizers/ImagePreprocessor.cpp
     normalizers/RigidRegistrationEngine.h
     normalizers/RigidRegistrationEngine.cpp
     normalizers/NonlinearRegistrationEngine.h
     normalizers/NonlinearRegistrationEngine.cpp
+)
+
+# Add image preprocessing module
+target_sources(CentiloidCalculator PRIVATE
+    preprocessing/ImagePreprocessor.h
+    preprocessing/ImagePreprocessor.cpp
 )
 
 # Add factories

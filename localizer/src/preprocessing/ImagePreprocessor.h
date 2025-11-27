@@ -11,6 +11,9 @@
 
 /**
  * @brief Image preprocessing utilities for registration
+ *
+ * This module is separated from normalizers to allow independent
+ * extension of image preprocessing pipelines.
  */
 class ImagePreprocessor {
 public:
@@ -40,3 +43,5 @@ private:
     static std::vector<double> getSortedPixelValues(ImageType::Pointer image);
     static double getPercentileValue(const std::vector<double>& sortedValues, double percentile);
 };
+
+

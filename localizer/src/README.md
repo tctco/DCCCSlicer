@@ -38,6 +38,13 @@ Calculate standardized amyloid burden scores:
 ./CentiloidCalculator centiloid --input normalized_pet.nii --output result.nii --skip-normalization
 ```
 
+Batch processing of multiple amyloid PET images:
+
+```bash
+# Process all .nii / .nii.gz files under input_dir and write outputs to output_dir
+./CentiloidCalculator centiloid --input input_dir --output output_dir --batch
+```
+
 #### CenTauR Analysis
 Calculate standardized tau burden scores:
 
@@ -54,6 +61,13 @@ Calculate SUVr with user-defined regions:
 
 ```bash
 ./CentiloidCalculator suvr --input pet.nii --output result.nii \
+  --voi-mask target_region.nii --ref-mask reference_region.nii
+```
+
+Batch SUVr calculation with user-defined regions:
+
+```bash
+./CentiloidCalculator suvr --input input_dir --output output_dir --batch \
   --voi-mask target_region.nii --ref-mask reference_region.nii
 ```
 
@@ -88,6 +102,7 @@ Extract pathology-specific signals:
 |--------|-------------|
 | `--config <file>` | Configuration file path (default: config.toml) |
 | `--debug` | Enable debug mode with intermediate outputs |
+| `--batch` | Enable batch processing mode. In batch mode, `--input` and `--output` are treated as directories, all `.nii` / `.nii.gz` files in the input directory are processed, and outputs are written as `<filename>_processed.nii` together with `results.csv` and `batch_info.txt` in the output directory. Currently supported for `centiloid`, `centaur`, `centaurz`, and `suvr` commands. When registration is enabled (no `--skip-normalization`), the output directory must be empty to avoid overwriting. |
 | `--iterative` | Use iterative rigid transformation |
 | `--manual-fov` | Enable manual field-of-view placement |
 | `--skip-normalization` | Skip spatial normalization step |
@@ -373,14 +388,20 @@ This design enables easy extension without modifying existing code, following th
 
 ```mermaid
 graph TD
-  CLI[CLI main.cpp] --> Pipeline[ProcessingPipeline]
+  subgraph CLI
+    Main[main.cpp] --> Cmds[cli/Commands]
+    Main --> Opts[cli/Options]
+  end
 
   subgraph Config
     IConfiguration
     Configuration
   end
-  CLI --> Configuration
-  Configuration --> Pipeline
+
+  subgraph Pipeline
+    ProcessingPipeline
+    BatchProcessor
+  end
 
   subgraph Normalization
     ISpatialNormalizer
@@ -392,11 +413,6 @@ graph TD
       NonlinearRegistrationEngine
     end
   end
-  Pipeline --> SpatialNormalizerFactory
-  SpatialNormalizerFactory --> RigidVoxelMorphNormalizer
-  RigidVoxelMorphNormalizer --> RegistrationPipeline
-  RigidRegistrationEngine --> ONNXRuntime[ONNX Runtime]
-  NonlinearRegistrationEngine --> ONNXRuntime
 
   subgraph Metrics
     IMetricCalculator
@@ -406,36 +422,49 @@ graph TD
     CenTauRCalculator
     CenTauRzCalculator
   end
-  Pipeline --> MetricCalculatorFactory
-  MetricCalculatorFactory --> SUVrCalculator
-  MetricCalculatorFactory --> CentiloidCalculator
-  MetricCalculatorFactory --> CenTauRCalculator
-  MetricCalculatorFactory --> CenTauRzCalculator
 
   subgraph Decoupling
     Decoupler
     DecoupledResult
   end
-  Pipeline --> Decoupler
+
+  Input[NIfTI PET images] -->|single file| ProcessingPipeline
+  Input -->|batch| BatchProcessor
+
+  Cmds --> ProcessingPipeline
+  Cmds --> BatchProcessor
+  Opts --> Cmds
+
+  Configuration --> ProcessingPipeline
+  IConfiguration --> Configuration
+
+  ProcessingPipeline --> SpatialNormalizerFactory
+  SpatialNormalizerFactory --> RigidVoxelMorphNormalizer
+  RigidVoxelMorphNormalizer --> RegistrationPipeline
+  RigidRegistrationEngine --> ONNXRuntime[ONNX Runtime]
+  NonlinearRegistrationEngine --> ONNXRuntime
+
+  ProcessingPipeline --> MetricCalculatorFactory
+  MetricCalculatorFactory --> SUVrCalculator
+  MetricCalculatorFactory --> CentiloidCalculator
+  MetricCalculatorFactory --> CenTauRCalculator
+  MetricCalculatorFactory --> CenTauRzCalculator
+
+  ProcessingPipeline --> Decoupler
   Decoupler --> ONNXRuntime
   Decoupler --> DecoupledResult
 
-  Input[NIfTI PET image] --> Pipeline
-  Pipeline --> RigidAligned[Rigid-aligned Image]
-  Pipeline --> Normalized[Spatially Normalized Image]
-  Normalized --> SUVrCalculator
-  Normalized --> CentiloidCalculator
-  Normalized --> CenTauRCalculator
-  Normalized --> CenTauRzCalculator
-  Pipeline --> Output[Output NIfTI and Metric Results]
+  ProcessingPipeline --> OutputSingle[Output NIfTI and Metric Results]
+  BatchProcessor --> OutputBatch[Processed NIfTI files, results.csv, batch_info.txt]
 
-  Common[utils/common.h - ITK helpers] --> Pipeline
+  Common[utils/common.h - ITK and ONNX helpers] --> ProcessingPipeline
   Common --> RigidVoxelMorphNormalizer
   Common --> RigidRegistrationEngine
   Common --> NonlinearRegistrationEngine
   Common --> SUVrCalculator
   TemplatesMasks[Templates and Masks via config] --> RigidVoxelMorphNormalizer
   TemplatesMasks --> SUVrCalculator
+  TemplatesMasks --> Decoupler
 ```
 
 ## Testing

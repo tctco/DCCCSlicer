@@ -1,7 +1,7 @@
-# CentiloidCalculator 配置文件 (TOML格式)
-# 此文件包含所有可配置的参数
+# CentiloidCalculator configuration file (TOML format)
+# This file contains all configurable parameters
 
-# 模型文件路径（相对于可执行文件目录）
+# Model file paths (relative to executable directory)
 [models]
 rigid = "assets/models/registration/rigid.onnx"
 affine_voxelmorph = "assets/models/registration/affine_voxelmorph.onnx"
@@ -20,12 +20,12 @@ tau_decoupler = [
   "assets/models/decouple/tau_fold4.onnx",
 ]
 
-# 模板文件路径
+# Template file paths
 [templates]
 adni_pet_core = "assets/nii/ADNI_empty.nii"
 padded = "assets/nii/paddedTemplate.nii"
 
-# 掩膜文件路径
+# Mask file paths
 [masks]
 cerebral_gray = "assets/nii/voi_CerebGry_2mm.nii"
 centiloid_voi = "assets/nii/voi_ctx_2mm.nii"
@@ -33,13 +33,13 @@ whole_cerebral = "assets/nii/voi_WhlCbl_2mm.nii"
 centaur_voi = "assets/nii/CenTauR.nii"
 centaur_ref = "assets/nii/voi_CerebGry_tau_2mm.nii"
 
-# 处理参数
+# Processing parameters
 [processing]
 max_iter = 5
 ac_diff_threshold = 2.0
 temp_dir = "./tmp"
 
-# MNI裁剪参数
+# MNI cropping parameters
 [processing.crop_mni]
 start_x = 8
 start_y = 16
@@ -48,28 +48,28 @@ size_x = 79
 size_y = 95
 size_z = 79
 
-# Centiloid参数
+# Centiloid parameters
 [centiloid.tracers.pib]
-slope = 93.7
-intercept = -94.6
+slope = 96.37
+intercept = -100.61
 
 [centiloid.tracers.fbp]
-slope = 175.4
-intercept = -182.3
+slope = 183.21
+intercept = -194.56
 
 [centiloid.tracers.fbb]
-slope = 153.4
-intercept = -154.9
+slope = 157.96
+intercept = -162.86
 
 [centiloid.tracers.fmm]
-slope = 121.4
-intercept = -121.2
+slope = 119.70
+intercept = -121.86
 
 [centiloid.tracers.nav]
-slope = 85.2
-intercept = -87.6
+slope = 88.81
+intercept = -92.98
 
-# CenTauR参数（百分位公式）
+# CenTauR parameters (percentile formula)
 [centaur.tracers.ftp]
 baseline = 1.06
 max = 2.13
@@ -90,10 +90,10 @@ max = 2.12
 baseline = 1.03
 max = 2.40
 
-# CenTauRz参数（z-score公式）
+# CenTauRz parameters (z-score formula)
 [centaurz.tracers.ftp]
-slope = 13.63
-intercept = -15.85
+slope = 13.84
+intercept = -16.00
 
 [centaurz.tracers.gtp1]
 slope = 10.67
@@ -115,7 +115,7 @@ intercept = -15.57
 slope = 16.73
 intercept = -15.34
 
-# ADAD转换公式
+# ADAD conversion formula
 [adad_abeta.tracers.pib]
 slope = 1.0
 intercept = 0.0
@@ -136,7 +136,7 @@ intercept = 0.80
 slope = 0.90
 intercept = 1.56
 
-# SUVr参数配置
+# SUVr parameter configuration
 [suvr.regions.centiloid]
 voi_mask = "centiloid_voi"
 ref_mask = "whole_cerebral"

@@ -81,6 +81,10 @@ Spatial normalization algorithms:
 
 
 
+## Command-line interface
+
+For users who prefer running the core calculator from the command line (including batch processing and advanced options), please refer to the standalone [CLI documentation](./localizer/src/README.md).
+
 ## TODO
 
 - [x] Add support for skipping spatial normalization to directly calculate Centiloid/CenTauR.

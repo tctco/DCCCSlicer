@@ -1,3 +1,4 @@
+# Run with Developer PowerShell for VS2
 # conan profile detect --force
 
 # remove build and install directories

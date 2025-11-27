@@ -1,7 +1,7 @@
-# CentiloidCalculator 配置文件 (TOML格式) - 快速精确版本
-# 此文件包含所有可配置的参数
+# CentiloidCalculator configuration file (TOML format) - Fast and accurate version
+# This file contains all configurable parameters
 
-# 模型文件路径（相对于可执行文件目录）
+# Model file paths (relative to executable directory)
 [models]
 rigid = "assets/models/registration/rigid.onnx"
 affine_voxelmorph = "assets/models/registration/affine_voxelmorph.fast_and_acc.onnx"
@@ -20,12 +20,12 @@ tau_decoupler = [
   "assets/models/decouple/tau_fold4.onnx",
 ]
 
-# 模板文件路径
+# Template file paths
 [templates]
 adni_pet_core = "assets/nii/ADNI_empty.nii"
 padded = "assets/nii/padded_MNI152_T1_2mm.nii"
 
-# 掩膜文件路径
+# Mask file paths
 [masks]
 cerebral_gray = "assets/nii/voi_CerebGry_2mm.nii"
 centiloid_voi = "assets/nii/voi_ctx_2mm.nii"
@@ -33,13 +33,13 @@ whole_cerebral = "assets/nii/voi_WhlCbl_2mm.nii"
 centaur_voi = "assets/nii/CenTauR.nii"
 centaur_ref = "assets/nii/voi_CerebGry_tau_2mm.nii"
 
-# 处理参数
+# Processing parameters
 [processing]
 max_iter = 5
 ac_diff_threshold = 2.0
 temp_dir = "./tmp"
 
-# MNI裁剪参数
+# MNI cropping parameters
 [processing.crop_mni]
 start_x = 8
 start_y = 16
@@ -48,7 +48,7 @@ size_x = 79
 size_y = 95
 size_z = 79
 
-# Centiloid参数
+# Centiloid parameters
 [centiloid.tracers.pib]
 slope = 120.6
 intercept = -127.7
@@ -69,7 +69,7 @@ intercept = -153.2
 slope = 109.8
 intercept = -118.8
 
-# CenTauR参数
+# CenTauR parameters
 # The CenTauR dataset is not publicly available
 # The conversion formula is based on the FTP calibration results
 [centaur.tracers.ftp]
@@ -92,7 +92,7 @@ max = 2.28
 baseline = 1.05
 max = 2.60
 
-# CenTauRz参数
+# CenTauRz parameters
 # The only tested tracer is FTP
 # The rest tracers are approximated
 # from the FTP calibration results
@@ -120,7 +120,7 @@ intercept = -14.13
 slope = 14.72
 intercept = -13.50
 
-# SUVr参数配置
+# SUVr parameter configuration
 [suvr.regions.centiloid]
 voi_mask = "centiloid_voi"
 ref_mask = "whole_cerebral"

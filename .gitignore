@@ -15,6 +15,8 @@ tracked_files.txt
 localizer/src/tests/*.nii
 !localizer/src/tests/voi_mask.nii
 !localizer/src/tests/ref_mask.nii
+localizer/src/tests/calibrate_tracer/
+localizer/src/tests/calibrate_metrics.py
 localizer/src/build/
 localizer/src/install/
 

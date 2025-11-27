@@ -190,3 +190,5 @@ double ImagePreprocessor::getPercentileValue(const std::vector<double>& sortedVa
     size_t index = static_cast<size_t>(percentile * (sortedValues.size() - 1));
     return sortedValues[index];
 }
+
+
