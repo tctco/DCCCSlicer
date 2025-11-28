@@ -27,7 +27,7 @@ Readers should note that although our reproduced dataset is also derived from AD
 | FDG      | Fill State (%) | 4.33 ± 5.24   | 6.14 ± 7.25   | 8.71 ± 10.85  | 23.51 ± 15.17 |
 | FDG      | Centiloid      | -1.19 ± 8.86  | 43.10 ± 44.16 | 44.91 ± 45.60 | 82.56 ± 43.45 |
 
-![Fill states distribution of biomarkers](Fill-states-boxplot.png)
+<p align="center"><img src="Fill-states-boxplot.png" style="width:50%;" /></p>
 
 ### Table 2: Diagnostic Performance Comparison (Bootstrap AUC)
 
@@ -39,7 +39,7 @@ Patients (MCI + AD) vs Controls (CN + SMC), using 1000× bootstrap to compare AU
 | Abeta    |      0.779 |            0.778 |     0.764 |               |
 | FDG      |      0.646 |            0.672 |     0.046 | *             |
 
-![Fill states diagnostic ROCs](Fill-states-roc.png)
+<p align="center"><img src="Fill-states-roc.png" style="width:75%;" /></p>
 
 ### Key Findings
 
