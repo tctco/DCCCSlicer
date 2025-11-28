@@ -10,6 +10,8 @@ on:
     branches:
       - master
       - main
+    paths-ignore:
+      - '**/*.md'
   pull_request:
   workflow_dispatch:
 
