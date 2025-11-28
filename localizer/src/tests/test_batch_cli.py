@@ -23,7 +23,6 @@ class TestBatchProcessing:
             "centiloid",
             "--input", str(data_dir),
             "--output", str(output_dir),
-            "--tracer", "fbp",
             "--batch"
         ]
         
@@ -54,7 +53,6 @@ class TestBatchProcessing:
             "centiloid",
             "--input", str(non_existent_input),
             "--output", str(output_dir),
-            "--tracer", "fbp",
             "--batch"
         ]
         
