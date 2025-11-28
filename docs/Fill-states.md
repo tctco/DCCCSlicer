@@ -1,6 +1,6 @@
 # Reproduction Summary
 
-> Doering E, Hoenig MC, Giehl K, et al. “Fill States”: PET-derived Markers of the Spatial                     Extent of Alzheimer Disease Pathology. Radiology. 2025;314(3):e241482. doi:10.1148/radiol.241482
+> Doering E, Hoenig MC, Giehl K, et al. “Fill States”: PET-derived Markers of the Spatial Extent of Alzheimer Disease Pathology. Radiology. 2025;314(3):e241482. doi:10.1148/radiol.241482
 
 This directory contains the results for reproducing the analysis of Fill States in ADNI cohorts.
 

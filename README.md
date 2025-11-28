@@ -66,6 +66,7 @@ Metrics:
 - `Centiloid`: Klunk WE, Koeppe RA, Price JC, Benzinger TL, Devous Sr. MD, Jagust WJ, et al. The Centiloid Project: Standardizing quantitative amyloid plaque estimation by PET. Alzheimer’s & Dementia. 2015;11(1):1-15.e4.
 - `CenTauR`: Leuzy A, Raket LL, Villemagne VL, Klein G, Tonietto M, Olafson E, et al. Harmonizing tau positron emission tomography in Alzheimer’s disease: The CenTauR scale and the joint propagation model. Alzheimer’s & Dementia. 2024;20(9):5833–48.
 - `CenTauRz`: Villemagne VL, Leuzy A, Bohorquez SS, Bullich S, Shimada H, Rowe CC, et al. CenTauR: Toward a universal scale and masks for standardizing tau imaging studies. Alzheimer’s & Dementia: Diagnosis, Assessment & Disease Monitoring. 2023;15(3):e12454.
+- `Fill States`: Doering E, Hoenig MC, Giehl K, et al. “Fill States”: PET-derived Markers of the Spatial Extent of Alzheimer Disease Pathology. Radiology. 2025;314(3):e241482. doi:10.1148/radiol.241482
 - `ADAD`: not published yet
 
 Spatial normalization algorithms:
@@ -78,9 +79,6 @@ Spatial normalization algorithms:
 
 > Please note that Lee’s algorithm is not publicly available. The version we reproduced based on the DCCC framework may differ in network architecture and implementation details, and it has not yet undergone extensive validation. While Lee et al. achieved cross-modality applicability through transfer learning, our DCCC implementation was directly trained on more than 5,000 multimodal PET images to provide inherent multimodal support.
 
-
-
-
 ## Command-line interface
 
 For users who prefer running the core calculator from the command line (including batch processing and advanced options), please refer to the standalone [CLI documentation](./localizer/src/README.md).
@@ -89,10 +87,12 @@ For users who prefer running the core calculator from the command line (includin
 
 - [x] Add support for skipping spatial normalization to directly calculate Centiloid/CenTauR.
 - [ ] Support other brain PET semi-quantitative metrics, such as Z-scores and basal ganglia asymmetry index.
-  - [ ] Add support for “Fill States”: PET-derived Markers of the Spatial Extent of Alzheimer Disease Pathology
+  - [x] Add support for “Fill States”: PET-derived Markers of the Spatial Extent of Alzheimer Disease Pathology
 - [ ] Add support for other spatial normalization algorithms.
   - [x] Added support for Fast and Accurate Amyloid Brain PET Quantification Without MRI Using Deep Neural Networks
 - [ ] Improve the UI.
+
+> Check our [reproduction report](./docs/Fill-states.md) on fill states!
 
 ## Acknowledgements
 
