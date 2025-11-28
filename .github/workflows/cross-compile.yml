@@ -114,7 +114,7 @@ jobs:
         run: |
           set -e
           python -m pip install pytest pandas
-          python -m pytest test_quick.py test_batch.py test_acc.py -v
+          python -m pytest -v
 
       - name: Set up MSVC Developer Command Prompt
         if: runner.os == 'Windows'

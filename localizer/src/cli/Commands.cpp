@@ -41,6 +41,24 @@ SUVrDerivedMetricOptions parseSUVrDerivedMetricOptions(const argparse::ArgumentP
     return options;
 }
 
+FillStatesCommandOptions parseFillStatesOptions(const argparse::ArgumentParser& program) {
+    FillStatesCommandOptions options;
+    options.inputPath = program.get<std::string>("--input");
+    options.outputPath = program.get<std::string>("--output");
+    options.configPath = program.get<std::string>("--config");
+    options.includeSUVr = program.get<bool>("--suvr");
+    options.skipRegistration = program.get<bool>("--skip-normalization");
+    options.useIterativeRigid = program.get<bool>("--iterative");
+    options.useManualFOV = program.get<bool>("--manual-fov");
+    options.enableDebugOutput = program.get<bool>("--debug");
+    options.batchMode = program.get<bool>("--batch");
+    options.metricType = "fillstates";
+    options.tracer = program.get<std::string>("--tracer");
+
+    setupDebugOutput(options);
+    return options;
+}
+
 int executeSUVrDerivedMetricCommand(const argparse::ArgumentParser& program, const std::string& metricType, const std::string& fullCommand) {
     SUVrDerivedMetricOptions options = parseSUVrDerivedMetricOptions(program, metricType);
     
@@ -103,6 +121,59 @@ int executeCenTauRCommand(const argparse::ArgumentParser& parser, const std::str
 
 int executeCenTauRzCommand(const argparse::ArgumentParser& parser, const std::string& fullCommand) {
     return executeSUVrDerivedMetricCommand(parser, "centaurz", fullCommand);
+}
+
+int executeFillStatesCommand(const argparse::ArgumentParser& parser, const std::string& fullCommand) {
+    FillStatesCommandOptions options = parseFillStatesOptions(parser);
+
+    auto config = loadConfigurationWithLogging(options.configPath, options.enableDebugOutput);
+
+    ProcessingOptions procOptions;
+    procOptions.skipRegistration = options.skipRegistration;
+    procOptions.useIterativeRigid = options.useIterativeRigid;
+    procOptions.useManualFOV = options.useManualFOV;
+    procOptions.enableDebugOutput = options.enableDebugOutput;
+    procOptions.debugOutputBasePath = options.debugOutputBasePath;
+    procOptions.selectedMetric = options.metricType;
+    procOptions.selectedMetricTracer = options.tracer;
+
+    if (options.batchMode) {
+        auto processor = [config, procOptions](const std::string& inputPath, const std::string& outputPath) -> ProcessingResult {
+            ProcessingPipeline pipeline(config);
+            return pipeline.process(inputPath, outputPath, procOptions);
+        };
+
+        std::cout << "Starting " << options.metricType << " batch processing..." << std::endl;
+        return BatchProcessor::runBatch(
+            options.inputPath,
+            options.outputPath,
+            options.configPath,
+            SOFTWARE_VERSION,
+            fullCommand,
+            options.skipRegistration,
+            processor
+        );
+    }
+
+    ProcessingPipeline pipeline(config);
+    std::cout << "Starting " << options.metricType << " calculation: " << options.inputPath << std::endl;
+    ProcessingResult result = pipeline.process(options.inputPath, options.outputPath, procOptions);
+
+    std::cout << "\n=== " << options.metricType << " Results ===" << std::endl;
+
+    for (const auto& metricResult : result.metricResults) {
+        std::cout << "Metric: " << metricResult.metricName << std::endl;
+        for (const auto& [tracer, value] : metricResult.tracerValues) {
+            std::cout << tracer << ": " << value << std::endl;
+        }
+        std::cout << std::endl;
+        if (options.includeSUVr) {
+            std::cout << "SUVr: " << metricResult.suvr << std::endl << std::endl;
+        }
+    }
+
+    std::cout << "Processing completed successfully!" << std::endl;
+    return EXIT_SUCCESS;
 }
 
 int executeSUVrCommand(const argparse::ArgumentParser& parser, const std::string& fullCommand) {

@@ -56,6 +56,19 @@ void Configuration::initializeDefaults() {
   configMap["centiloid.tracers.fmm.intercept"] = "-121.2";
   configMap["centiloid.tracers.nav.slope"] = "85.2";
   configMap["centiloid.tracers.nav.intercept"] = "-87.6";
+
+  // Fill-states tracer resources (defaults match assets/configs/config.toml)
+  configMap["fillstates.tracers.fbp.mean"] = "assets/nii/fill_states/fs_FBP_mean.nii.gz";
+  configMap["fillstates.tracers.fbp.std"]  = "assets/nii/fill_states/fs_FBP_std.nii.gz";
+  configMap["fillstates.tracers.fbp.roi"]  = "assets/nii/fill_states/fs_FBP_meta_roi.nii";
+
+  configMap["fillstates.tracers.fdg.mean"] = "assets/nii/fill_states/fs_FDG_mean.nii.gz";
+  configMap["fillstates.tracers.fdg.std"]  = "assets/nii/fill_states/fs_FDG_std.nii.gz";
+  configMap["fillstates.tracers.fdg.roi"]  = "assets/nii/fill_states/fs_FDG_meta_roi.nii";
+
+  configMap["fillstates.tracers.ftp.mean"] = "assets/nii/fill_states/fs_FTP_mean.nii.gz";
+  configMap["fillstates.tracers.ftp.std"]  = "assets/nii/fill_states/fs_FTP_std.nii.gz";
+  configMap["fillstates.tracers.ftp.roi"]  = "assets/nii/CenTauR.nii";
 }
 
 std::string Configuration::getString(const std::string &key,

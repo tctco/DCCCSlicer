@@ -46,6 +46,14 @@ void addSUVrDerivedMetricArguments(argparse::ArgumentParser& parser) {
         .implicit_value(true);
 }
 
+void addFillStatesArguments(argparse::ArgumentParser& parser) {
+    addSUVrDerivedMetricArguments(parser);
+    parser.add_argument("--tracer")
+        .help("Tracer type to use for fill-states metric (fbp, fdg, ftp)")
+        .required()
+        .choices("fbp", "fdg", "ftp");
+}
+
 void setupDebugOutput(BaseCommandOptions& options) {
     if (options.enableDebugOutput && !options.outputPath.empty()) {
         std::filesystem::path outputFilePath(options.outputPath);

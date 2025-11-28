@@ -57,10 +57,18 @@ struct DecoupleCommandOptions : BaseCommandOptions, SpatialNormalizationOptions 
     bool skipRegistration = false;
 };
 
+/**
+ * @brief Options for fill-states metric
+ */
+struct FillStatesCommandOptions : SUVrDerivedMetricOptions {
+    std::string tracer; // "fbp", "fdg", "ftp"
+};
+
 // Shared Argument Parsers
 void addBaseArguments(argparse::ArgumentParser& parser);
 void addSpatialNormalizationArguments(argparse::ArgumentParser& parser);
 void addSUVrDerivedMetricArguments(argparse::ArgumentParser& parser);
+void addFillStatesArguments(argparse::ArgumentParser& parser);
 
 // Helper functions
 void setupDebugOutput(BaseCommandOptions& options);

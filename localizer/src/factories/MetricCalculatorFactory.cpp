@@ -3,6 +3,7 @@
 #include "../calculators/CenTauRCalculator.h"
 #include "../calculators/CenTauRzCalculator.h"
 #include "../calculators/SUVrCalculator.h"
+#include "../calculators/FillStatesCalculator.h"
 #include <stdexcept>
 #include <algorithm>
 #include <string>
@@ -19,6 +20,8 @@ MetricCalculatorPtr MetricCalculatorFactory::create(CalculatorType type, Configu
             return std::make_shared<CenTauRzCalculator>(config);
         case CalculatorType::SUVR:
             return std::make_shared<SUVrCalculator>(config);
+        case CalculatorType::FILL_STATES:
+            return std::make_shared<FillStatesCalculator>(config);
         default:
             throw std::invalid_argument("Unknown metric calculator type");
     }
@@ -51,7 +54,7 @@ std::vector<MetricCalculatorPtr> MetricCalculatorFactory::createSelected(const s
 }
 
 std::vector<std::string> MetricCalculatorFactory::getAvailableTypes() {
-    return {"suvr", "centiloid", "centaur", "centaurz"};
+    return {"suvr", "centiloid", "centaur", "centaurz", "fillstates"};
 }
 
 MetricCalculatorFactory::CalculatorType MetricCalculatorFactory::stringToType(const std::string& typeName) {
@@ -66,6 +69,8 @@ MetricCalculatorFactory::CalculatorType MetricCalculatorFactory::stringToType(co
         return CalculatorType::CENTAUR;
     } else if (lowerName == "centaurz") {
         return CalculatorType::CENTAURZ;
+    } else if (lowerName == "fillstates") {
+        return CalculatorType::FILL_STATES;
     }
     
     throw std::invalid_argument("Unsupported metric calculator type: " + typeName);

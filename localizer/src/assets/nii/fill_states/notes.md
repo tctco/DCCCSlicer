@@ -1,0 +1,6 @@
+- `fs_FBP_mean.nii.gz`: FBP mean for z score
+- `fs_FBP_std.nii.gz`: FBP std for z score
+- `fs_FBP_meta_roi.nii`: FBP meta ROI for fill states (slightly different from Centiloid PiB meta ROI). See [Centiloid Project](https://www.gaain.org/centiloid-project) - Florbetapir Calibration - `AVID VOIs.zip` for details
+- `fs_FDG_mean.nii.gz`: FDG mean for z score
+- `fs_FDG_std.nii.gz`: FDG std for z score
+- `fs_FDG_meta_roi`: FDG meta ROI for fill states. According to the fill states - supplementary paper, the neurodegeneration meta ROI consisted of the angular gyrus, posterior cingulate, and inferior temporal cortex. This meta ROI is generated with the AAL atlas provided by DCCCSlicer.

@@ -4,7 +4,6 @@
 #include "../interfaces/IConfiguration.h"
 #include "../decouplers/Decoupler.h"
 #include <vector>
-#include <memory>
 
 /**
  * @brief Spatial normalization result
@@ -33,7 +32,8 @@ struct ProcessingOptions {
     std::string debugOutputBasePath = "";
     
     // Metric selection parameters
-    std::string selectedMetric = "";  // "suvr", "centiloid", "centaur", "centaurz"
+    std::string selectedMetric = "";         // "suvr", "centiloid", "centaur", "centaurz", "fillstates"
+    std::string selectedMetricTracer = "";   // "fbp", "fdg", "ftp" (for tracer-dependent metrics)
 };
 
 /**
@@ -45,6 +45,8 @@ struct ProcessingResult {
     std::vector<MetricResult> metricResults;
     DecoupledResult decoupledResult;
     bool hasDecoupledResult = false;
+    ImageType::Pointer fillStatesMaskImage;  // Optional fill-states mask
+    bool hasFillStatesMask = false;
     
     void printAllResults() const {
         for (const auto& result : metricResults) {
@@ -80,8 +82,9 @@ public:
     /**
      * @brief Execute metric calculation only
      */
-    std::vector<MetricResult> calculateMetrics(ImageType::Pointer spatiallyNormalizedImage, 
-                                             const std::string& selectedMetric = "centiloid");
+    std::vector<MetricResult> calculateMetrics(ImageType::Pointer spatiallyNormalizedImage,
+                                               const ProcessingOptions& options,
+                                               ImageType::Pointer& fillStatesMaskOut);
     
     /**
      * @brief Execute decoupling analysis

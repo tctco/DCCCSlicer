@@ -16,8 +16,7 @@ public:
         CENTAUR,
         CENTAURZ,
         SUVR,
-        // Future types can be added here
-        // CUSTOM_METRIC
+        FILL_STATES,  // Z-score based fill-states metric
     };
     
     static MetricCalculatorPtr create(CalculatorType type, ConfigurationPtr config);

@@ -2,6 +2,7 @@
 #include "../factories/SpatialNormalizerFactory.h"
 #include "../factories/MetricCalculatorFactory.h"
 #include "../normalizers/RigidVoxelMorphNormalizer.h"
+#include "../calculators/FillStatesCalculator.h"
 #include "../utils/common.h"
 #include <iostream>
 #include <algorithm>
@@ -41,7 +42,12 @@ ProcessingResult ProcessingPipeline::process(const std::string& inputPath,
         
         // 2. Calculate semi-quantitative metrics
         if (!options.selectedMetric.empty()) {
-            result.metricResults = calculateMetrics(result.spatiallyNormalizedImage, options.selectedMetric);
+            ImageType::Pointer fillStatesMask;
+            result.metricResults = calculateMetrics(result.spatiallyNormalizedImage, options, fillStatesMask);
+            if (fillStatesMask) {
+                result.fillStatesMaskImage = fillStatesMask;
+                result.hasFillStatesMask = true;
+            }
         }
         
         // 3. ADNI-style processing and decoupling (if needed)
@@ -57,6 +63,12 @@ ProcessingResult ProcessingPipeline::process(const std::string& inputPath,
                 result.hasDecoupledResult = true;
                 result.decoupledResult.SaveResults(outputPath);
             }
+        }
+
+        // 4. Save fill-states mask map if available
+        if (result.hasFillStatesMask && result.fillStatesMaskImage) {
+            std::string fsPath = Common::addSuffixToFilePath(outputPath, "_fill_states_map");
+            saveResult(result.fillStatesMaskImage, fsPath);
         }
         
     } catch (const std::exception& e) {
@@ -99,19 +111,40 @@ SpatialNormalizationResult ProcessingPipeline::performSpatialNormalization(const
     return result;
 }
 
-std::vector<MetricResult> ProcessingPipeline::calculateMetrics(ImageType::Pointer spatiallyNormalizedImage, 
-                                                             const std::string& selectedMetric) {
+std::vector<MetricResult> ProcessingPipeline::calculateMetrics(ImageType::Pointer spatiallyNormalizedImage,
+                                                               const ProcessingOptions& options,
+                                                               ImageType::Pointer& fillStatesMaskOut) {
     std::vector<MetricResult> results;
     
     // Create selected metric calculator
-    auto calculators = MetricCalculatorFactory::createSelected(selectedMetric, config_);
+    auto calculators = MetricCalculatorFactory::createSelected(options.selectedMetric, config_);
     
     for (auto& calculator : calculators) {
         try {
+            // Inject tracer information and capture fill-states mask for tracer-dependent metrics
+            const std::string metricLower = Common::toLower(options.selectedMetric);
+            if (metricLower == "fillstates") {
+                auto* fsCalc = dynamic_cast<FillStatesCalculator*>(calculator.get());
+                if (fsCalc != nullptr) {
+                    if (!options.selectedMetricTracer.empty()) {
+                        fsCalc->setTracer(options.selectedMetricTracer);
+                    }
+                }
+            }
+
             MetricResult result = calculator->calculate(spatiallyNormalizedImage);
+
+            if (Common::toLower(options.selectedMetric) == "fillstates") {
+                auto* fsCalc = dynamic_cast<FillStatesCalculator*>(calculator.get());
+                if (fsCalc != nullptr) {
+                    fillStatesMaskOut = fsCalc->getLastMaskImage();
+                }
+            }
+
             results.push_back(result);
         } catch (const std::exception& e) {
             std::cerr << "Error calculating metric " << calculator->getName() << ": " << e.what() << std::endl;
+            throw "Failed to calculate " + calculator->getName();
         }
     }
     

@@ -144,3 +144,19 @@ ref_mask = "whole_cerebral"
 [suvr.regions.centaur]
 voi_mask = "centaur_voi"
 ref_mask = "centaur_ref"
+
+# Fill-states tracer-specific resources
+[fillstates.tracers.fbp]
+mean = "assets/nii/fill_states/fs_FBP_mean.nii.gz"
+std = "assets/nii/fill_states/fs_FBP_std.nii.gz"
+roi = "assets/nii/fill_states/fs_FBP_meta_roi.nii"
+
+[fillstates.tracers.fdg]
+mean = "assets/nii/fill_states/fs_FDG_mean.nii.gz"
+std = "assets/nii/fill_states/fs_FDG_std.nii.gz"
+roi = "assets/nii/fill_states/fs_FDG_meta_roi.nii"
+
+[fillstates.tracers.ftp]
+mean = "assets/nii/fill_states/fs_FTP_mean.nii.gz"
+std = "assets/nii/fill_states/fs_FTP_std.nii.gz"
+roi = "assets/nii/CenTauR.nii"

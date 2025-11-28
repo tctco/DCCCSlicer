@@ -1,7 +1,7 @@
 # CMakeList.txt: CentiloidCalculator Refactored Version
 cmake_minimum_required(VERSION 3.21)
 
-project(CentiloidCalculator VERSION 3.3.1)
+project(CentiloidCalculator VERSION 3.4.0)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -56,6 +56,8 @@ target_sources(CentiloidCalculator PRIVATE
     calculators/CenTauRCalculator.cpp
     calculators/CenTauRzCalculator.h
     calculators/CenTauRzCalculator.cpp
+    calculators/FillStatesCalculator.h
+    calculators/FillStatesCalculator.cpp
 )
 
 # Add spatial normalizers

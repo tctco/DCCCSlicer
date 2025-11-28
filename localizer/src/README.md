@@ -8,7 +8,7 @@ The Deep Cascaded Cerebral Calculator Core is a comprehensive C++ toolkit design
 
 ### Key Features
 
-- **Multi-biomarker Support**: Calculates Centiloid (amyloid), CenTauR/CenTauRz (tau), and custom SUVr metrics
+- **Multi-biomarker Support**: Calculates Centiloid (amyloid), CenTauR/CenTauRz (tau), fill-states, and custom SUVr metrics
 - **Deep Learning Pipeline**: Utilizes ONNX-based neural networks for spatial normalization
 - **Modular Architecture**: Extensible design with clean interfaces for adding new biomarkers
 - **Multi-tracer Compatibility**: Supports various PET tracers with tracer-specific calibrations
@@ -55,6 +55,25 @@ Calculate standardized tau burden scores:
 # CenTauRz z-score scale
 ./CentiloidCalculator centaurz --input tau_pet.nii --output result.nii
 ```
+
+#### Fill-states Analysis
+Calculate fill-states metric based on voxel-wise z-scores within tracer-specific meta-ROIs:
+
+```bash
+# Amyloid tracer (FBP) fill-states
+./CentiloidCalculator fillstates --input amyloid_pet.nii --output result.nii --tracer fbp
+
+# FDG neurodegeneration fill-states
+./CentiloidCalculator fillstates --input fdg_pet.nii --output result.nii --tracer fdg
+
+# FTP tau fill-states
+./CentiloidCalculator fillstates --input ftp_pet.nii --output result.nii --tracer ftp
+```
+
+The command produces:
+
+- A **normalized output** image at the path specified by `--output`, same as other SUVr-derived metrics.
+- A **fill_states_map** image saved alongside the output, using the same base name with suffix `_fill_states_map`, containing a 0/1 mask of voxels exceeding the z-score threshold within the meta-ROI.
 
 #### Custom SUVr Calculation
 Calculate SUVr with user-defined regions:
@@ -107,6 +126,7 @@ Extract pathology-specific signals:
 | `--manual-fov` | Enable manual field-of-view placement |
 | `--skip-normalization` | Skip spatial normalization step |
 | `--suvr` | Include SUVr values in metric outputs |
+| `--tracer <tracer>` | Tracer type for fill-states metric (`fillstates` command only). Supported values: `fbp`, `fdg`, `ftp`. Required for `fillstates`. |
 
 ## Configuration
 

@@ -37,6 +37,11 @@ int main(int argc, char* argv[]) {
         centaurz_cmd.add_description("Calculate CenTauRz metric for tau PET images (z-score)");
         addSUVrDerivedMetricArguments(centaurz_cmd);
 
+        // Fill-states subcommand
+        argparse::ArgumentParser fillstates_cmd("fillstates");
+        fillstates_cmd.add_description("Calculate fill-states metric for PET images");
+        addFillStatesArguments(fillstates_cmd);
+
         // SUVr subcommand  
         argparse::ArgumentParser suvr_cmd("suvr");
         suvr_cmd.add_description("Calculate SUVr metric with custom VOI and reference masks");
@@ -84,6 +89,7 @@ int main(int argc, char* argv[]) {
         program.add_subparser(centiloid_cmd);
         program.add_subparser(centaur_cmd);
         program.add_subparser(centaurz_cmd);
+        program.add_subparser(fillstates_cmd);
         program.add_subparser(suvr_cmd);
         program.add_subparser(normalize_cmd);
         program.add_subparser(decouple_cmd);
@@ -97,6 +103,8 @@ int main(int argc, char* argv[]) {
             return executeCenTauRCommand(centaur_cmd, fullCommand);
         } else if (program.is_subcommand_used("centaurz")) {
             return executeCenTauRzCommand(centaurz_cmd, fullCommand);
+        } else if (program.is_subcommand_used("fillstates")) {
+            return executeFillStatesCommand(fillstates_cmd, fullCommand);
         } else if (program.is_subcommand_used("suvr")) {
             return executeSUVrCommand(suvr_cmd, fullCommand);
         } else if (program.is_subcommand_used("normalize")) {
