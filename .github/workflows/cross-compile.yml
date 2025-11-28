@@ -177,7 +177,7 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install pytest pandas
-          python -m pytest test_quick.py test_batch.py test_acc.py -v
+          python -m pytest -v
 
       - name: Copy install/bin into localizer/cpp (Linux/macOS)
         if: runner.os != 'Windows'
