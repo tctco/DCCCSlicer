@@ -1,11 +1,15 @@
 # CMakeList.txt: CentiloidCalculator Refactored Version
 cmake_minimum_required(VERSION 3.21)
 
-project(CentiloidCalculator VERSION 3.3.0)
+project(CentiloidCalculator VERSION 3.3.1)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# for VS Code Intellisense
+# https://stackoverflow.com/questions/58077908/linking-conan-include-to-vs-code
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Dependencies via conan
 find_package(ITK CONFIG REQUIRED)
