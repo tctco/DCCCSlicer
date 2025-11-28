@@ -1,6 +1,6 @@
 import pytest
 
-# Global list to store results from test_acc.py
+# Global list to store results from test_acc_centiloid_centaurz.py
 # Using a list of dictionaries to store the results
 ACC_TEST_RESULTS = []
 

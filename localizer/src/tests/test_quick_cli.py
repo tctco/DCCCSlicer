@@ -51,7 +51,13 @@ TEST_CASES: List[Dict[str, Any]] = [
     },
     {
         "id": "centiloid_basic",
-        "args": ["centiloid", "--input", "{input}", "--output", "{output}"],
+        "args": [
+            "centiloid",
+            "--input",
+            "{input}",
+            "--output",
+            "{output}",
+        ],
         "expected_failure": False,
     },
     {
@@ -92,12 +98,24 @@ TEST_CASES: List[Dict[str, Any]] = [
     },
     {
         "id": "centaur_basic",
-        "args": ["centaur", "--input", "{input}", "--output", "{output}"],
+        "args": [
+            "centaur",
+            "--input",
+            "{input}",
+            "--output",
+            "{output}",
+        ],
         "expected_failure": False,
     },
     {
         "id": "centaurz_basic",
-        "args": ["centaurz", "--input", "{input}", "--output", "{output}"],
+        "args": [
+            "centaurz",
+            "--input",
+            "{input}",
+            "--output",
+            "{output}",
+        ],
         "expected_failure": False,
     },
     {

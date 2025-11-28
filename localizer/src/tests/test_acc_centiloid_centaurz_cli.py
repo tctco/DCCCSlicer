@@ -9,11 +9,14 @@ from typing import List, Dict, Any
 # we rely on the one defined in conftest_plugins which conftest.py imports.
 from conftest_plugins import ACC_TEST_RESULTS
 
+CENTILOID_ERROR_THRESHOLD = 10.0
+CENTAURZ_ERROR_THRESHOLD = 2.0
+
 # Define TEST_DIR relative to this file to read gt.csv during collection
 CURRENT_DIR = Path(__file__).parent.resolve()
 
 def read_gt_data() -> List[Dict[str, Any]]:
-    gt_file = CURRENT_DIR / "gt.csv"
+    gt_file = CURRENT_DIR / "test_acc_centiloid_centaurz" / "gt.csv"
     if not gt_file.exists():
         return []
     try:
@@ -42,12 +45,12 @@ class TestEvaluation:
         gt_value = float(row['value'])
         
         # Locate source file
-        # Inputs are in 'tests/test_acc'
-        src_file = test_files['test_dir'] / "test_acc" / image_name
+        # Inputs are in 'tests/test_acc_centiloid_centaurz'
+        src_file = test_files['test_dir'] / "test_acc_centiloid_centaurz" / image_name
         
         if not src_file.exists():
             self._record_result(image_name, metric, tracer, gt_value, "Skip", "N/A")
-            pytest.skip(f"Input file {image_name} not found in tests/test_acc")
+            pytest.skip(f"Input file {image_name} not found in tests/test_acc_centiloid_centaurz")
 
         # Prepare isolated environment for batch mode to ensure clean CSV and no interference
         input_dir = tmp_path / "inputs"
@@ -122,9 +125,9 @@ class TestEvaluation:
         # Accuracy Assertion
         abs_diff = abs(diff)
         if metric.lower() == 'centiloid':
-            assert abs_diff <= 10.0, f"Centiloid error {abs_diff:.2f} > 10.0"
+            assert abs_diff <= CENTILOID_ERROR_THRESHOLD, f"Centiloid error {abs_diff:.2f} > {CENTILOID_ERROR_THRESHOLD}"
         elif metric.lower() == 'centaurz':
-            assert abs_diff <= 2.0, f"Centaurz error {abs_diff:.2f} > 2.0"
+            assert abs_diff <= CENTAURZ_ERROR_THRESHOLD, f"Centaurz error {abs_diff:.2f} > {CENTAURZ_ERROR_THRESHOLD}"
 
     def _record_result(self, image, metric, tracer, gt, pred, diff):
         """Helper to format and record results."""
