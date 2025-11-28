@@ -40,10 +40,6 @@ class TestNiiGzSupport:
             str(output_path),
         ]
 
-        # For SUVr-derived metrics like centiloid, a tracer argument is required
-        if subcommand == "centiloid":
-            args.extend(["--tracer", "fbp"])
-
         result = run_subprocess(args)
 
         assert result.returncode == 0, (
