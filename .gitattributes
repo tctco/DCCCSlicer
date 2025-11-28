@@ -1,0 +1,23 @@
+## Git LFS tracking for large binary assets
+## NOTE: After modifying this file, run:
+##   git lfs install
+##   git lfs track (if needed)
+##   git add .gitattributes
+##   git add <files>
+##   git commit -m "migrate assets to Git LFS"
+
+# NIfTI images (global, including tests and examples)
+*.nii filter=lfs diff=lfs merge=lfs -text
+*.nii.gz filter=lfs diff=lfs merge=lfs -text
+
+# ONNX models (global)
+*.onnx filter=lfs diff=lfs merge=lfs -text
+
+# Optionally, if you want to restrict LFS to specific asset directories only,
+# comment out the global patterns above and uncomment the scoped ones below:
+# localizer/src/assets/nii/* filter=lfs diff=lfs merge=lfs -text
+# localizer/src/assets/nii/** filter=lfs diff=lfs merge=lfs -text
+# localizer/src/assets/models/* filter=lfs diff=lfs merge=lfs -text
+# localizer/src/assets/models/** filter=lfs diff=lfs merge=lfs -text
+
+
