@@ -20,7 +20,8 @@ class MetricCalculatorLogic:
     METRIC_SUBCOMMANDS = {
         "Centiloid": "centiloid",
         "CenTauR": "centaur", 
-        "CenTauRz": "centaurz"
+        "CenTauRz": "centaurz",
+        "Fill States": "fillstates",
     }
     
     # Config file mapping
@@ -44,8 +45,17 @@ class MetricCalculatorLogic:
         self._async_callback = None
         self._async_context = None
     
-    def calculate_metric(self, input_node, metric_type, algorithm_style="SPM style",
-                        manual_fov=False, iterative=False, skip_normalization=False, **kwargs):
+    def calculate_metric(
+        self,
+        input_node,
+        metric_type,
+        algorithm_style="SPM style",
+        manual_fov=False,
+        iterative=False,
+        skip_normalization=False,
+        tracer=None,
+        **kwargs,
+    ):
         """Calculate specified metric for input volume
         
         Args:
@@ -77,8 +87,14 @@ class MetricCalculatorLogic:
             
             # Build command
             cmd = self._build_command(
-                metric_type, tmp_path, output_path, algorithm_style,
-                manual_fov, iterative, skip_normalization
+                metric_type,
+                tmp_path,
+                output_path,
+                algorithm_style,
+                manual_fov,
+                iterative,
+                skip_normalization,
+                tracer=tracer,
             )
             
             # Execute calculation
@@ -98,9 +114,18 @@ class MetricCalculatorLogic:
         except Exception as e:
             return False, "", f"Error during {metric_type} calculation: {str(e)}"
 
-    def calculate_metric_async(self, input_node, metric_type, algorithm_style="SPM style",
-                               manual_fov=False, iterative=False, skip_normalization=False,
-                               callback=None, **kwargs):
+    def calculate_metric_async(
+        self,
+        input_node,
+        metric_type,
+        algorithm_style="SPM style",
+        manual_fov=False,
+        iterative=False,
+        skip_normalization=False,
+        tracer=None,
+        callback=None,
+        **kwargs,
+    ):
         """Asynchronously calculate specified metric for input volume."""
 
         if not input_node:
@@ -126,8 +151,14 @@ class MetricCalculatorLogic:
 
             output_path = str(self.plugin_path / "Normalized.nii")
             cmd = self._build_command(
-                metric_type, tmp_path, output_path, algorithm_style,
-                manual_fov, iterative, skip_normalization
+                metric_type,
+                tmp_path,
+                output_path,
+                algorithm_style,
+                manual_fov,
+                iterative,
+                skip_normalization,
+                tracer=tracer,
             )
 
             context = {
@@ -140,8 +171,17 @@ class MetricCalculatorLogic:
                 False, "", f"Error during {metric_type} calculation: {str(e)}", callback
             )
     
-    def _build_command(self, metric_type, input_path, output_path, algorithm_style,
-                      manual_fov, iterative, skip_normalization):
+    def _build_command(
+        self,
+        metric_type,
+        input_path,
+        output_path,
+        algorithm_style,
+        manual_fov,
+        iterative,
+        skip_normalization,
+        tracer=None,
+    ):
         """Build command arguments for metric calculation
         
         Args:
@@ -161,9 +201,11 @@ class MetricCalculatorLogic:
         cmd = [
             str(self.executable_path),
             subcommand,
-            "--input", input_path,
-            "--output", output_path,
-            "--suvr"
+            "--input",
+            input_path,
+            "--output",
+            output_path,
+            "--suvr",
         ]
     
         
@@ -179,6 +221,17 @@ class MetricCalculatorLogic:
             cmd.append("--iterative")
         if skip_normalization:
             cmd.append("--skip-normalization")
+
+        # Add tracer option for Fill States metric
+        if subcommand == "fillstates":
+            tracer_value = (tracer or "").strip().lower()
+            if not tracer_value:
+                raise ValueError(
+                    "Tracer must be specified for Fill States metric (fbp, fdg, ftp)."
+                )
+            if '--suvr' in cmd:
+                cmd.remove('--suvr')
+            cmd.extend(["--tracer", tracer_value])
 
         return cmd
 

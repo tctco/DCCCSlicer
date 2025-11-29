@@ -136,7 +136,15 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.roiSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
         self.ui.refSelector.setMRMLScene(slicer.mrmlScene)
         self.ui.roiSelector.setMRMLScene(slicer.mrmlScene)
-        
+
+        # Initialize tracer selector if available: keep it empty and disabled by default
+        try:
+            if hasattr(self.ui, "tracerSelector"):
+                self.ui.tracerSelector.clear()
+                self.ui.tracerSelector.setEnabled(False)
+        except AttributeError as e:
+            print(f"Tracer selector not found in UI: {e}")
+
         # 设置Atlas选择器，如果存在的话
         try:
             if hasattr(self.ui, 'atlasSelector'):
@@ -182,6 +190,15 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             "currentNodeChanged(vtkMRMLNode*)", self.onInputVolumeChanged
         )
         self.ui.decoupleButton.connect("clicked(bool)", self.onDecoupleButton)
+
+        # Metric selector change updates tracer selector state
+        try:
+            if hasattr(self.ui, "metricSelector"):
+                self.ui.metricSelector.currentIndexChanged.connect(
+                    self.onMetricSelectionChanged
+                )
+        except AttributeError as e:
+            print(f"metricSelector not found when setting up connections: {e}")
         
         # Atlas相关按钮连接
         try:
@@ -431,6 +448,30 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def getAdditionalInfo(self, node):
         return self.metric_calculator.get_additional_info(node)
 
+    def onMetricSelectionChanged(self, index):
+        """Update tracer selector availability based on selected metric."""
+        try:
+            metric_text = self.ui.metricSelector.currentText
+        except AttributeError:
+            return
+
+        tracer_selector = getattr(self.ui, "tracerSelector", None)
+        if tracer_selector is None:
+            return
+
+        # Enable tracer selection only for Fill States metric and populate options dynamically
+        if metric_text == "Fill States":
+            tracer_selector.blockSignals(True)
+            tracer_selector.clear()
+            tracer_selector.addItems(["FDG", "FTP", "FBP"])
+            tracer_selector.setEnabled(True)
+            tracer_selector.blockSignals(False)
+        else:
+            tracer_selector.blockSignals(True)
+            tracer_selector.clear()
+            tracer_selector.setEnabled(False)
+            tracer_selector.blockSignals(False)
+
     def onCalcMetricButton(self) -> None:
         currentNode = self._checkCurrentVolume()
         if not currentNode:
@@ -450,6 +491,36 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             algorithm_style = "SPM style"  # Default algorithm
             print("algorithmSelector not found in UI, using default: SPM style")
 
+        # Map tracer selection to CLI tracer name for Fill States metric
+        tracer = None
+        if metric_type == "Fill States":
+            tracer_selector = getattr(self.ui, "tracerSelector", None)
+            if tracer_selector is None:
+                slicer.util.errorDisplay(
+                    "Tracer selector is not available in the UI for Fill States metric."
+                )
+                return
+
+            tracer_label = (tracer_selector.currentText or "").strip()
+            if not tracer_label:
+                slicer.util.errorDisplay(
+                    "Please select a tracer (FDG / FTP / FBP) for Fill States metric."
+                )
+                return
+
+            # Map UI labels to CLI tracer identifiers
+            tracer_map = {
+                "FDG": "fdg",
+                "FTP": "ftp",
+                "FBP": "fbp",
+            }
+            tracer = tracer_map.get(tracer_label.upper())
+            if tracer is None:
+                slicer.util.errorDisplay(
+                    f"Unsupported tracer selection for Fill States: {tracer_label}"
+                )
+                return
+
         self._pending_metric_info = additionalInformation or ""
         self.ui.calcMetricButton.setEnabled(False)
         self._show_busy_dialog("_metric_busy_dialog", "Calculating metric, please wait...")
@@ -461,6 +532,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             manual_fov=self.ui.manualFOVCheckBox.isChecked(),
             iterative=self.ui.enableIterativeCheckBox.isChecked(),
             skip_normalization=self.ui.skipCheckBox.isChecked(),
+            tracer=tracer,
             callback=self._on_metric_calculation_finished
         )
 

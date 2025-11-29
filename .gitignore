@@ -23,6 +23,7 @@ localizer/src/build/
 localizer/src/install/
 
 build/
+localizer/cpp
 .VSCodeCounter/
 .vscode/
 .cache/
