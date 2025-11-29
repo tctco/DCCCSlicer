@@ -102,6 +102,38 @@ target_sources(CentiloidCalculator PRIVATE
     cli/Options.cpp
     cli/Commands.h
     cli/Commands.cpp
+    refactor/common/ProcessingContracts.h
+    refactor/interfaces/IMetricLogic.h
+    refactor/interfaces/IMetricModuleRegistry.h
+    refactor/interfaces/IMetricCLI.h
+    refactor/di/ServiceContainer.h
+    refactor/providers/LegacyNormalizerProvider.h
+    refactor/providers/LegacyNormalizerProvider.cpp
+    refactor/services/ISpatialNormalizationService.h
+    refactor/services/SpatialNormalizationService.h
+    refactor/services/SpatialNormalizationService.cpp
+    refactor/services/IMetricService.h
+    refactor/services/MetricService.h
+    refactor/services/MetricService.cpp
+    refactor/services/MetricModuleRegistry.h
+    refactor/services/MetricModuleRegistry.cpp
+    refactor/services/IFileService.h
+    refactor/services/FileService.h
+    refactor/services/FileService.cpp
+    refactor/application/PipelineApplication.h
+    refactor/application/PipelineApplication.cpp
+    refactor/di/Bootstrap.h
+    refactor/di/Bootstrap.cpp
+    refactor/metrics/suvr/SUVrLogic.h
+    refactor/metrics/suvr/SUVrLogic.cpp
+    refactor/metrics/suvr/SUVrCLI.h
+    refactor/metrics/suvr/SUVrCLI.cpp
+    refactor/metrics/centiloid/CentiloidLogic.h
+    refactor/metrics/centiloid/CentiloidLogic.cpp
+    refactor/metrics/centiloid/CentiloidCLI.h
+    refactor/metrics/centiloid/CentiloidCLI.cpp
+    refactor/metrics/ModuleCatalog.h
+    refactor/metrics/ModuleCatalog.cpp
 )
 
 # Add decoupler sources

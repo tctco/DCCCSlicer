@@ -1,8 +1,11 @@
 ﻿#include "cli/Commands.h"
 #include "cli/Options.h"
 #include "config/Version.h"
+#include "refactor/metrics/ModuleCatalog.h"
 #include <iostream>
 #include <itkNiftiImageIOFactory.h>
+#include <memory>
+#include <vector>
 
 int main(int argc, char* argv[]) {
     itk::NiftiImageIOFactory::RegisterOneFactory();
@@ -85,6 +88,21 @@ int main(int argc, char* argv[]) {
             .default_value(false)
             .implicit_value(true);
         
+        // Refactored CLI modules (plugin-style)
+        auto refactorModules = RefactorPipeline::Metrics::buildCLIModules();
+        std::vector<std::unique_ptr<argparse::ArgumentParser>> refactorModuleParsers;
+        std::vector<std::string> refactorModuleNames;
+        refactorModuleParsers.reserve(refactorModules.size());
+        refactorModuleNames.reserve(refactorModules.size());
+        for (const auto& module : refactorModules) {
+            auto parser = std::make_unique<argparse::ArgumentParser>(module->getSubcommandName());
+            parser->add_description(module->getDescription());
+            module->configureArguments(*parser);
+            program.add_subparser(*parser);
+            refactorModuleNames.push_back(module->getSubcommandName());
+            refactorModuleParsers.push_back(std::move(parser));
+        }
+        
         // Add subcommands to main program
         program.add_subparser(centiloid_cmd);
         program.add_subparser(centaur_cmd);
@@ -112,6 +130,11 @@ int main(int argc, char* argv[]) {
         } else if (program.is_subcommand_used("decouple")) {
             return executeDecoupleCommand(decouple_cmd);
         } else {
+            for (size_t i = 0; i < refactorModules.size(); ++i) {
+                if (program.is_subcommand_used(refactorModuleNames[i])) {
+                    return refactorModules[i]->execute(*refactorModuleParsers[i], fullCommand);
+                }
+            }
             std::cerr << "No subcommand specified. Use --help for usage information." << std::endl;
             std::cerr << program;
             return EXIT_FAILURE;

@@ -579,4 +579,23 @@ This approach ensures your new metric is:
 - Accessible via a clear CLI interface.
 - Covered by automated tests for regression protection.
 
+### 2.6. Prototype: Dependency-injected Pipeline (`localizer/src/refactor`)
+
+To reduce cross-cutting edits when introducing new metrics, a prototype refactor now coexists under `localizer/src/refactor/`. It follows a NestJS-inspired layering:
+
+- **CLI Controller (`refactor/cli/`)** – e.g., `SUVrCommand` parses CLI arguments and delegates to the application layer.
+- **Application (`refactor/application/PipelineApplication.*`)** – orchestrates *SpatialNormalizationService → MetricService → FileService*.
+- **Services (`refactor/services/`)** – cohesive units handling normalization, metric calculations, and persistence.
+- **Providers (`refactor/providers/`)** – adapters to legacy components (e.g., `LegacyNormalizerProvider` reuses `RigidVoxelMorphNormalizer`).
+- **DI Container (`refactor/di/ServiceContainer.h`)** – lightweight dependency injection that wires services together at runtime.
+
+Key additions for plugin-style expansion:
+
+- **Metric module contracts** – `refactor/interfaces/IMetricModule*.h` define how calculators self-describe (`getName`, `calculate`), while `IMetricCliModule` describes the CLI/controller surface (subcommand name, argument wiring, execution, service registration).
+- **Registry** – `MetricModuleRegistry` keeps a map of modules and is injected into `MetricService`, so the service simply delegates to the module selected by CLI options.
+- **Metric catalog** – `refactor/metrics/ModuleCatalog.*` builds the list of available CLI modules so `main.cpp` can loop through them to add subcommands dynamically.
+- **Metric folders** – Each metric lives in `refactor/metrics/<metric>/`, containing `*Cli.*` (UI/controller code) and `*Logic.*` (metric registration + processing flow). CLI files only parse/validate arguments, while logic files create containers, register metric calculators, and run the pipeline.
+
+The first end-to-end flows (`refactor-suvr`, `refactor-centiloid` CLI subcommands) demonstrate how new metrics plug in by adding a self-contained module folder plus a CLI entry point, leaving the shared service and application layers untouched.
+
 
