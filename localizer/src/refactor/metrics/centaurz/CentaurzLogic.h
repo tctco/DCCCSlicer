@@ -1,12 +1,10 @@
 #pragma once
-#include "../../interfaces/IMetricLogic.h"
-#include "../../../interfaces/IConfiguration.h"
 #include "../../di/ServiceContainer.h"
 #include <string>
 
-namespace RefactorPipeline::Metrics::Centiloid {
+namespace RefactorPipeline::Metrics::Centaurz {
 
-struct CentiloidCLIOptions {
+struct CentaurzCLIOptions {
     std::string inputPath;
     std::string outputPath;
     std::string configPath = "config.toml";
@@ -20,7 +18,8 @@ struct CentiloidCLIOptions {
 };
 
 void registerMetric(ServiceContainer& container);
-int runCommand(const CentiloidCLIOptions& options, const std::string& fullCommand);
+int runCommand(const CentaurzCLIOptions& options, const std::string& fullCommand);
 
-} // namespace RefactorPipeline::Metrics::Centiloid
+} // namespace RefactorPipeline::Metrics::Centaurz
+
 

@@ -1,4 +1,6 @@
 #include "MetricService.h"
+#include "../common/Common.h"
+#include <string>
 #include <stdexcept>
 #include <utility>
 
@@ -16,7 +18,7 @@ std::vector<MetricResult> MetricService::calculate(const MetricComputationReques
         throw std::invalid_argument("MetricService requires a spatially normalized image");
     }
 
-    std::string metricName = Common::toLower(request.options.metricName);
+    std::string metricName = refactorCommon::path::toLower(request.options.metricName);
     if (metricName.empty()) {
         return {};
     }

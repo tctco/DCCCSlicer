@@ -102,6 +102,19 @@ target_sources(CentiloidCalculator PRIVATE
     cli/Options.cpp
     cli/Commands.h
     cli/Commands.cpp
+    refactor/common/Common.h
+    refactor/common/NiftiTypes.h
+    refactor/common/NiftiIO.h
+    refactor/common/NiftiIO.cpp
+    refactor/common/ImageOps.h
+    refactor/common/ImageOps.cpp
+    refactor/common/PathUtils.h
+    refactor/common/PathUtils.cpp
+    refactor/common/Filesystem.h
+    refactor/common/Filesystem.cpp
+    refactor/common/Logging.h
+    refactor/common/Logging.cpp
+    refactor/common/OnnxPath.h
     refactor/common/ProcessingContracts.h
     refactor/interfaces/IMetricLogic.h
     refactor/interfaces/IMetricModuleRegistry.h
@@ -122,6 +135,8 @@ target_sources(CentiloidCalculator PRIVATE
     refactor/services/FileService.cpp
     refactor/application/PipelineApplication.h
     refactor/application/PipelineApplication.cpp
+    refactor/common/BatchLogging.h
+    refactor/common/BatchLogging.cpp
     refactor/di/Bootstrap.h
     refactor/di/Bootstrap.cpp
     refactor/metrics/suvr/SUVrLogic.h
@@ -132,6 +147,18 @@ target_sources(CentiloidCalculator PRIVATE
     refactor/metrics/centiloid/CentiloidLogic.cpp
     refactor/metrics/centiloid/CentiloidCLI.h
     refactor/metrics/centiloid/CentiloidCLI.cpp
+    refactor/metrics/centaurz/CentaurzLogic.h
+    refactor/metrics/centaurz/CentaurzLogic.cpp
+    refactor/metrics/centaurz/CentaurzCLI.h
+    refactor/metrics/centaurz/CentaurzCLI.cpp
+    refactor/metrics/fillstates/FillStatesLogic.h
+    refactor/metrics/fillstates/FillStatesLogic.cpp
+    refactor/metrics/fillstates/FillStatesCLI.h
+    refactor/metrics/fillstates/FillStatesCLI.cpp
+    refactor/metrics/adad/ADADLogic.h
+    refactor/metrics/adad/ADADLogic.cpp
+    refactor/metrics/adad/ADADCLI.h
+    refactor/metrics/adad/ADADCLI.cpp
     refactor/metrics/ModuleCatalog.h
     refactor/metrics/ModuleCatalog.cpp
 )

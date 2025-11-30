@@ -4,6 +4,7 @@
 #include "../services/MetricService.h"
 #include "../services/MetricModuleRegistry.h"
 #include "../services/FileService.h"
+#include "../metrics/ModuleCatalog.h"
 #include <stdexcept>
 
 namespace RefactorPipeline {
@@ -17,13 +18,13 @@ std::shared_ptr<ServiceContainer> buildDefaultContainer(ConfigurationPtr config)
     container->registerSingleton<IConfiguration>([config](auto&) { return config; });
     container->registerSingleton<LegacyNormalizerProvider>(
         [](auto& c) {
-            auto cfg = c.resolve<IConfiguration>();
+            auto cfg = c.template resolve<IConfiguration>();
             return std::make_shared<LegacyNormalizerProvider>(cfg);
         });
     container->registerSingleton<ISpatialNormalizationService>(
         [](auto& c) {
-            auto cfg = c.resolve<IConfiguration>();
-            auto provider = c.resolve<LegacyNormalizerProvider>();
+            auto cfg = c.template resolve<IConfiguration>();
+            auto provider = c.template resolve<LegacyNormalizerProvider>();
             return std::make_shared<SpatialNormalizationService>(cfg, provider);
         });
     container->registerSingleton<IMetricModuleRegistry>(
@@ -32,7 +33,7 @@ std::shared_ptr<ServiceContainer> buildDefaultContainer(ConfigurationPtr config)
         });
     container->registerSingleton<IMetricService>(
         [](auto& c) {
-            auto registry = c.resolve<IMetricModuleRegistry>();
+            auto registry = c.template resolve<IMetricModuleRegistry>();
             return std::make_shared<MetricService>(registry);
         });
     container->registerSingleton<IFileService>(
@@ -41,11 +42,13 @@ std::shared_ptr<ServiceContainer> buildDefaultContainer(ConfigurationPtr config)
         });
     container->registerSingleton<PipelineApplication>(
         [](auto& c) {
-            auto spatial = c.resolve<ISpatialNormalizationService>();
-            auto metric = c.resolve<IMetricService>();
-            auto fileService = c.resolve<IFileService>();
+            auto spatial = c.template resolve<ISpatialNormalizationService>();
+            auto metric = c.template resolve<IMetricService>();
+            auto fileService = c.template resolve<IFileService>();
             return std::make_shared<PipelineApplication>(spatial, metric, fileService);
         });
+
+    Metrics::registerAllMetricModules(*container);
 
     return container;
 }

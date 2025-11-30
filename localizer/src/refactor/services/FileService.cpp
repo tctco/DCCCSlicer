@@ -1,5 +1,5 @@
 #include "FileService.h"
-#include "../../utils/common.h"
+#include "../common/Common.h"
 #include <stdexcept>
 
 namespace RefactorPipeline {
@@ -12,7 +12,7 @@ void FileService::saveNormalizedImage(const FileSaveRequest& request) {
         throw std::invalid_argument("FileService requires a valid output path");
     }
 
-    Common::SaveImage(request.spatiallyNormalizedImage, request.outputPath);
+    refactorCommon::nifti::saveImage(request.spatiallyNormalizedImage, request.outputPath);
 }
 
 } // namespace RefactorPipeline

@@ -18,6 +18,20 @@ namespace {
 constexpr const char* kVoiMaskParam = "voi_mask_path";
 constexpr const char* kRefMaskParam = "ref_mask_path";
 
+void configureDebugOutputBasePath(SUVrCLIOptions& options) {
+    if (!options.enableDebugOutput || options.outputPath.empty()) {
+        return;
+    }
+    std::filesystem::path outputFilePath(options.outputPath);
+    std::string directory = outputFilePath.parent_path().string();
+    std::string baseName = outputFilePath.stem().string();
+    if (directory.empty()) {
+        options.debugOutputBasePath = baseName;
+    } else {
+        options.debugOutputBasePath = directory + "/" + baseName;
+    }
+}
+
 class SUVrLogic : public IMetricLogic {
 public:
     explicit SUVrLogic(ConfigurationPtr config)
@@ -94,7 +108,7 @@ void registerMetric(ServiceContainer& container) {
     registry->registerModule(std::make_shared<SUVrLogic>(config));
 }
 
-int runCommand(const SUVrCommandOptions& options, const std::string& fullCommand) {
+int runCommand(const SUVrCLIOptions& options, const std::string& fullCommand) {
     if (options.batchMode) {
         std::cerr << "[refactor-suvr] Batch mode is not supported in the prototype refactor path yet." << std::endl;
         return EXIT_FAILURE;
@@ -105,8 +119,8 @@ int runCommand(const SUVrCommandOptions& options, const std::string& fullCommand
         return EXIT_FAILURE;
     }
 
-    SUVrCommandOptions optionsCopy = options;
-    setupDebugOutput(optionsCopy);
+    SUVrCLIOptions optionsCopy = options;
+    configureDebugOutputBasePath(optionsCopy);
 
     auto config = loadConfiguration(optionsCopy.configPath, optionsCopy.enableDebugOutput);
     if (!config) {
@@ -116,7 +130,6 @@ int runCommand(const SUVrCommandOptions& options, const std::string& fullCommand
     ensureOutputDirectoryExists(optionsCopy.outputPath);
 
     auto container = buildDefaultContainer(config);
-    registerMetric(*container);
 
     ProcessingRequest request;
     request.outputPath = optionsCopy.outputPath;
@@ -124,10 +137,10 @@ int runCommand(const SUVrCommandOptions& options, const std::string& fullCommand
     request.computeMetrics = true;
     request.metricOptions.metricName = "suvr";
     if (!optionsCopy.voiMaskPath.empty()) {
-        request.metricOptions.stringParameters["voi_mask_path"] = optionsCopy.voiMaskPath;
+        request.metricOptions.stringParameters[kVoiMaskParam] = optionsCopy.voiMaskPath;
     }
     if (!optionsCopy.refMaskPath.empty()) {
-        request.metricOptions.stringParameters["ref_mask_path"] = optionsCopy.refMaskPath;
+        request.metricOptions.stringParameters[kRefMaskParam] = optionsCopy.refMaskPath;
     }
 
     request.normalization.inputPath = optionsCopy.inputPath;

@@ -29,11 +29,34 @@ ProcessingResponse PipelineApplication::run(const ProcessingRequest& request) {
     if (request.computeMetrics && !request.metricOptions.metricName.empty()) {
         MetricComputationRequest metricRequest;
         metricRequest.spatiallyNormalizedImage = response.normalizationOutput.spatiallyNormalizedImage;
+        metricRequest.rigidAlignedImage = response.normalizationOutput.rigidAlignedImage;
         metricRequest.options = request.metricOptions;
         response.metricResults = metricService_->calculate(metricRequest);
     }
 
     return response;
+}
+
+BatchProcessingSummary PipelineApplication::runBatch(const BatchProcessingRequest& request,
+                                                     BatchSuccessCallback onSuccess,
+                                                     BatchErrorCallback onError) {
+    BatchProcessingSummary summary;
+    for (const auto& item : request.items) {
+        summary.processed++;
+        try {
+            auto response = run(item.request);
+            summary.succeeded++;
+            if (onSuccess) {
+                onSuccess(item, response);
+            }
+        } catch (const std::exception& ex) {
+            summary.failed++;
+            if (onError) {
+                onError(item, ex);
+            }
+        }
+    }
+    return summary;
 }
 
 } // namespace RefactorPipeline

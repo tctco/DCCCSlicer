@@ -1,10 +1,10 @@
-#include "SUVrCLI.h"
+#include "ADADCLI.h"
 #include "../../interfaces/IMetricCLI.h"
-#include "SUVrLogic.h"
+#include "ADADLogic.h"
 #include <memory>
 #include <string>
 
-namespace RefactorPipeline::Metrics::SUVr {
+namespace RefactorPipeline::Metrics::ADAD {
 
 namespace {
 
@@ -39,14 +39,14 @@ void addSpatialNormalizationArguments(argparse::ArgumentParser& parser) {
         .implicit_value(true);
 }
 
-class SUVrCLI : public IMetricCLI {
+class ADADCLI : public IMetricCLI {
 public:
     std::string getSubcommandName() const override {
-        return "refactor-suvr";
+        return "refactor-adad";
     }
 
     std::string getDescription() const override {
-        return "Prototype SUVR pipeline built with service/DI refactor";
+        return "Prototype ADAD scoring pipeline built with service/DI refactor";
     }
 
     void configureArguments(argparse::ArgumentParser& parser) override {
@@ -56,16 +56,14 @@ public:
             .help("Skip the spatial normalization stage")
             .default_value(false)
             .implicit_value(true);
-        parser.add_argument("--voi-mask")
-            .help("Absolute path to the VOI mask")
-            .default_value(std::string{});
-        parser.add_argument("--ref-mask")
-            .help("Absolute path to the reference mask")
-            .default_value(std::string{});
+        parser.add_argument("--modality")
+            .help("Decoupling modality to use (abeta or tau)")
+            .default_value(std::string("abeta"))
+            .choices("abeta", "tau");
     }
 
     int execute(const argparse::ArgumentParser& parser, const std::string& fullCommand) override {
-        SUVrCLIOptions options;
+        ADADCLIOptions options;
         options.inputPath = parser.get<std::string>("--input");
         options.outputPath = parser.get<std::string>("--output");
         options.configPath = parser.get<std::string>("--config");
@@ -74,8 +72,7 @@ public:
         options.skipRegistration = parser.get<bool>("--skip-normalization");
         options.useIterativeRigid = parser.get<bool>("--iterative");
         options.useManualFOV = parser.get<bool>("--manual-fov");
-        options.voiMaskPath = parser.get<std::string>("--voi-mask");
-        options.refMaskPath = parser.get<std::string>("--ref-mask");
+        options.modality = parser.get<std::string>("--modality");
         return runCommand(options, fullCommand);
     }
 };
@@ -83,7 +80,8 @@ public:
 } // namespace
 
 MetricCLIPtr createCLI() {
-    return std::make_shared<SUVrCLI>();
+    return std::make_shared<ADADCLI>();
 }
 
-} // namespace RefactorPipeline::Metrics::SUVr
+} // namespace RefactorPipeline::Metrics::ADAD
+

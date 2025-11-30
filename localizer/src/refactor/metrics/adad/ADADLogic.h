@@ -4,23 +4,24 @@
 #include "../../di/ServiceContainer.h"
 #include <string>
 
-namespace RefactorPipeline::Metrics::Centiloid {
+namespace RefactorPipeline::Metrics::ADAD {
 
-struct CentiloidCLIOptions {
+struct ADADCLIOptions {
     std::string inputPath;
     std::string outputPath;
     std::string configPath = "config.toml";
-    bool includeSUVr = false;
+    bool enableDebugOutput = false;
+    std::string debugOutputBasePath;
+    bool batchMode = false;
     bool skipRegistration = false;
     bool useIterativeRigid = false;
     bool useManualFOV = false;
-    bool enableDebugOutput = false;
-    bool batchMode = false;
-    std::string debugOutputBasePath;
+    std::string modality = "abeta";
 };
 
 void registerMetric(ServiceContainer& container);
-int runCommand(const CentiloidCLIOptions& options, const std::string& fullCommand);
+int runCommand(const ADADCLIOptions& options, const std::string& fullCommand);
 
-} // namespace RefactorPipeline::Metrics::Centiloid
+} // namespace RefactorPipeline::Metrics::ADAD
+
 

@@ -3,7 +3,9 @@
 #include <unordered_map>
 #include <vector>
 #include "../../interfaces/IMetricCalculator.h"
-#include "../../utils/common.h"
+#include "Common.h"
+
+using ImageType = refactorCommon::ImageType;
 
 namespace RefactorPipeline {
 
@@ -34,6 +36,7 @@ struct MetricComputationOptions {
 
 struct MetricComputationRequest {
     ImageType::Pointer spatiallyNormalizedImage;
+    ImageType::Pointer rigidAlignedImage;
     MetricComputationOptions options;
 };
 
@@ -53,6 +56,21 @@ struct ProcessingRequest {
 struct ProcessingResponse {
     SpatialNormalizationOutput normalizationOutput;
     std::vector<MetricResult> metricResults;
+};
+
+struct BatchProcessingItem {
+    ProcessingRequest request;
+    std::string label;
+};
+
+struct BatchProcessingRequest {
+    std::vector<BatchProcessingItem> items;
+};
+
+struct BatchProcessingSummary {
+    size_t processed = 0;
+    size_t succeeded = 0;
+    size_t failed = 0;
 };
 
 } // namespace RefactorPipeline

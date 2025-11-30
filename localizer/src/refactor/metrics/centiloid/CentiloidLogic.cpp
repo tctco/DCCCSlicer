@@ -1,9 +1,12 @@
 #include "CentiloidLogic.h"
 #include "../../interfaces/IMetricModuleRegistry.h"
 #include "../../common/ProcessingContracts.h"
+#include "../../common/Common.h"
 #include "../../di/Bootstrap.h"
 #include "../../../calculators/CentiloidCalculator.h"
 #include "../../../config/Configuration.h"
+#include "../../common/BatchLogging.h"
+#include "../../../config/Version.h"
 #include "../../../interfaces/IConfiguration.h"
 #include <filesystem>
 #include <iostream>
@@ -12,6 +15,13 @@
 namespace RefactorPipeline::Metrics::Centiloid {
 
 namespace {
+
+void configureDebugOutputBasePath(CentiloidCLIOptions& options) {
+    if (!options.enableDebugOutput || options.outputPath.empty()) {
+        return;
+    }
+    options.debugOutputBasePath = refactorCommon::path::deriveDebugBasePath(options.outputPath);
+}
 
 class CentiloidLogic : public IMetricLogic {
 public:
@@ -50,11 +60,132 @@ ConfigurationPtr loadConfiguration(const std::string& configPath, bool debug) {
     return configuration;
 }
 
-void ensureOutputDirectoryExists(const std::string& outputPath) {
-    auto directory = std::filesystem::path(outputPath).parent_path();
-    if (!directory.empty() && !std::filesystem::exists(directory)) {
-        std::filesystem::create_directories(directory);
+ProcessingRequest buildProcessingRequest(const CentiloidCLIOptions& options,
+                                         const std::string& inputPath,
+                                         const std::string& outputPath,
+                                         const std::string& debugBasePath) {
+    ProcessingRequest request;
+    request.outputPath = outputPath;
+    request.persistNormalizedImage = true;
+    request.computeMetrics = true;
+    request.metricOptions.metricName = "centiloid";
+
+    request.normalization.inputPath = inputPath;
+    request.normalization.skip = options.skipRegistration;
+    request.normalization.options.useIterativeRigid = options.useIterativeRigid;
+    request.normalization.options.useManualFOV = options.useManualFOV;
+    request.normalization.options.enableDebugOutput = options.enableDebugOutput;
+    request.normalization.options.debugOutputBasePath =
+        options.enableDebugOutput ? debugBasePath : std::string{};
+    return request;
+}
+
+void logMetricResults(const ProcessingResponse& response, bool includeSUVr) {
+    if (response.metricResults.empty()) {
+        std::cout << "[refactor-centiloid] No metric results returned." << std::endl;
+        return;
     }
+    std::cout << "\n=== Refactor Centiloid Results ===" << std::endl;
+    for (const auto& metric : response.metricResults) {
+        std::cout << "Metric: " << metric.metricName << std::endl;
+        for (const auto& [tracer, value] : metric.tracerValues) {
+            std::cout << "  " << tracer << ": " << value << std::endl;
+        }
+        if (includeSUVr) {
+            std::cout << "  SUVr: " << metric.suvr << std::endl;
+        }
+    }
+}
+
+int runSingle(const CentiloidCLIOptions& options,
+              const std::string& fullCommand,
+              PipelineApplication& app) {
+    refactorCommon::fs::ensureParentDirectory(options.outputPath);
+    std::string debugBase =
+        options.enableDebugOutput ? refactorCommon::path::deriveDebugBasePath(options.outputPath) : std::string{};
+    ProcessingRequest request = buildProcessingRequest(
+        options, options.inputPath, options.outputPath, debugBase);
+
+    std::cout << "[refactor-centiloid] Starting processing: " << fullCommand << std::endl;
+    try {
+        auto response = app.run(request);
+        std::cout << "\n[refactor-centiloid] Spatial normalization complete. Normalized image saved to "
+                  << options.outputPath << std::endl;
+        logMetricResults(response, options.includeSUVr);
+    } catch (const std::exception& ex) {
+        std::cerr << "[refactor-centiloid] Pipeline failed: " << ex.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    std::cout << "[refactor-centiloid] Processing completed successfully." << std::endl;
+    return EXIT_SUCCESS;
+}
+
+int runBatch(const CentiloidCLIOptions& options,
+             const std::string& fullCommand,
+             PipelineApplication& app) {
+    const std::filesystem::path inputDir(options.inputPath);
+    const std::filesystem::path outputDir(options.outputPath);
+
+    if (!std::filesystem::exists(inputDir) || !std::filesystem::is_directory(inputDir)) {
+        std::cerr << "[refactor-centiloid] Input directory does not exist: " << options.inputPath << std::endl;
+        return EXIT_FAILURE;
+    }
+    if (!refactorCommon::fs::ensureDirectory(outputDir)) {
+        std::cerr << "[refactor-centiloid] Output path must be a directory: " << options.outputPath << std::endl;
+        return EXIT_FAILURE;
+    }
+    if (!options.skipRegistration && !refactorCommon::fs::isDirectoryEmpty(outputDir)) {
+        std::cerr << "[refactor-centiloid] Output directory must be empty unless --skip-normalization is set." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    auto files = refactorCommon::fs::collectNiftiFiles(inputDir);
+    if (files.empty()) {
+        std::cout << "[refactor-centiloid] No NIfTI files found in " << inputDir << std::endl;
+        return EXIT_SUCCESS;
+    }
+
+    std::cout << "[refactor-centiloid] Starting batch processing of " << files.size()
+              << " files: " << fullCommand << std::endl;
+
+    BatchProcessingRequest batchRequest;
+    batchRequest.items.reserve(files.size());
+    for (const auto& path : files) {
+        std::string outputPath = refactorCommon::fs::buildOutputPath(path, outputDir, "_centiloid_refactor.nii");
+        std::string debugBase =
+            options.enableDebugOutput ? refactorCommon::path::deriveDebugBasePath(outputPath) : std::string{};
+        ProcessingRequest request = buildProcessingRequest(
+            options, path.string(), outputPath, debugBase);
+        BatchProcessingItem item;
+        item.request = std::move(request);
+        item.label = path.filename().string();
+        batchRequest.items.push_back(std::move(item));
+    }
+
+    auto batchInfo = BatchLogging::openBatchInfo(
+        outputDir, fullCommand, SOFTWARE_VERSION, options.configPath, inputDir);
+    auto csvCtx = BatchLogging::openCsv(outputDir);
+
+    auto onSuccess = [&](const BatchProcessingItem& item, const ProcessingResponse& response) {
+        std::cout << "[refactor-centiloid][batch] Processed " << item.label << std::endl;
+        logMetricResults(response, options.includeSUVr);
+        BatchLogging::appendSuccessEntry(batchInfo, item.label);
+        BatchLogging::appendCsvRows(csvCtx, item.label, response.metricResults);
+    };
+
+    auto onError = [&](const BatchProcessingItem& item, const std::exception& ex) {
+        std::cerr << "[refactor-centiloid][batch] Failed " << item.label << ": " << ex.what() << std::endl;
+        BatchLogging::appendFailureEntry(batchInfo, item.label, ex.what());
+    };
+
+    auto summary = app.runBatch(batchRequest, onSuccess, onError);
+    BatchLogging::finalizeBatchInfo(batchInfo, summary);
+
+    std::cout << "[refactor-centiloid] Batch complete. Success: "
+              << summary.succeeded << ", Failed: " << summary.failed << std::endl;
+
+    return summary.failed == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 } // namespace
@@ -68,66 +199,23 @@ void registerMetric(ServiceContainer& container) {
     registry->registerModule(std::make_shared<CentiloidLogic>(config));
 }
 
-int runCommand(const SUVrDerivedMetricOptions& options, const std::string& fullCommand) {
-    if (options.batchMode) {
-        std::cerr << "[refactor-centiloid] Batch mode is not supported in the prototype refactor path yet." << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    SUVrDerivedMetricOptions optionsCopy = options;
-    setupDebugOutput(optionsCopy);
+int runCommand(const CentiloidCLIOptions& options, const std::string& fullCommand) {
+    CentiloidCLIOptions optionsCopy = options;
+    configureDebugOutputBasePath(optionsCopy);
 
     auto config = loadConfiguration(optionsCopy.configPath, optionsCopy.enableDebugOutput);
     if (!config) {
         return EXIT_FAILURE;
     }
 
-    ensureOutputDirectoryExists(optionsCopy.outputPath);
-
     auto container = buildDefaultContainer(config);
-    registerMetric(*container);
-
-    ProcessingRequest request;
-    request.outputPath = optionsCopy.outputPath;
-    request.persistNormalizedImage = true;
-    request.computeMetrics = true;
-    request.metricOptions.metricName = "centiloid";
-
-    request.normalization.inputPath = optionsCopy.inputPath;
-    request.normalization.skip = optionsCopy.skipRegistration;
-    request.normalization.options.useIterativeRigid = optionsCopy.useIterativeRigid;
-    request.normalization.options.useManualFOV = optionsCopy.useManualFOV;
-    request.normalization.options.enableDebugOutput = optionsCopy.enableDebugOutput;
-    request.normalization.options.debugOutputBasePath = optionsCopy.debugOutputBasePath;
-
-    std::cout << "[refactor-centiloid] Starting processing: " << fullCommand << std::endl;
     auto app = resolveApplication(*container);
 
-    try {
-        auto response = app->run(request);
-        std::cout << "\n[refactor-centiloid] Spatial normalization complete. Normalized image saved to "
-                  << optionsCopy.outputPath << std::endl;
-        if (response.metricResults.empty()) {
-            std::cout << "[refactor-centiloid] No metric results returned." << std::endl;
-        } else {
-            std::cout << "\n=== Refactor Centiloid Results ===" << std::endl;
-            for (const auto& metric : response.metricResults) {
-                std::cout << "Metric: " << metric.metricName << std::endl;
-                for (const auto& [tracer, value] : metric.tracerValues) {
-                    std::cout << "  " << tracer << ": " << value << std::endl;
-                }
-                if (optionsCopy.includeSUVr) {
-                    std::cout << "  SUVr: " << metric.suvr << std::endl;
-                }
-            }
-        }
-    } catch (const std::exception& ex) {
-        std::cerr << "[refactor-centiloid] Pipeline failed: " << ex.what() << std::endl;
-        return EXIT_FAILURE;
+    if (optionsCopy.batchMode) {
+        return runBatch(optionsCopy, fullCommand, *app);
     }
 
-    std::cout << "[refactor-centiloid] Processing completed successfully." << std::endl;
-    return EXIT_SUCCESS;
+    return runSingle(optionsCopy, fullCommand, *app);
 }
 
 } // namespace RefactorPipeline::Metrics::Centiloid

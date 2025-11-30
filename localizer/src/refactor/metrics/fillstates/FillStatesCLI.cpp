@@ -1,10 +1,10 @@
-#include "SUVrCLI.h"
+#include "FillStatesCLI.h"
 #include "../../interfaces/IMetricCLI.h"
-#include "SUVrLogic.h"
+#include "FillStatesLogic.h"
 #include <memory>
 #include <string>
 
-namespace RefactorPipeline::Metrics::SUVr {
+namespace RefactorPipeline::Metrics::FillStates {
 
 namespace {
 
@@ -39,43 +39,49 @@ void addSpatialNormalizationArguments(argparse::ArgumentParser& parser) {
         .implicit_value(true);
 }
 
-class SUVrCLI : public IMetricCLI {
+void addFillStatesArguments(argparse::ArgumentParser& parser) {
+    addBaseArguments(parser);
+    addSpatialNormalizationArguments(parser);
+    parser.add_argument("--suvr")
+        .help("Include SUVr values in the output")
+        .default_value(false)
+        .implicit_value(true);
+    parser.add_argument("--skip-normalization")
+        .help("Skip spatial normalization and calculate metrics directly")
+        .default_value(false)
+        .implicit_value(true);
+    parser.add_argument("--tracer")
+        .help("Tracer type to use for fill-states metric (fbp, fdg, ftp)")
+        .required()
+        .choices("fbp", "fdg", "ftp");
+}
+
+class FillStatesCLI : public IMetricCLI {
 public:
     std::string getSubcommandName() const override {
-        return "refactor-suvr";
+        return "refactor-fillstates";
     }
 
     std::string getDescription() const override {
-        return "Prototype SUVR pipeline built with service/DI refactor";
+        return "Prototype FillStates pipeline built with service/DI refactor";
     }
 
     void configureArguments(argparse::ArgumentParser& parser) override {
-        addBaseArguments(parser);
-        addSpatialNormalizationArguments(parser);
-        parser.add_argument("--skip-normalization")
-            .help("Skip the spatial normalization stage")
-            .default_value(false)
-            .implicit_value(true);
-        parser.add_argument("--voi-mask")
-            .help("Absolute path to the VOI mask")
-            .default_value(std::string{});
-        parser.add_argument("--ref-mask")
-            .help("Absolute path to the reference mask")
-            .default_value(std::string{});
+        addFillStatesArguments(parser);
     }
 
     int execute(const argparse::ArgumentParser& parser, const std::string& fullCommand) override {
-        SUVrCLIOptions options;
+        FillStatesCLIOptions options;
         options.inputPath = parser.get<std::string>("--input");
         options.outputPath = parser.get<std::string>("--output");
         options.configPath = parser.get<std::string>("--config");
-        options.enableDebugOutput = parser.get<bool>("--debug");
-        options.batchMode = parser.get<bool>("--batch");
+        options.tracer = parser.get<std::string>("--tracer");
+        options.includeSUVr = parser.get<bool>("--suvr");
         options.skipRegistration = parser.get<bool>("--skip-normalization");
         options.useIterativeRigid = parser.get<bool>("--iterative");
         options.useManualFOV = parser.get<bool>("--manual-fov");
-        options.voiMaskPath = parser.get<std::string>("--voi-mask");
-        options.refMaskPath = parser.get<std::string>("--ref-mask");
+        options.enableDebugOutput = parser.get<bool>("--debug");
+        options.batchMode = parser.get<bool>("--batch");
         return runCommand(options, fullCommand);
     }
 };
@@ -83,7 +89,9 @@ public:
 } // namespace
 
 MetricCLIPtr createCLI() {
-    return std::make_shared<SUVrCLI>();
+    return std::make_shared<FillStatesCLI>();
 }
 
-} // namespace RefactorPipeline::Metrics::SUVr
+} // namespace RefactorPipeline::Metrics::FillStates
+
+

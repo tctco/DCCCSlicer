@@ -1,5 +1,5 @@
 #include "SpatialNormalizationService.h"
-#include "../../utils/common.h"
+#include "../common/Common.h"
 #include <stdexcept>
 #include <utility>
 
@@ -55,7 +55,7 @@ SpatialNormalizationOutput SpatialNormalizationService::normalize(const SpatialN
 }
 
 ImageType::Pointer SpatialNormalizationService::loadInput(const std::string& inputPath) const {
-    ImageType::Pointer image = Common::LoadNii(inputPath);
+    ImageType::Pointer image = refactorCommon::nifti::loadImage(inputPath);
     if (!image) {
         throw std::runtime_error("Failed to load input image: " + inputPath);
     }
