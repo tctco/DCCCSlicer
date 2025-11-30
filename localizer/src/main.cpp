@@ -1,7 +1,7 @@
 ﻿#include "cli/Commands.h"
 #include "cli/Options.h"
 #include "config/Version.h"
-#include "refactor/metrics/ModuleCatalog.h"
+#include "metrics/ModuleCatalog.h"
 #include <iostream>
 #include <itkNiftiImageIOFactory.h>
 #include <memory>

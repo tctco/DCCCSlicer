@@ -4,7 +4,7 @@
 #include "../config/Version.h"
 #include "../pipeline/ProcessingPipeline.h"
 #include "../pipeline/BatchProcessor.h"
-#include "../calculators/SUVrCalculator.h"
+#include "../metrics/suvr/SUVrCalculator.h"
 #include "../utils/common.h"
 #include <iostream>
 
@@ -19,7 +19,9 @@ std::shared_ptr<Configuration> loadConfigurationWithLogging(const std::string& c
     loadSuccess ? std::cout << " [SUCCESS]" << std::endl : 
                   std::cout << " [FAILED] - using default configuration" << std::endl;
     
-    debugMode && (config->printAllConfigurations(), true);
+    if (debugMode) {
+        config->printAllConfigurations();
+    }
     
     return config;
 }

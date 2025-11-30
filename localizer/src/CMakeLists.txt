@@ -46,20 +46,6 @@ target_sources(CentiloidCalculator PRIVATE
     config/Version.h
 )
 
-# Add metric calculators
-target_sources(CentiloidCalculator PRIVATE
-    calculators/SUVrCalculator.h
-    calculators/SUVrCalculator.cpp
-    calculators/CentiloidCalculator.h
-    calculators/CentiloidCalculator.cpp
-    calculators/CenTauRCalculator.h
-    calculators/CenTauRCalculator.cpp
-    calculators/CenTauRzCalculator.h
-    calculators/CenTauRzCalculator.cpp
-    calculators/FillStatesCalculator.h
-    calculators/FillStatesCalculator.cpp
-)
-
 # Add spatial normalizers
 target_sources(CentiloidCalculator PRIVATE
     normalizers/RigidVoxelMorphNormalizer.h
@@ -102,65 +88,79 @@ target_sources(CentiloidCalculator PRIVATE
     cli/Options.cpp
     cli/Commands.h
     cli/Commands.cpp
-    refactor/common/Common.h
-    refactor/common/NiftiTypes.h
-    refactor/common/NiftiIO.h
-    refactor/common/NiftiIO.cpp
-    refactor/common/ImageOps.h
-    refactor/common/ImageOps.cpp
-    refactor/common/PathUtils.h
-    refactor/common/PathUtils.cpp
-    refactor/common/Filesystem.h
-    refactor/common/Filesystem.cpp
-    refactor/common/Logging.h
-    refactor/common/Logging.cpp
-    refactor/common/OnnxPath.h
-    refactor/common/ProcessingContracts.h
-    refactor/interfaces/IMetricLogic.h
-    refactor/interfaces/IMetricModuleRegistry.h
-    refactor/interfaces/IMetricCLI.h
-    refactor/di/ServiceContainer.h
-    refactor/providers/LegacyNormalizerProvider.h
-    refactor/providers/LegacyNormalizerProvider.cpp
-    refactor/services/ISpatialNormalizationService.h
-    refactor/services/SpatialNormalizationService.h
-    refactor/services/SpatialNormalizationService.cpp
-    refactor/services/IMetricService.h
-    refactor/services/MetricService.h
-    refactor/services/MetricService.cpp
-    refactor/services/MetricModuleRegistry.h
-    refactor/services/MetricModuleRegistry.cpp
-    refactor/services/IFileService.h
-    refactor/services/FileService.h
-    refactor/services/FileService.cpp
-    refactor/application/PipelineApplication.h
-    refactor/application/PipelineApplication.cpp
-    refactor/common/BatchLogging.h
-    refactor/common/BatchLogging.cpp
-    refactor/di/Bootstrap.h
-    refactor/di/Bootstrap.cpp
-    refactor/metrics/suvr/SUVrLogic.h
-    refactor/metrics/suvr/SUVrLogic.cpp
-    refactor/metrics/suvr/SUVrCLI.h
-    refactor/metrics/suvr/SUVrCLI.cpp
-    refactor/metrics/centiloid/CentiloidLogic.h
-    refactor/metrics/centiloid/CentiloidLogic.cpp
-    refactor/metrics/centiloid/CentiloidCLI.h
-    refactor/metrics/centiloid/CentiloidCLI.cpp
-    refactor/metrics/centaurz/CentaurzLogic.h
-    refactor/metrics/centaurz/CentaurzLogic.cpp
-    refactor/metrics/centaurz/CentaurzCLI.h
-    refactor/metrics/centaurz/CentaurzCLI.cpp
-    refactor/metrics/fillstates/FillStatesLogic.h
-    refactor/metrics/fillstates/FillStatesLogic.cpp
-    refactor/metrics/fillstates/FillStatesCLI.h
-    refactor/metrics/fillstates/FillStatesCLI.cpp
-    refactor/metrics/adad/ADADLogic.h
-    refactor/metrics/adad/ADADLogic.cpp
-    refactor/metrics/adad/ADADCLI.h
-    refactor/metrics/adad/ADADCLI.cpp
-    refactor/metrics/ModuleCatalog.h
-    refactor/metrics/ModuleCatalog.cpp
+    core/common/Common.h
+    core/common/NiftiTypes.h
+    core/common/NiftiIO.h
+    core/common/NiftiIO.cpp
+    core/common/ImageOps.h
+    core/common/ImageOps.cpp
+    core/common/PathUtils.h
+    core/common/PathUtils.cpp
+    core/common/Filesystem.h
+    core/common/Filesystem.cpp
+    core/common/Logging.h
+    core/common/Logging.cpp
+    core/common/OnnxPath.h
+    core/common/ProcessingContracts.h
+    core/interfaces/IMetricLogic.h
+    core/interfaces/IMetricModuleRegistry.h
+    core/interfaces/IMetricCLI.h
+    core/di/ServiceContainer.h
+    core/providers/LegacyNormalizerProvider.h
+    core/providers/LegacyNormalizerProvider.cpp
+    core/services/ISpatialNormalizationService.h
+    core/services/SpatialNormalizationService.h
+    core/services/SpatialNormalizationService.cpp
+    core/services/IMetricService.h
+    core/services/MetricService.h
+    core/services/MetricService.cpp
+    core/services/MetricModuleRegistry.h
+    core/services/MetricModuleRegistry.cpp
+    core/services/IFileService.h
+    core/services/FileService.h
+    core/services/FileService.cpp
+    core/application/PipelineApplication.h
+    core/application/PipelineApplication.cpp
+    core/common/BatchLogging.h
+    core/common/BatchLogging.cpp
+    core/di/Bootstrap.h
+    core/di/Bootstrap.cpp
+    metrics/suvr/SUVrLogic.h
+    metrics/suvr/SUVrLogic.cpp
+    metrics/suvr/SUVrCLI.h
+    metrics/suvr/SUVrCLI.cpp
+    metrics/suvr/SUVrCalculator.h
+    metrics/suvr/SUVrCalculator.cpp
+    metrics/centiloid/CentiloidLogic.h
+    metrics/centiloid/CentiloidLogic.cpp
+    metrics/centiloid/CentiloidCLI.h
+    metrics/centiloid/CentiloidCLI.cpp
+    metrics/centiloid/CentiloidCalculator.h
+    metrics/centiloid/CentiloidCalculator.cpp
+    metrics/centaur/CenTauRLogic.h
+    metrics/centaur/CenTauRLogic.cpp
+    metrics/centaur/CenTauRCLI.h
+    metrics/centaur/CenTauRCLI.cpp
+    metrics/centaur/CenTauRCalculator.h
+    metrics/centaur/CenTauRCalculator.cpp
+    metrics/centaurz/CentaurzLogic.h
+    metrics/centaurz/CentaurzLogic.cpp
+    metrics/centaurz/CentaurzCLI.h
+    metrics/centaurz/CentaurzCLI.cpp
+    metrics/centaurz/CenTauRzCalculator.h
+    metrics/centaurz/CenTauRzCalculator.cpp
+    metrics/fillstates/FillStatesLogic.h
+    metrics/fillstates/FillStatesLogic.cpp
+    metrics/fillstates/FillStatesCLI.h
+    metrics/fillstates/FillStatesCLI.cpp
+    metrics/fillstates/FillStatesCalculator.h
+    metrics/fillstates/FillStatesCalculator.cpp
+    metrics/adad/ADADLogic.h
+    metrics/adad/ADADLogic.cpp
+    metrics/adad/ADADCLI.h
+    metrics/adad/ADADCLI.cpp
+    metrics/ModuleCatalog.h
+    metrics/ModuleCatalog.cpp
 )
 
 # Add decoupler sources

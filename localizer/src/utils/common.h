@@ -1,7 +1,7 @@
 #pragma once
 #ifndef COMMON_H
 #define COMMON_H
-#include "../refactor/common/Common.h"
+#include "../core/common/Common.h"
 
 #include <vector>
 #include <string>

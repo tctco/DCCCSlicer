@@ -2,7 +2,7 @@
 #include "../factories/SpatialNormalizerFactory.h"
 #include "../factories/MetricCalculatorFactory.h"
 #include "../normalizers/RigidVoxelMorphNormalizer.h"
-#include "../calculators/FillStatesCalculator.h"
+#include "../metrics/fillstates/FillStatesCalculator.h"
 #include "../utils/common.h"
 #include <iostream>
 #include <algorithm>

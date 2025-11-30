@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "../refactor/common/OnnxPath.h"
+#include "../core/common/OnnxPath.h"
 
 namespace OrtUtils {
 inline std::basic_string<ORTCHAR_T> MakeOrtPath(const std::string& path) {

@@ -1,9 +1,9 @@
 #include "MetricCalculatorFactory.h"
-#include "../calculators/CentiloidCalculator.h"
-#include "../calculators/CenTauRCalculator.h"
-#include "../calculators/CenTauRzCalculator.h"
-#include "../calculators/SUVrCalculator.h"
-#include "../calculators/FillStatesCalculator.h"
+#include "../metrics/centiloid/CentiloidCalculator.h"
+#include "../metrics/centaur/CenTauRCalculator.h"
+#include "../metrics/centaurz/CenTauRzCalculator.h"
+#include "../metrics/suvr/SUVrCalculator.h"
+#include "../metrics/fillstates/FillStatesCalculator.h"
 #include <stdexcept>
 #include <algorithm>
 #include <string>
