@@ -8,6 +8,7 @@ std::string addSuffix(const std::string& filePath, const std::string& suffix);
 std::string toLower(std::string value);
 std::string executableDirectory();
 std::string deriveDebugBasePath(const std::string& outputPath);
+void requireOutputDirectoryExists(const std::string& outputPath);
 
 }  // namespace Common::path
 

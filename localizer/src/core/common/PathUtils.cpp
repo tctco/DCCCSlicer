@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <stdexcept>
 
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -85,6 +86,19 @@ std::string deriveDebugBasePath(const std::string& outputPath) {
         return baseName;
     }
     return directory + "/" + baseName;
+}
+
+void requireOutputDirectoryExists(const std::string& outputPath) {
+    if (outputPath.empty()) {
+        throw std::invalid_argument("Output path must not be empty");
+    }
+    std::filesystem::path directory = std::filesystem::path(outputPath).parent_path();
+    if (directory.empty()) {
+        return;
+    }
+    if (!std::filesystem::exists(directory)) {
+        throw std::runtime_error("Output directory does not exist: " + directory.string());
+    }
 }
 
 }  // namespace Common::path

@@ -4,7 +4,7 @@
 #include "../../core/di/Bootstrap.h"
 #include "../../core/interfaces/IConfiguration.h"
 #include "SUVrCalculator.h"
-#include <filesystem>
+#include "../shared/DebugPathHelpers.h"
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -15,20 +15,6 @@ namespace {
 
 constexpr const char* kVoiMaskParam = "voi_mask_path";
 constexpr const char* kRefMaskParam = "ref_mask_path";
-
-void configureDebugOutputBasePath(SUVrCLIOptions& options) {
-    if (!options.enableDebugOutput || options.outputPath.empty()) {
-        return;
-    }
-    std::filesystem::path outputFilePath(options.outputPath);
-    std::string directory = outputFilePath.parent_path().string();
-    std::string baseName = outputFilePath.stem().string();
-    if (directory.empty()) {
-        options.debugOutputBasePath = baseName;
-    } else {
-        options.debugOutputBasePath = directory + "/" + baseName;
-    }
-}
 
 class SUVrLogic : public IMetricLogic {
 public:
@@ -74,13 +60,6 @@ private:
     ConfigurationPtr config_;
 };
 
-void ensureOutputDirectoryExists(const std::string& outputPath) {
-    auto directory = std::filesystem::path(outputPath).parent_path();
-    if (!directory.empty() && !std::filesystem::exists(directory)) {
-        std::filesystem::create_directories(directory);
-    }
-}
-
 } // namespace
 
 void registerMetric(ServiceContainer& container) {
@@ -104,9 +83,9 @@ int runCommand(const SUVrCLIOptions& options, const std::string& fullCommand) {
     }
 
     SUVrCLIOptions optionsCopy = options;
-    configureDebugOutputBasePath(optionsCopy);
+    Pipeline::Metrics::Shared::configureDerivedDebugBasePath(optionsCopy);
 
-    ensureOutputDirectoryExists(optionsCopy.outputPath);
+    Common::path::requireOutputDirectoryExists(optionsCopy.outputPath);
 
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = optionsCopy.configPath;

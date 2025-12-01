@@ -5,6 +5,7 @@
 #include "../../core/di/Bootstrap.h"
 #include "FillStatesCalculator.h"
 #include "../../core/interfaces/IConfiguration.h"
+#include "../shared/DebugPathHelpers.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -14,13 +15,6 @@ namespace {
 
 constexpr const char* kTracerParam = "fillstates_tracer";
 constexpr const char* kMaskOutputParam = "fillstates_mask_output";
-
-void configureDebugOutputBasePath(FillStatesCLIOptions& options) {
-    if (!options.enableDebugOutput || options.outputPath.empty()) {
-        return;
-    }
-    options.debugOutputBasePath = Common::path::deriveDebugBasePath(options.outputPath);
-}
 
 class FillStatesLogic : public IMetricLogic {
 public:
@@ -79,10 +73,6 @@ private:
     ConfigurationPtr config_;
 };
 
-void ensureOutputDirectoryExists(const std::string& outputPath) {
-    Common::fs::ensureParentDirectory(outputPath);
-}
-
 std::string buildMaskOutputPath(const std::string& outputPath) {
     if (outputPath.empty()) {
         return {};
@@ -113,9 +103,9 @@ int runCommand(const FillStatesCLIOptions& options, const std::string& fullComma
     }
 
     FillStatesCLIOptions optionsCopy = options;
-    configureDebugOutputBasePath(optionsCopy);
+    Pipeline::Metrics::Shared::configureDerivedDebugBasePath(optionsCopy);
 
-    ensureOutputDirectoryExists(optionsCopy.outputPath);
+    Common::path::requireOutputDirectoryExists(optionsCopy.outputPath);
 
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = optionsCopy.configPath;

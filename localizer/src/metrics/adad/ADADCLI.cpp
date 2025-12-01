@@ -22,10 +22,6 @@ void addBaseArguments(argparse::ArgumentParser& parser) {
         .help("Enable debug mode")
         .default_value(false)
         .implicit_value(true);
-    parser.add_argument("--batch")
-        .help("Enable batch processing mode")
-        .default_value(false)
-        .implicit_value(true);
 }
 
 void addSpatialNormalizationArguments(argparse::ArgumentParser& parser) {
@@ -68,7 +64,6 @@ public:
         options.outputPath = parser.get<std::string>("--output");
         options.configPath = parser.get<std::string>("--config");
         options.enableDebugOutput = parser.get<bool>("--debug");
-        options.batchMode = parser.get<bool>("--batch");
         options.skipRegistration = parser.get<bool>("--skip-normalization");
         options.useIterativeRigid = parser.get<bool>("--iterative");
         options.useManualFOV = parser.get<bool>("--manual-fov");

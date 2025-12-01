@@ -4,6 +4,7 @@
 #include "../../core/di/Bootstrap.h"
 #include "../../core/interfaces/IConfiguration.h"
 #include "Decoupler.h"
+#include "../shared/DebugPathHelpers.h"
 #include <iostream>
 #include <map>
 #include <stdexcept>
@@ -15,13 +16,6 @@ namespace {
 
 constexpr const char* kModalityParam = "modality";
 constexpr const char* kOutputPathParam = "output_path";
-
-void configureDebugOutputBasePath(ADADCLIOptions& options) {
-    if (!options.enableDebugOutput || options.outputPath.empty()) {
-        return;
-    }
-    options.debugOutputBasePath = Common::path::deriveDebugBasePath(options.outputPath);
-}
 
 std::string normalizeModality(const std::string& raw) {
     std::string modality = Common::path::toLower(raw);
@@ -184,10 +178,6 @@ private:
     ConfigurationPtr config_;
 };
 
-void ensureOutputDirectoryExists(const std::string& outputPath) {
-    Common::fs::ensureParentDirectory(outputPath);
-}
-
 void printResults(const std::vector<MetricResult>& results, const std::string& modality) {
     if (results.empty()) {
         std::cout << "[adad] No metric results returned." << std::endl;
@@ -222,9 +212,9 @@ int runCommand(const ADADCLIOptions& options, const std::string& fullCommand) {
     }
 
     ADADCLIOptions optionsCopy = options;
-    configureDebugOutputBasePath(optionsCopy);
+    Pipeline::Metrics::Shared::configureDerivedDebugBasePath(optionsCopy);
 
-    ensureOutputDirectoryExists(optionsCopy.outputPath);
+    Common::path::requireOutputDirectoryExists(optionsCopy.outputPath);
 
     const std::string normalizedModality = normalizeModality(optionsCopy.modality);
 

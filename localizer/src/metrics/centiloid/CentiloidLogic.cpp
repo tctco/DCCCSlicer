@@ -3,10 +3,9 @@
 #include "../../core/common/ProcessingContracts.h"
 #include "../../core/di/Bootstrap.h"
 #include "CentiloidCalculator.h"
-#include "../../core/common/BatchLogging.h"
-#include "../../core/config/Version.h"
 #include "../../core/interfaces/IConfiguration.h"
-#include <filesystem>
+#include "../shared/BatchMetricExecutor.h"
+#include "../shared/DebugPathHelpers.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -14,12 +13,7 @@ namespace Pipeline::Metrics::Centiloid {
 
 namespace {
 
-void configureDebugOutputBasePath(CentiloidCLIOptions& options) {
-    if (!options.enableDebugOutput || options.outputPath.empty()) {
-        return;
-    }
-    options.debugOutputBasePath = Common::path::deriveDebugBasePath(options.outputPath);
-}
+using MetricHooks = Pipeline::Metrics::Shared::MetricExecutionHooks<CentiloidCLIOptions>;
 
 class CentiloidLogic : public IMetricLogic {
 public:
@@ -81,94 +75,41 @@ void logMetricResults(const ProcessingResponse& response, bool includeSUVr) {
     }
 }
 
+MetricHooks createExecutionHooks() {
+    MetricHooks hooks;
+    hooks.logTag = "centiloid";
+    hooks.batchOutputSuffix = "_centiloid.nii";
+    hooks.buildRequest = [](const CentiloidCLIOptions& options,
+                            const std::string& inputPath,
+                            const std::string& outputPath,
+                            const std::string& debugBasePath) {
+        return buildProcessingRequest(options, inputPath, outputPath, debugBasePath);
+    };
+    auto debugResolver = [](const CentiloidCLIOptions& options, const std::string& outputPath) {
+        return options.enableDebugOutput
+            ? Common::path::deriveDebugBasePath(outputPath)
+            : std::string{};
+    };
+    hooks.resolveSingleDebug = debugResolver;
+    hooks.resolveBatchDebug = debugResolver;
+    hooks.logResults = [](const CentiloidCLIOptions& options, const ProcessingResponse& response) {
+        logMetricResults(response, options.includeSUVr);
+    };
+    return hooks;
+}
+
 int runSingle(const CentiloidCLIOptions& options,
               const std::string& fullCommand,
               PipelineApplication& app) {
-    Common::fs::ensureParentDirectory(options.outputPath);
-    std::string debugBase =
-        options.enableDebugOutput ? Common::path::deriveDebugBasePath(options.outputPath) : std::string{};
-    ProcessingRequest request = buildProcessingRequest(
-        options, options.inputPath, options.outputPath, debugBase);
-    std::cout << "[centiloid] Starting processing: " << fullCommand << std::endl;
-    try {
-        auto response = app.run(request);
-        std::cout << "\n[centiloid] Spatial normalization complete. Normalized image saved to "
-                  << options.outputPath << std::endl;
-        logMetricResults(response, options.includeSUVr);
-    } catch (const std::exception& ex) {
-        std::cerr << "[centiloid] Pipeline failed: " << ex.what() << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    std::cout << "[centiloid] Processing completed successfully." << std::endl;
-    return EXIT_SUCCESS;
+    return Pipeline::Metrics::Shared::runSingleMetric(
+        options, fullCommand, app, createExecutionHooks());
 }
 
 int runBatch(const CentiloidCLIOptions& options,
              const std::string& fullCommand,
              PipelineApplication& app) {
-    const std::filesystem::path inputDir(options.inputPath);
-    const std::filesystem::path outputDir(options.outputPath);
-
-    if (!std::filesystem::exists(inputDir) || !std::filesystem::is_directory(inputDir)) {
-        std::cerr << "[centiloid] Input directory does not exist: " << options.inputPath << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!Common::fs::ensureDirectory(outputDir)) {
-        std::cerr << "[centiloid] Output path must be a directory: " << options.outputPath << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!options.skipRegistration && !Common::fs::isDirectoryEmpty(outputDir)) {
-        std::cerr << "[centiloid] Output directory must be empty unless --skip-normalization is set." << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    auto files = Common::fs::collectNiftiFiles(inputDir);
-    if (files.empty()) {
-        std::cout << "[centiloid] No NIfTI files found in " << inputDir << std::endl;
-        return EXIT_SUCCESS;
-    }
-
-    std::cout << "[centiloid] Starting batch processing of " << files.size()
-              << " files: " << fullCommand << std::endl;
-
-    BatchProcessingRequest batchRequest;
-    batchRequest.items.reserve(files.size());
-    for (const auto& path : files) {
-        std::string outputPath = Common::fs::buildOutputPath(path, outputDir, "_centiloid.nii");
-        std::string debugBase =
-            options.enableDebugOutput ? Common::path::deriveDebugBasePath(outputPath) : std::string{};
-        ProcessingRequest request = buildProcessingRequest(
-            options, path.string(), outputPath, debugBase);
-        BatchProcessingItem item;
-        item.request = std::move(request);
-        item.label = path.filename().string();
-        batchRequest.items.push_back(std::move(item));
-    }
-
-    auto batchInfo = BatchLogging::openBatchInfo(
-        outputDir, fullCommand, SOFTWARE_VERSION, options.configPath, inputDir);
-    auto csvCtx = BatchLogging::openCsv(outputDir);
-
-    auto onSuccess = [&](const BatchProcessingItem& item, const ProcessingResponse& response) {
-        std::cout << "[centiloid][batch] Processed " << item.label << std::endl;
-        logMetricResults(response, options.includeSUVr);
-        BatchLogging::appendSuccessEntry(batchInfo, item.label);
-        BatchLogging::appendCsvRows(csvCtx, item.label, response.metricResults);
-    };
-
-    auto onError = [&](const BatchProcessingItem& item, const std::exception& ex) {
-        std::cerr << "[centiloid][batch] Failed " << item.label << ": " << ex.what() << std::endl;
-        BatchLogging::appendFailureEntry(batchInfo, item.label, ex.what());
-    };
-
-    auto summary = app.runBatch(batchRequest, onSuccess, onError);
-    BatchLogging::finalizeBatchInfo(batchInfo, summary);
-
-    std::cout << "[centiloid] Batch complete. Success: "
-              << summary.succeeded << ", Failed: " << summary.failed << std::endl;
-
-    return summary.failed == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+    return Pipeline::Metrics::Shared::runBatchMetric(
+        options, fullCommand, app, createExecutionHooks());
 }
 
 } // namespace
@@ -184,7 +125,7 @@ void registerMetric(ServiceContainer& container) {
 
 int runCommand(const CentiloidCLIOptions& options, const std::string& fullCommand) {
     CentiloidCLIOptions optionsCopy = options;
-    configureDebugOutputBasePath(optionsCopy);
+    Pipeline::Metrics::Shared::configureDerivedDebugBasePath(optionsCopy);
 
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = optionsCopy.configPath;

@@ -1,12 +1,11 @@
 #include "CenTauRLogic.h"
 #include "../../core/interfaces/IMetricModuleRegistry.h"
 #include "../../core/common/ProcessingContracts.h"
-#include "../../core/common/BatchLogging.h"
 #include "../../core/di/Bootstrap.h"
-#include "../../core/config/Version.h"
 #include "../../core/interfaces/IConfiguration.h"
 #include "CenTauRCalculator.h"
-#include <filesystem>
+#include "../shared/BatchMetricExecutor.h"
+#include "../shared/DebugPathHelpers.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -14,12 +13,7 @@ namespace Pipeline::Metrics::Centaur {
 
 namespace {
 
-void configureDebugOutputBasePath(CenTauRCLIOptions& options) {
-    if (!options.enableDebugOutput || options.outputPath.empty()) {
-        return;
-    }
-    options.debugOutputBasePath = Common::path::deriveDebugBasePath(options.outputPath);
-}
+using MetricHooks = Pipeline::Metrics::Shared::MetricExecutionHooks<CenTauRCLIOptions>;
 
 class CenTauRLogic : public IMetricLogic {
 public:
@@ -81,95 +75,41 @@ void logMetricResults(const ProcessingResponse& response, bool includeSUVr) {
     }
 }
 
+MetricHooks createExecutionHooks() {
+    MetricHooks hooks;
+    hooks.logTag = "centaur";
+    hooks.batchOutputSuffix = "_centaur_refactor.nii";
+    hooks.buildRequest = [](const CenTauRCLIOptions& options,
+                            const std::string& inputPath,
+                            const std::string& outputPath,
+                            const std::string& debugBasePath) {
+        return buildProcessingRequest(options, inputPath, outputPath, debugBasePath);
+    };
+    auto debugResolver = [](const CenTauRCLIOptions& options, const std::string& outputPath) {
+        return options.enableDebugOutput
+            ? Common::path::deriveDebugBasePath(outputPath)
+            : std::string{};
+    };
+    hooks.resolveSingleDebug = debugResolver;
+    hooks.resolveBatchDebug = debugResolver;
+    hooks.logResults = [](const CenTauRCLIOptions& options, const ProcessingResponse& response) {
+        logMetricResults(response, options.includeSUVr);
+    };
+    return hooks;
+}
+
 int runSingle(const CenTauRCLIOptions& options,
               const std::string& fullCommand,
               PipelineApplication& app) {
-    Common::fs::ensureParentDirectory(options.outputPath);
-    std::string debugBase =
-        options.enableDebugOutput ? Common::path::deriveDebugBasePath(options.outputPath) : std::string{};
-    ProcessingRequest request = buildProcessingRequest(
-        options, options.inputPath, options.outputPath, debugBase);
-
-    std::cout << "[centaur] Starting processing: " << fullCommand << std::endl;
-    try {
-        auto response = app.run(request);
-        std::cout << "\n[centaur] Spatial normalization complete. Normalized image saved to "
-                  << options.outputPath << std::endl;
-        logMetricResults(response, options.includeSUVr);
-    } catch (const std::exception& ex) {
-        std::cerr << "[centaur] Pipeline failed: " << ex.what() << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    std::cout << "[centaur] Processing completed successfully." << std::endl;
-    return EXIT_SUCCESS;
+    return Pipeline::Metrics::Shared::runSingleMetric(
+        options, fullCommand, app, createExecutionHooks());
 }
 
 int runBatch(const CenTauRCLIOptions& options,
              const std::string& fullCommand,
              PipelineApplication& app) {
-    const std::filesystem::path inputDir(options.inputPath);
-    const std::filesystem::path outputDir(options.outputPath);
-
-    if (!std::filesystem::exists(inputDir) || !std::filesystem::is_directory(inputDir)) {
-        std::cerr << "[centaur] Input directory does not exist: " << options.inputPath << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!Common::fs::ensureDirectory(outputDir)) {
-        std::cerr << "[centaur] Output path must be a directory: " << options.outputPath << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (!options.skipRegistration && !Common::fs::isDirectoryEmpty(outputDir)) {
-        std::cerr << "[centaur] Output directory must be empty unless --skip-normalization is set." << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    auto files = Common::fs::collectNiftiFiles(inputDir);
-    if (files.empty()) {
-        std::cout << "[centaur] No NIfTI files found in " << inputDir << std::endl;
-        return EXIT_SUCCESS;
-    }
-
-    std::cout << "[centaur] Starting batch processing of " << files.size()
-              << " files: " << fullCommand << std::endl;
-
-    BatchProcessingRequest batchRequest;
-    batchRequest.items.reserve(files.size());
-    for (const auto& path : files) {
-        std::string outputPath = Common::fs::buildOutputPath(path, outputDir, "_centaur_refactor.nii");
-        std::string debugBase =
-            options.enableDebugOutput ? Common::path::deriveDebugBasePath(outputPath) : std::string{};
-        ProcessingRequest request = buildProcessingRequest(
-            options, path.string(), outputPath, debugBase);
-        BatchProcessingItem item;
-        item.request = std::move(request);
-        item.label = path.filename().string();
-        batchRequest.items.push_back(std::move(item));
-    }
-
-    auto batchInfo = BatchLogging::openBatchInfo(
-        outputDir, fullCommand, SOFTWARE_VERSION, options.configPath, inputDir);
-    auto csvCtx = BatchLogging::openCsv(outputDir);
-
-    auto onSuccess = [&](const BatchProcessingItem& item, const ProcessingResponse& response) {
-        std::cout << "[centaur][batch] Processed " << item.label << std::endl;
-        logMetricResults(response, options.includeSUVr);
-        BatchLogging::appendSuccessEntry(batchInfo, item.label);
-        BatchLogging::appendCsvRows(csvCtx, item.label, response.metricResults);
-    };
-
-    auto onError = [&](const BatchProcessingItem& item, const std::exception& ex) {
-        std::cerr << "[centaur][batch] Failed " << item.label << ": " << ex.what() << std::endl;
-        BatchLogging::appendFailureEntry(batchInfo, item.label, ex.what());
-    };
-
-    auto summary = app.runBatch(batchRequest, onSuccess, onError);
-    BatchLogging::finalizeBatchInfo(batchInfo, summary);
-
-    std::cout << "[centaur] Batch complete. Success: "
-              << summary.succeeded << ", Failed: " << summary.failed << std::endl;
-
-    return summary.failed == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+    return Pipeline::Metrics::Shared::runBatchMetric(
+        options, fullCommand, app, createExecutionHooks());
 }
 
 } // namespace
@@ -185,7 +125,7 @@ void registerMetric(ServiceContainer& container) {
 
 int runCommand(const CenTauRCLIOptions& options, const std::string& fullCommand) {
     CenTauRCLIOptions optionsCopy = options;
-    configureDebugOutputBasePath(optionsCopy);
+    Pipeline::Metrics::Shared::configureDerivedDebugBasePath(optionsCopy);
 
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = optionsCopy.configPath;
