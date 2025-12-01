@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-namespace RefactorPipeline::Metrics::Centaur {
+namespace Pipeline::Metrics::Centaur {
 
 namespace {
 
@@ -55,7 +55,7 @@ void addSUVrDerivedArguments(argparse::ArgumentParser& parser) {
 class CenTauRCLI : public IMetricCLI {
 public:
     std::string getSubcommandName() const override {
-        return "refactor-centaur";
+        return "centaur";
     }
 
     std::string getDescription() const override {
@@ -87,6 +87,6 @@ MetricCLIPtr createCLI() {
     return std::make_shared<CenTauRCLI>();
 }
 
-} // namespace RefactorPipeline::Metrics::Centaur
+} // namespace Pipeline::Metrics::Centaur
 
 

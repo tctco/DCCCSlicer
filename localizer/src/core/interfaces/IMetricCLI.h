@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 class IMetricCLI {
 public:
@@ -18,5 +18,5 @@ public:
 
 using MetricCLIPtr = std::shared_ptr<IMetricCLI>;
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

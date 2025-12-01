@@ -1,5 +1,5 @@
 #include "SUVrCalculator.h"
-#include "../../utils/common.h"
+#include "../../core/common/Common.h"
 #include <algorithm>
 #include <string>
 
@@ -63,12 +63,12 @@ std::vector<std::string> SUVrCalculator::getSupportedTracers() const {
 double SUVrCalculator::calculateSUVr(ImageType::Pointer spatialNormalizedImage, 
                                      const std::string& voiMaskPath, 
                                      const std::string& refMaskPath) {
-    ImageType::Pointer voiTemplate = Common::LoadNii(voiMaskPath);
-    ImageType::Pointer refTemplate = Common::LoadNii(refMaskPath);
-    ImageType::Pointer resampledImage = Common::ResampleToMatch(voiTemplate, spatialNormalizedImage);
+    ImageType::Pointer voiTemplate = Common::nifti::loadImage(voiMaskPath);
+    ImageType::Pointer refTemplate = Common::nifti::loadImage(refMaskPath);
+    ImageType::Pointer resampledImage = Common::image::resampleToMatch(voiTemplate, spatialNormalizedImage);
     
-    double meanVoi = Common::CalculateMeanInMask(resampledImage, voiTemplate);
-    double meanRef = Common::CalculateMeanInMask(resampledImage, refTemplate);
+    double meanVoi = Common::image::calculateMeanInMask(resampledImage, voiTemplate);
+    double meanRef = Common::image::calculateMeanInMask(resampledImage, refTemplate);
     
     return meanVoi / meanRef;
 }

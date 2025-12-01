@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-namespace refactorCommon::image {
+namespace Common::image {
 
 void divideVoxelsByValue(ImageType::Pointer image, float divisor) {
     itk::ImageRegionIterator<ImageType> it(
@@ -112,6 +112,6 @@ void extractImageData(ImageType::Pointer image, std::vector<float>& imageData) {
     }
 }
 
-}  // namespace refactorCommon::image
+}  // namespace Common::image
 
 

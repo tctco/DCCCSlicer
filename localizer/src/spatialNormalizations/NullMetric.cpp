@@ -1,7 +1,7 @@
 #include "NullMetric.h"
 #include "../core/interfaces/IMetricModuleRegistry.h"
 
-namespace RefactorPipeline::SpatialNormalization {
+namespace Pipeline::SpatialNormalization {
 
 namespace {
 
@@ -25,7 +25,7 @@ void registerNullMetric(ServiceContainer& container) {
     }
 }
 
-} // namespace RefactorPipeline::SpatialNormalization
+} // namespace Pipeline::SpatialNormalization
 
 
 

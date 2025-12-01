@@ -1,7 +1,7 @@
 #pragma once
 #include "../../core/interfaces/IMetricCalculator.h"
 #include "../../core/interfaces/IConfiguration.h"
-#include "../../utils/common.h"
+#include "../../core/common/ImageTypes.h"
 #include <string>
 #include <vector>
 /**

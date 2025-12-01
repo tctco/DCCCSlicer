@@ -1,9 +1,9 @@
 #pragma once
 #include "../../core/interfaces/IMetricCLI.h"
 
-namespace RefactorPipeline::Metrics::SUVr {
+namespace Pipeline::Metrics::SUVr {
 
 MetricCLIPtr createCLI();
 
-} // namespace RefactorPipeline::Metrics::SUVr
+} // namespace Pipeline::Metrics::SUVr
 

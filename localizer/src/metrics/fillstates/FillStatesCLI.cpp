@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-namespace RefactorPipeline::Metrics::FillStates {
+namespace Pipeline::Metrics::FillStates {
 
 namespace {
 
@@ -59,7 +59,7 @@ void addFillStatesArguments(argparse::ArgumentParser& parser) {
 class FillStatesCLI : public IMetricCLI {
 public:
     std::string getSubcommandName() const override {
-        return "refactor-fillstates";
+        return "fillstates";
     }
 
     std::string getDescription() const override {
@@ -92,6 +92,6 @@ MetricCLIPtr createCLI() {
     return std::make_shared<FillStatesCLI>();
 }
 
-} // namespace RefactorPipeline::Metrics::FillStates
+} // namespace Pipeline::Metrics::FillStates
 
 

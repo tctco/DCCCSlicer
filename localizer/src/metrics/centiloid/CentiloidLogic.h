@@ -4,7 +4,7 @@
 #include "../../core/di/ServiceContainer.h"
 #include <string>
 
-namespace RefactorPipeline::Metrics::Centiloid {
+namespace Pipeline::Metrics::Centiloid {
 
 struct CentiloidCLIOptions {
     std::string inputPath;
@@ -22,5 +22,5 @@ struct CentiloidCLIOptions {
 void registerMetric(ServiceContainer& container);
 int runCommand(const CentiloidCLIOptions& options, const std::string& fullCommand);
 
-} // namespace RefactorPipeline::Metrics::Centiloid
+} // namespace Pipeline::Metrics::Centiloid
 

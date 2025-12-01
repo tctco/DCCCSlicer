@@ -8,7 +8,7 @@
 #include "Logging.h"
 #include "OnnxPath.h"
 
-namespace refactorCommon {
+namespace Common {
 
 // Convenience aliases for frequent consumers.
 using ImageType = nifti::ImageType;
@@ -16,6 +16,6 @@ using DDFType = nifti::DDFType;
 using BinaryImageType = nifti::BinaryImageType;
 using ReaderType = nifti::ReaderType;
 
-}  // namespace refactorCommon
+}  // namespace Common
 
 

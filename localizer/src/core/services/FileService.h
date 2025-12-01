@@ -1,7 +1,7 @@
 #pragma once
 #include "IFileService.h"
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 class FileService : public IFileService {
 public:
@@ -11,5 +11,5 @@ public:
     void saveNormalizedImage(const FileSaveRequest& request) override;
 };
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

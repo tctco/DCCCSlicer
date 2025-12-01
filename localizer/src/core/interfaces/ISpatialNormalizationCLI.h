@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-namespace RefactorPipeline::SpatialNormalization {
+namespace Pipeline::SpatialNormalization {
 
 class ISpatialNormalizationCLI {
 public:
@@ -18,7 +18,7 @@ public:
 
 using SpatialNormalizationCLIPtr = std::shared_ptr<ISpatialNormalizationCLI>;
 
-} // namespace RefactorPipeline::SpatialNormalization
+} // namespace Pipeline::SpatialNormalization
 
 
 

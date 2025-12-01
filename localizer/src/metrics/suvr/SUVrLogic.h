@@ -4,7 +4,7 @@
 #include "../../core/di/ServiceContainer.h"
 #include <string>
 
-namespace RefactorPipeline::Metrics::SUVr {
+namespace Pipeline::Metrics::SUVr {
 
 struct SUVrCLIOptions {
     std::string inputPath;
@@ -23,4 +23,4 @@ struct SUVrCLIOptions {
 void registerMetric(ServiceContainer& container);
 int runCommand(const SUVrCLIOptions& options, const std::string& fullCommand);
 
-} // namespace RefactorPipeline::Metrics::SUVr
+} // namespace Pipeline::Metrics::SUVr

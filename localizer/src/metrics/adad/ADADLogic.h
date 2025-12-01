@@ -4,7 +4,7 @@
 #include "../../core/di/ServiceContainer.h"
 #include <string>
 
-namespace RefactorPipeline::Metrics::ADAD {
+namespace Pipeline::Metrics::ADAD {
 
 struct ADADCLIOptions {
     std::string inputPath;
@@ -22,6 +22,6 @@ struct ADADCLIOptions {
 void registerMetric(ServiceContainer& container);
 int runCommand(const ADADCLIOptions& options, const std::string& fullCommand);
 
-} // namespace RefactorPipeline::Metrics::ADAD
+} // namespace Pipeline::Metrics::ADAD
 
 

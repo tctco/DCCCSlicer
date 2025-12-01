@@ -4,11 +4,11 @@
 
 #include "NiftiTypes.h"
 
-namespace refactorCommon::nifti {
+namespace Common::nifti {
 
 void saveImage(ImageType::Pointer image, const std::string& filename);
 ImageType::Pointer loadImage(const std::string& filename);
 
-}  // namespace refactorCommon::nifti
+}  // namespace Common::nifti
 
 

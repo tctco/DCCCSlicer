@@ -1,6 +1,7 @@
 #pragma once
-#include "../utils/common.h"
+#include "../common/ImageTypes.h"
 #include "onnxruntime_cxx_api.h"
+#include <string>
 #include <unordered_map>
 #include <vector>
 #include <tuple>

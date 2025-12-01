@@ -5,7 +5,7 @@
 #include <typeindex>
 #include <unordered_map>
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 class ServiceContainer {
 public:
@@ -44,5 +44,5 @@ private:
     std::unordered_map<std::type_index, Registration> registrations_;
 };
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

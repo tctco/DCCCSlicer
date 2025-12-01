@@ -1,13 +1,15 @@
 ﻿#include "Decoupler.h"
-#include "../../utils/onnx_path_utils.h"
+#include "../../core/common/Common.h"
+#include "../../core/common/OnnxPath.h"
 
 void DecoupledResult::SaveResults(const std::string& fpath) {
-  Common::SaveImage(strippedImage,
-                    Common::addSuffixToFilePath(fpath, "_stripped_image"));
-  Common::SaveImage(strippedComponent, Common::addSuffixToFilePath(
-                                           fpath, "_stripped_component"));
-  Common::SaveImage(ADprobMap,
-                    Common::addSuffixToFilePath(fpath, "_AD_prob_map"));
+  Common::nifti::saveImage(
+      strippedImage, Common::path::addSuffix(fpath, "_stripped_image"));
+  Common::nifti::saveImage(
+      strippedComponent,
+      Common::path::addSuffix(fpath, "_stripped_component"));
+  Common::nifti::saveImage(
+      ADprobMap, Common::path::addSuffix(fpath, "_AD_prob_map"));
 }
 
 void DecoupledResult::printResult() const {
@@ -27,7 +29,7 @@ Decoupler::Decoupler(const std::string& modelPath)
     : env(ORT_LOGGING_LEVEL_WARNING, "Decouple"), sessions() {
   Ort::SessionOptions sessionOptions;
   sessionOptions.SetIntraOpNumThreads(1);
-  auto ortModelPath = OrtUtils::MakeOrtPath(modelPath);
+  auto ortModelPath = Common::onnx::makeOrtPath(modelPath);
   try {
     this->sessions.push_back(
         new Ort::Session(this->env, ortModelPath.c_str(), sessionOptions));
@@ -42,7 +44,7 @@ Decoupler::Decoupler(const std::vector<std::string>& modelPaths)
   sessionOptions.SetIntraOpNumThreads(1);
   try {
     for (const auto& p : modelPaths) {
-      auto ortModelPath = OrtUtils::MakeOrtPath(p);
+      auto ortModelPath = Common::onnx::makeOrtPath(p);
       this->sessions.push_back(
           new Ort::Session(this->env, ortModelPath.c_str(), sessionOptions));
     }
@@ -97,7 +99,7 @@ std::unordered_map<std::string, std::vector<float>> Decoupler::_predict_one(
 DecoupledResult Decoupler::predict(ImageType::Pointer inputImage) {
   // Convert input image to vector
   std::vector<float> inputTensor;
-  Common::ExtractImageData(inputImage, inputTensor);
+  Common::image::extractImageData(inputImage, inputTensor);
 
   // Run inference (support ensemble) and aggregate
   std::unordered_map<std::string, std::vector<float>> aggregated;
@@ -123,21 +125,21 @@ DecoupledResult Decoupler::predict(ImageType::Pointer inputImage) {
   auto size = inputImage->GetLargestPossibleRegion().GetSize();
   for (auto& [name, imgData] : aggregated) {
     if (name == "stripped_AD_images_cal") {
-      ImageType::Pointer image = Common::CreateImageFromVector(imgData, size);
+      ImageType::Pointer image = Common::image::createImageFromVector(imgData, size);
       image->SetOrigin(inputImage->GetOrigin());
       image->SetSpacing(inputImage->GetSpacing());
       image->SetDirection(inputImage->GetDirection());
       decoupledResult.strippedImage = image;
     } else if (name == "stripped_component_cal") {
       ImageType::Pointer image =
-          Common::CreateImageFromVector(imgData, {160, 160, 96});
+          Common::image::createImageFromVector(imgData, {160, 160, 96});
       image->SetOrigin(inputImage->GetOrigin());
       image->SetSpacing(inputImage->GetSpacing());
       image->SetDirection(inputImage->GetDirection());
       decoupledResult.strippedComponent = image;
     } else if (name == "AD_prob_map_cal") {
       ImageType::Pointer image =
-          Common::CreateImageFromVector(imgData, {160, 160, 96});
+          Common::image::createImageFromVector(imgData, {160, 160, 96});
       decoupledResult.ADprobMap = image;
       image->SetOrigin(inputImage->GetOrigin());
       image->SetSpacing(inputImage->GetSpacing());

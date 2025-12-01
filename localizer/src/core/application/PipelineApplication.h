@@ -6,7 +6,7 @@
 #include <functional>
 #include <memory>
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 using BatchSuccessCallback = std::function<void(const BatchProcessingItem&, const ProcessingResponse&)>;
 using BatchErrorCallback = std::function<void(const BatchProcessingItem&, const std::exception&)>;
@@ -28,5 +28,5 @@ private:
     std::shared_ptr<IFileService> fileService_;
 };
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

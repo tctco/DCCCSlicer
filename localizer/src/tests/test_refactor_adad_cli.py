@@ -12,7 +12,7 @@ def _expected_output_paths(base: Path):
 
 
 class TestRefactorADADCLI:
-    """Tests for the refactor-adad prototype command."""
+    """Tests for the adad prototype command."""
 
     @pytest.mark.parametrize("modality", ["abeta", "tau"])
     def test_refactor_adad_generates_all_outputs(self, run_subprocess, tmp_path, test_files, modality):
@@ -21,7 +21,7 @@ class TestRefactorADADCLI:
         """
         output_path = tmp_path / f"refactor_adad_{modality}.nii"
         args = [
-            "refactor-adad",
+            "adad",
             "--input",
             str(test_files["input"]),
             "--output",
@@ -33,7 +33,7 @@ class TestRefactorADADCLI:
         result = run_subprocess(args)
 
         assert result.returncode == 0, (
-            f"refactor-adad command failed for modality={modality}.\n"
+            f"adad command failed for modality={modality}.\n"
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
 
@@ -46,7 +46,7 @@ class TestRefactorADADCLI:
         """
         output_path = tmp_path / "refactor_adad_skip.nii"
         args = [
-            "refactor-adad",
+            "adad",
             "--input",
             str(test_files["input"]),
             "--output",
@@ -57,7 +57,7 @@ class TestRefactorADADCLI:
         result = run_subprocess(args)
 
         assert result.returncode == 0, (
-            "refactor-adad command failed with --skip-normalization.\n"
+            "adad command failed with --skip-normalization.\n"
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
 

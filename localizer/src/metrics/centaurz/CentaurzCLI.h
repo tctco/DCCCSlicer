@@ -1,10 +1,10 @@
 #pragma once
 #include "../../core/interfaces/IMetricCLI.h"
 
-namespace RefactorPipeline::Metrics::Centaurz {
+namespace Pipeline::Metrics::Centaurz {
 
 MetricCLIPtr createCLI();
 
-} // namespace RefactorPipeline::Metrics::Centaurz
+} // namespace Pipeline::Metrics::Centaurz
 
 

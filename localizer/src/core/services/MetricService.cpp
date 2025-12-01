@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 MetricService::MetricService(std::shared_ptr<IMetricModuleRegistry> registry)
     : registry_(std::move(registry)) {
@@ -18,7 +18,7 @@ std::vector<MetricResult> MetricService::calculate(const MetricComputationReques
         throw std::invalid_argument("MetricService requires a spatially normalized image");
     }
 
-    std::string metricName = refactorCommon::path::toLower(request.options.metricName);
+    std::string metricName = Common::path::toLower(request.options.metricName);
     if (metricName.empty()) {
         return {};
     }
@@ -26,5 +26,5 @@ std::vector<MetricResult> MetricService::calculate(const MetricComputationReques
     return registry_->run(metricName, request);
 }
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

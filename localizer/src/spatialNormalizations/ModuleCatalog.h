@@ -2,11 +2,11 @@
 #include <vector>
 #include "../core/interfaces/ISpatialNormalizationCLI.h"
 
-namespace RefactorPipeline::SpatialNormalization {
+namespace Pipeline::SpatialNormalization {
 
 std::vector<SpatialNormalizationCLIPtr> buildCLIModules();
 
-} // namespace RefactorPipeline::SpatialNormalization
+} // namespace Pipeline::SpatialNormalization
 
 
 

@@ -2,10 +2,10 @@
 
 #include <string>
 
-namespace refactorCommon::log {
+namespace Common::log {
 
 void debug(const std::string& message);
 
-}  // namespace refactorCommon::log
+}  // namespace Common::log
 
 

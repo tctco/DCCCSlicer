@@ -1,5 +1,6 @@
 #include "FillStatesCalculator.h"
 
+#include "../../core/common/Common.h"
 #include <filesystem>
 #include <stdexcept>
 #include <cctype>
@@ -40,7 +41,7 @@ FillStatesCalculator::TracerResources FillStatesCalculator::getTracerResources()
             "'. Please set fillstates.tracers." + t + ".mean/std/roi in config.");
     }
 
-    const std::string execDir = Common::getExecutablePath();
+    const std::string execDir = Common::path::executableDirectory();
     res.meanPath = (std::filesystem::path(execDir) / meanRel).string();
     res.stdPath  = (std::filesystem::path(execDir) / stdRel).string();
     res.roiPath  = (std::filesystem::path(execDir) / roiRel).string();
@@ -68,29 +69,29 @@ MetricResult FillStatesCalculator::calculate(ImageType::Pointer spatialNormalize
     const TracerResources resources = getTracerResources();
 
     // Load mean/std and ROI images
-    ImageType::Pointer meanImage = Common::LoadNii(resources.meanPath);
-    ImageType::Pointer stdImage  = Common::LoadNii(resources.stdPath);
+    ImageType::Pointer meanImage = Common::nifti::loadImage(resources.meanPath);
+    ImageType::Pointer stdImage  = Common::nifti::loadImage(resources.stdPath);
 
     ImageType::Pointer roiImage;
     if (!resources.roiPath.empty()) {
-        roiImage = Common::LoadNii(resources.roiPath);
+        roiImage = Common::nifti::loadImage(resources.roiPath);
     } else if (!resources.roiMaskKey.empty()) {
-        roiImage = Common::LoadNii(config_->getMaskPath(resources.roiMaskKey));
+        roiImage = Common::nifti::loadImage(config_->getMaskPath(resources.roiMaskKey));
     } else {
         throw std::runtime_error("No ROI specified for fill-states calculation.");
     }
 
     // Resample all auxiliary images to match the spatially normalized image
-    ImageType::Pointer meanResampled = Common::ResampleToMatch(spatialNormalizedImage, meanImage);
-    ImageType::Pointer stdResampled  = Common::ResampleToMatch(spatialNormalizedImage, stdImage);
-    ImageType::Pointer roiResampled  = Common::ResampleToMatch(spatialNormalizedImage, roiImage);
+    ImageType::Pointer meanResampled = Common::image::resampleToMatch(spatialNormalizedImage, meanImage);
+    ImageType::Pointer stdResampled  = Common::image::resampleToMatch(spatialNormalizedImage, stdImage);
+    ImageType::Pointer roiResampled  = Common::image::resampleToMatch(spatialNormalizedImage, roiImage);
 
     // Intensity normalization using tracer-specific reference ROI, if provided
     double refMean = 1.0;
     if (!resources.refMaskKey.empty()) {
-        ImageType::Pointer refTemplate = Common::LoadNii(config_->getMaskPath(resources.refMaskKey));
-        ImageType::Pointer imageInRefSpace = Common::ResampleToMatch(refTemplate, spatialNormalizedImage);
-        refMean = Common::CalculateMeanInMask(imageInRefSpace, refTemplate);
+        ImageType::Pointer refTemplate = Common::nifti::loadImage(config_->getMaskPath(resources.refMaskKey));
+        ImageType::Pointer imageInRefSpace = Common::image::resampleToMatch(refTemplate, spatialNormalizedImage);
+        refMean = Common::image::calculateMeanInMask(imageInRefSpace, refTemplate);
         if (refMean <= 0.0) {
             throw std::runtime_error("Reference region mean is non-positive for fill-states.");
         }

@@ -1,7 +1,7 @@
 #include "PipelineApplication.h"
 #include <stdexcept>
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 PipelineApplication::PipelineApplication(std::shared_ptr<ISpatialNormalizationService> spatialService,
                                          std::shared_ptr<IMetricService> metricService,
@@ -59,5 +59,5 @@ BatchProcessingSummary PipelineApplication::runBatch(const BatchProcessingReques
     return summary;
 }
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

@@ -4,7 +4,7 @@
 #include <vector>
 #include "../common/ProcessingContracts.h"
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 class IMetricLogic {
 public:
@@ -15,5 +15,5 @@ public:
 
 using MetricPtr = std::shared_ptr<IMetricLogic>;
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

@@ -3,7 +3,7 @@
 #include <vector>
 #include "IMetricLogic.h"
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 class IMetricModuleRegistry {
 public:
@@ -18,5 +18,5 @@ public:
 
 using MetricModuleRegistryPtr = std::shared_ptr<IMetricModuleRegistry>;
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-namespace RefactorPipeline::Metrics::SUVr {
+namespace Pipeline::Metrics::SUVr {
 
 namespace {
 
@@ -42,7 +42,7 @@ void addSpatialNormalizationArguments(argparse::ArgumentParser& parser) {
 class SUVrCLI : public IMetricCLI {
 public:
     std::string getSubcommandName() const override {
-        return "refactor-suvr";
+        return "suvr";
     }
 
     std::string getDescription() const override {
@@ -86,4 +86,4 @@ MetricCLIPtr createCLI() {
     return std::make_shared<SUVrCLI>();
 }
 
-} // namespace RefactorPipeline::Metrics::SUVr
+} // namespace Pipeline::Metrics::SUVr

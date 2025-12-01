@@ -1,5 +1,5 @@
 #include "RigidVoxelMorphNormalizer.h"
-#include "../utils/common.h"
+#include "../common/Common.h"
 #include <itkRegionOfInterestImageFilter.h>
 
 RigidVoxelMorphNormalizer::RigidVoxelMorphNormalizer(ConfigurationPtr config) 
@@ -13,7 +13,7 @@ void RigidVoxelMorphNormalizer::initializeModel() {
     std::string templatePath = config_->getTemplatePath("padded");
     
     registrationPipeline_ = std::make_unique<RegistrationPipeline>(rigidModelPath, voxelMorphPath);
-    paddedTemplate_ = Common::LoadNii(templatePath);
+    paddedTemplate_ = Common::nifti::loadImage(templatePath);
 }
 
 ImageType::Pointer RigidVoxelMorphNormalizer::normalize(ImageType::Pointer inputImage) {
@@ -33,7 +33,7 @@ ImageType::Pointer RigidVoxelMorphNormalizer::normalizeIterative(
     for (int i = 0; i < maxIter; ++i) {
         // Save temporary file
         std::string tempPath = config_->getTempDirPath() + "/rigid_iter.nii";
-        Common::SaveImage(currentImage, tempPath);
+        Common::nifti::saveImage(currentImage, tempPath);
         
         // Execute next rigid registration
         currentImage = performRigidAlignment(currentImage, true);
@@ -83,7 +83,7 @@ RigidVoxelMorphNormalizer::NormalizationResult RigidVoxelMorphNormalizer::normal
     for (int i = 0; i < maxIter; ++i) {
         // Save temporary file
         std::string tempPath = config_->getTempDirPath() + "/rigid_iter.nii";
-        Common::SaveImage(currentImage, tempPath);
+        Common::nifti::saveImage(currentImage, tempPath);
         
         // Execute next rigid registration
         currentImage = performRigidAlignment(currentImage, true);
@@ -112,7 +112,7 @@ ImageType::Pointer RigidVoxelMorphNormalizer::performRigidAlignment(ImageType::P
     ImageType::Pointer processedImage = inputImage;
     
     if (resampleFirst) {
-        processedImage = Common::ResampleToMatch(paddedTemplate_, processedImage);
+        processedImage = Common::image::resampleToMatch(paddedTemplate_, processedImage);
     }
     
     processedImage = registrationPipeline_->preprocess(processedImage);
@@ -120,7 +120,7 @@ ImageType::Pointer RigidVoxelMorphNormalizer::performRigidAlignment(ImageType::P
     
     // Extract image data
     std::vector<float> imageData;
-    Common::ExtractImageData(processedImage, imageData);
+    Common::image::extractImageData(processedImage, imageData);
     
     // Execute prediction
     auto orientation = registrationPipeline_->predict(imageData, {1, 1, 64, 64, 64});
@@ -142,7 +142,7 @@ ImageType::Pointer RigidVoxelMorphNormalizer::performRigidAlignment(ImageType::P
 
 ImageType::Pointer RigidVoxelMorphNormalizer::performVoxelMorphWarping(ImageType::Pointer rigidImage) {
     // Resample to template space
-    ImageType::Pointer paddedImage = Common::ResampleToMatch(paddedTemplate_, rigidImage);
+    ImageType::Pointer paddedImage = Common::image::resampleToMatch(paddedTemplate_, rigidImage);
     
     // Preprocessing
     paddedImage = registrationPipeline_->preprocessVoxelMorph(paddedImage);
@@ -150,19 +150,19 @@ ImageType::Pointer RigidVoxelMorphNormalizer::performVoxelMorphWarping(ImageType
     
     // Prepare data
     std::vector<float> paddedImageData, paddedTemplateData, paddedOriginalData;
-    Common::ExtractImageData(paddedImage, paddedImageData);
-    Common::ExtractImageData(paddedTemplate_, paddedTemplateData);
+    Common::image::extractImageData(paddedImage, paddedImageData);
+    Common::image::extractImageData(paddedTemplate_, paddedTemplateData);
     
     // Load original resampled image
-    ImageType::Pointer paddedOriginalImage = Common::ResampleToMatch(paddedTemplate_, rigidImage);
-    Common::ExtractImageData(paddedOriginalImage, paddedOriginalData);
+    ImageType::Pointer paddedOriginalImage = Common::image::resampleToMatch(paddedTemplate_, rigidImage);
+    Common::image::extractImageData(paddedOriginalImage, paddedOriginalData);
     
     // Execute VoxelMorph prediction
     auto warpedImageData = registrationPipeline_->predictVoxelMorph(
         paddedOriginalData, paddedImageData, paddedTemplateData);
     
     // Create output image
-    ImageType::Pointer warpedImage = Common::CreateImageFromVector(
+    ImageType::Pointer warpedImage = Common::image::createImageFromVector(
         warpedImageData["warped"], paddedImage->GetLargestPossibleRegion().GetSize());
     
     warpedImage->SetDirection(paddedTemplate_->GetDirection());
@@ -214,5 +214,5 @@ void RigidVoxelMorphNormalizer::setDebugMode(bool enable, const std::string& bas
 void RigidVoxelMorphNormalizer::saveDebugImage(ImageType::Pointer image, const std::string& suffix) {
     if (!debugMode_ || debugBasePath_.empty()) return;
     std::string filename = debugBasePath_ + "_" + suffix + ".nii";
-    Common::SaveImage(image, filename);
+    Common::nifti::saveImage(image, filename);
 }

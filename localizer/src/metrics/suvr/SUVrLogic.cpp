@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace RefactorPipeline::Metrics::SUVr {
+namespace Pipeline::Metrics::SUVr {
 
 namespace {
 
@@ -94,12 +94,12 @@ void registerMetric(ServiceContainer& container) {
 
 int runCommand(const SUVrCLIOptions& options, const std::string& fullCommand) {
     if (options.batchMode) {
-        std::cerr << "[refactor-suvr] Batch mode is not supported in the prototype refactor path yet." << std::endl;
+        std::cerr << "[suvr] Batch mode is not supported in the prototype refactor path yet." << std::endl;
         return EXIT_FAILURE;
     }
 
     if (options.voiMaskPath.empty() || options.refMaskPath.empty()) {
-        std::cerr << "[refactor-suvr] Both --voi-mask and --ref-mask must be provided for the prototype." << std::endl;
+        std::cerr << "[suvr] Both --voi-mask and --ref-mask must be provided for the prototype." << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -111,7 +111,7 @@ int runCommand(const SUVrCLIOptions& options, const std::string& fullCommand) {
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = optionsCopy.configPath;
     bootstrapOptions.enableConfigDebug = optionsCopy.enableDebugOutput;
-    bootstrapOptions.logTag = "refactor-suvr";
+    bootstrapOptions.logTag = "suvr";
     auto container = buildDefaultContainer(bootstrapOptions);
 
     ProcessingRequest request;
@@ -133,12 +133,12 @@ int runCommand(const SUVrCLIOptions& options, const std::string& fullCommand) {
     request.normalization.options.enableDebugOutput = optionsCopy.enableDebugOutput;
     request.normalization.options.debugOutputBasePath = optionsCopy.debugOutputBasePath;
 
-    std::cout << "[refactor-suvr] Starting processing: " << fullCommand << std::endl;
+    std::cout << "[suvr] Starting processing: " << fullCommand << std::endl;
     auto app = resolveApplication(*container);
 
     try {
         auto response = app->run(request);
-        std::cout << "\n[refactor-suvr] Spatial normalization complete. Normalized image saved to "
+        std::cout << "\n[suvr] Spatial normalization complete. Normalized image saved to "
                   << optionsCopy.outputPath << std::endl;
         if (!response.metricResults.empty()) {
             std::cout << "\n=== Refactor SUVr Metrics ===" << std::endl;
@@ -146,16 +146,16 @@ int runCommand(const SUVrCLIOptions& options, const std::string& fullCommand) {
                 std::cout << metric.metricName << ": " << metric.suvr << std::endl;
             }
         } else {
-            std::cout << "[refactor-suvr] Metric calculation skipped or returned no results." << std::endl;
+            std::cout << "[suvr] Metric calculation skipped or returned no results." << std::endl;
         }
     } catch (const std::exception& ex) {
-        std::cerr << "[refactor-suvr] Pipeline failed: " << ex.what() << std::endl;
+        std::cerr << "[suvr] Pipeline failed: " << ex.what() << std::endl;
         return EXIT_FAILURE;
     }
 
-    std::cout << "[refactor-suvr] Processing completed successfully." << std::endl;
+    std::cout << "[suvr] Processing completed successfully." << std::endl;
     return EXIT_SUCCESS;
 }
 
-} // namespace RefactorPipeline::Metrics::SUVr
+} // namespace Pipeline::Metrics::SUVr
 

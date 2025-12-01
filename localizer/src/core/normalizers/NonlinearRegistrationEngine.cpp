@@ -1,12 +1,12 @@
 #include "NonlinearRegistrationEngine.h"
 #include <iostream>
-#include "../utils/onnx_path_utils.h"
+#include "../common/OnnxPath.h"
 
 NonlinearRegistrationEngine::NonlinearRegistrationEngine(const std::string& modelPath)
     : env_(ORT_LOGGING_LEVEL_WARNING, "NonlinearRegistration"), session_(nullptr) {
     Ort::SessionOptions sessionOptions;
     sessionOptions.SetIntraOpNumThreads(1);
-    auto ortModelPath = OrtUtils::MakeOrtPath(modelPath);
+    auto ortModelPath = Common::onnx::makeOrtPath(modelPath);
 
     try {
         session_ = new Ort::Session(env_, ortModelPath.c_str(), sessionOptions);

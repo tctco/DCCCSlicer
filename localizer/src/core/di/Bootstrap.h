@@ -3,7 +3,7 @@
 #include "ServiceContainer.h"
 #include "../application/PipelineApplication.h"
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 struct BootstrapOptions {
     std::string configPath;
@@ -14,5 +14,5 @@ struct BootstrapOptions {
 std::shared_ptr<ServiceContainer> buildDefaultContainer(const BootstrapOptions& options);
 std::shared_ptr<PipelineApplication> resolveApplication(ServiceContainer& container);
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

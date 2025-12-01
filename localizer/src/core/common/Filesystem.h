@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace refactorCommon::fs {
+namespace Common::fs {
 
 bool ensureParentDirectory(const std::string& filePath);
 bool ensureDirectory(const std::filesystem::path& dir);
@@ -16,6 +16,6 @@ std::string buildOutputPath(const std::filesystem::path& inputFile,
                             const std::filesystem::path& outputDir,
                             const std::string& suffix);
 
-}  // namespace refactorCommon::fs
+}  // namespace Common::fs
 
 

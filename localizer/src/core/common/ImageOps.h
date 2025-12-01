@@ -4,7 +4,7 @@
 
 #include "NiftiTypes.h"
 
-namespace refactorCommon::image {
+namespace Common::image {
 
 using ImageType = nifti::ImageType;
 
@@ -17,6 +17,6 @@ ImageType::Pointer createImageFromVector(const std::vector<float>& imageData,
                                          ImageType::SizeType size);
 void extractImageData(ImageType::Pointer image, std::vector<float>& imageData);
 
-}  // namespace refactorCommon::image
+}  // namespace Common::image
 
 

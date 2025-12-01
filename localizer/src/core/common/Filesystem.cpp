@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace refactorCommon::fs {
+namespace Common::fs {
 
 bool ensureParentDirectory(const std::string& filePath) {
     auto directory = std::filesystem::path(filePath).parent_path();
@@ -72,6 +72,6 @@ std::string buildOutputPath(const std::filesystem::path& inputFile,
     return (outputDir / (baseName + suffix)).string();
 }
 
-}  // namespace refactorCommon::fs
+}  // namespace Common::fs
 
 

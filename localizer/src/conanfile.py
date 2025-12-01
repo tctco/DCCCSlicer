@@ -3,7 +3,7 @@ from conan import ConanFile
 
 
 class AppConan(ConanFile):
-    name = "centiloidcalculator"
+    name = "DCCCcore"
     version = "3.2.0"
     settings = "os", "arch", "compiler", "build_type"
     generators = "CMakeDeps", "CMakeToolchain"

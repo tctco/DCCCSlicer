@@ -1,12 +1,12 @@
 #include "AdniPetCoreCLI.h"
-#include "../../cli/Options.h"
+#include "../CLIOptions.h"
 #include "../../core/common/Filesystem.h"
 #include "../../core/common/ProcessingContracts.h"
 #include "../../core/di/Bootstrap.h"
 #include "../NullMetric.h"
 #include <iostream>
 
-namespace RefactorPipeline::SpatialNormalization::Adni {
+namespace Pipeline::SpatialNormalization::Adni {
 
 namespace {
 
@@ -18,14 +18,14 @@ struct RunConfig {
 int runNormalization(const NormalizeCommandOptions& options,
                      const RunConfig& config,
                      const std::string& fullCommand) {
-    refactorCommon::fs::ensureParentDirectory(options.outputPath);
+    Common::fs::ensureParentDirectory(options.outputPath);
 
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = options.configPath;
     bootstrapOptions.enableConfigDebug = options.enableDebugOutput;
     bootstrapOptions.logTag = config.logTag;
 
-    auto container = RefactorPipeline::buildDefaultContainer(bootstrapOptions);
+    auto container = Pipeline::buildDefaultContainer(bootstrapOptions);
     SpatialNormalization::registerNullMetric(*container);
 
     ProcessingRequest request;
@@ -43,7 +43,7 @@ int runNormalization(const NormalizeCommandOptions& options,
     request.normalization.options.enableAdniPetCore = config.enableAdniPetCore;
 
     std::cout << "[" << config.logTag << "] Starting processing: " << fullCommand << std::endl;
-    auto app = RefactorPipeline::resolveApplication(*container);
+    auto app = Pipeline::resolveApplication(*container);
 
     try {
         auto response = app->run(request);
@@ -104,5 +104,5 @@ SpatialNormalizationCLIPtr createCLI() {
     return std::make_shared<AdniPetCoreCLI>();
 }
 
-} // namespace RefactorPipeline::SpatialNormalization::Adni
+} // namespace Pipeline::SpatialNormalization::Adni
 

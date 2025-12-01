@@ -12,7 +12,7 @@
 #include "adad/ADADCLI.h"
 #include "adad/ADADLogic.h"
 
-namespace RefactorPipeline::Metrics {
+namespace Pipeline::Metrics {
 
 std::vector<MetricCLIPtr> buildCLIModules() {
     std::vector<MetricCLIPtr> modules;
@@ -34,5 +34,5 @@ void registerAllMetricModules(ServiceContainer& container) {
     ADAD::registerMetric(container);
 }
 
-} // namespace RefactorPipeline::Metrics
+} // namespace Pipeline::Metrics
 

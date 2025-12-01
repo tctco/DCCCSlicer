@@ -12,7 +12,7 @@ The Deep Cascaded Cerebral Calculator Core is a comprehensive C++ toolkit design
 - **Deep Learning Pipeline**: Utilizes ONNX-based neural networks for spatial normalization
 - **Modular Architecture**: Extensible design with clean interfaces for adding new biomarkers
 - **Multi-tracer Compatibility**: Supports various PET tracers with tracer-specific calibrations
-- **Decoupling Analysis**: Advanced pathology-specific signal extraction
+- **ADAD Scoring**: Built-in decoupling pipeline for abeta/tau modalities via `adad`
 - **Configuration-driven**: Flexible TOML-based configuration system
 
 ## Usage
@@ -22,27 +22,27 @@ The software provides a command-line interface with multiple subcommands for dif
 ### Basic Commands
 
 #### Centiloid Analysis
-Calculate standardized amyloid burden scores:
+Calculate standardized amyloid burden scores using the refactored CLI:
 
 ```bash
 # Basic Centiloid calculation
-./CentiloidCalculator centiloid --input amyloid_pet.nii --output result.nii
+./DCCCcore centiloid --input amyloid_pet.nii --output result.nii
 
 # With configuration file
-./CentiloidCalculator centiloid --input amyloid_pet.nii --output result.nii --config custom_config.toml
+./DCCCcore centiloid --input amyloid_pet.nii --output result.nii --config custom_config.toml
 
 # Include SUVr values in output
-./CentiloidCalculator centiloid --input amyloid_pet.nii --output result.nii --suvr
+./DCCCcore centiloid --input amyloid_pet.nii --output result.nii --suvr
 
 # Skip spatial normalization (pre-normalized images)
-./CentiloidCalculator centiloid --input normalized_pet.nii --output result.nii --skip-normalization
+./DCCCcore centiloid --input normalized_pet.nii --output result.nii --skip-normalization
 ```
 
 Batch processing of multiple amyloid PET images:
 
 ```bash
 # Process all .nii / .nii.gz files under input_dir and write outputs to output_dir
-./CentiloidCalculator centiloid --input input_dir --output output_dir --batch
+./DCCCcore centiloid --input input_dir --output output_dir --batch
 ```
 
 #### CenTauR Analysis
@@ -50,10 +50,10 @@ Calculate standardized tau burden scores:
 
 ```bash
 # CenTauR percentile scale
-./CentiloidCalculator centaur --input tau_pet.nii --output result.nii
+./DCCCcore centaur --input tau_pet.nii --output result.nii
 
 # CenTauRz z-score scale
-./CentiloidCalculator centaurz --input tau_pet.nii --output result.nii
+./DCCCcore centaurz --input tau_pet.nii --output result.nii
 ```
 
 #### Fill-states Analysis
@@ -61,13 +61,13 @@ Calculate fill-states metric based on voxel-wise z-scores within tracer-specific
 
 ```bash
 # Amyloid tracer (FBP) fill-states
-./CentiloidCalculator fillstates --input amyloid_pet.nii --output result.nii --tracer fbp
+./DCCCcore fillstates --input amyloid_pet.nii --output result.nii --tracer fbp
 
 # FDG neurodegeneration fill-states
-./CentiloidCalculator fillstates --input fdg_pet.nii --output result.nii --tracer fdg
+./DCCCcore fillstates --input fdg_pet.nii --output result.nii --tracer fdg
 
 # FTP tau fill-states
-./CentiloidCalculator fillstates --input ftp_pet.nii --output result.nii --tracer ftp
+./DCCCcore fillstates --input ftp_pet.nii --output result.nii --tracer ftp
 ```
 
 The command produces:
@@ -79,14 +79,14 @@ The command produces:
 Calculate SUVr with user-defined regions:
 
 ```bash
-./CentiloidCalculator suvr --input pet.nii --output result.nii \
+./DCCCcore suvr --input pet.nii --output result.nii \
   --voi-mask target_region.nii --ref-mask reference_region.nii
 ```
 
 Batch SUVr calculation with user-defined regions:
 
 ```bash
-./CentiloidCalculator suvr --input input_dir --output output_dir --batch \
+./DCCCcore suvr --input input_dir --output output_dir --batch \
   --voi-mask target_region.nii --ref-mask reference_region.nii
 ```
 
@@ -95,25 +95,25 @@ Perform spatial standardization without metric calculation:
 
 ```bash
 # Standard normalization
-./CentiloidCalculator normalize --input pet.nii --output normalized.nii
+./DCCCcore normalize --input pet.nii --output normalized.nii
 
 # ADNI-style processing
-./CentiloidCalculator adni-pet-core --input pet.nii --output normalized.nii
+./DCCCcore adni-pet-core --input pet.nii --output normalized.nii
 
 # Iterative rigid registration
-./CentiloidCalculator normalize --input pet.nii --output normalized.nii --iterative
-./CentiloidCalculator adni-pet-core --input pet.nii --output normalized.nii --iterative
+./DCCCcore normalize --input pet.nii --output normalized.nii --iterative
+./DCCCcore adni-pet-core --input pet.nii --output normalized.nii --iterative
 ```
 
-#### Decoupling Analysis
-Extract pathology-specific signals:
+#### ADAD Analysis
+Run the ADAD decoupling-based metric:
 
 ```bash
-# Amyloid decoupling
-./CentiloidCalculator decouple --input pet.nii --output decoupled.nii --modality abeta
+# Default (abeta) modality
+./DCCCcore adad --input pet.nii --output result.nii
 
-# Tau decoupling
-./CentiloidCalculator decouple --input pet.nii --output decoupled.nii --modality tau
+# Tau modality with iterative rigid alignment
+./DCCCcore adad --input pet.nii --output result.nii --modality tau --iterative
 ```
 
 ### Command Options
@@ -122,12 +122,13 @@ Extract pathology-specific signals:
 |--------|-------------|
 | `--config <file>` | Configuration file path (default: config.toml) |
 | `--debug` | Enable debug mode with intermediate outputs |
-| `--batch` | Enable batch processing mode. In batch mode, `--input` and `--output` are treated as directories, all `.nii` / `.nii.gz` files in the input directory are processed, and outputs are written as `<filename>_processed.nii` together with `results.csv` and `batch_info.txt` in the output directory. Currently supported for `centiloid`, `centaur`, `centaurz`, and `suvr` commands. When registration is enabled (no `--skip-normalization`), the output directory must be empty to avoid overwriting. |
+| `--batch` | Enable batch processing mode. In batch mode, `--input` and `--output` are treated as directories, all `.nii` / `.nii.gz` files in the input directory are processed, and outputs are written as `<filename>_processed.nii` together with `results.csv` and `batch_info.txt` in the output directory. Currently supported for `centiloid`, `centaur`, `centaurz`, `suvr`, and `adad` commands. When registration is enabled (no `--skip-normalization`), the output directory must be empty to avoid overwriting. |
 | `--iterative` | Use iterative rigid transformation |
 | `--manual-fov` | Enable manual field-of-view placement |
 | `--skip-normalization` | Skip spatial normalization step |
 | `--suvr` | Include SUVr values in metric outputs |
-| `--tracer <tracer>` | Tracer type for fill-states metric (`fillstates` command only). Supported values: `fbp`, `fdg`, `ftp`. Required for `fillstates`. |
+| `--tracer <tracer>` | Tracer type for fill-states metric (`fillstates` command only). Supported values: `fbp`, `fdg`, `ftp`. |
+| `--modality <type>` | Decoupling modality for `adad` (`abeta` or `tau`). |
 
 ## Developers
 

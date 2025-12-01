@@ -1,7 +1,7 @@
 #pragma once
 #include "../common/ProcessingContracts.h"
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 class IMetricService {
 public:
@@ -10,5 +10,5 @@ public:
     virtual std::vector<MetricResult> calculate(const MetricComputationRequest& request) = 0;
 };
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

@@ -1,25 +1,22 @@
 #pragma once
 #include "ISpatialNormalizationService.h"
-#include "../providers/LegacyNormalizerProvider.h"
-#include <memory>
+#include "../interfaces/IConfiguration.h"
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 class SpatialNormalizationService : public ISpatialNormalizationService {
 public:
-    SpatialNormalizationService(ConfigurationPtr config,
-                                std::shared_ptr<LegacyNormalizerProvider> provider);
+    explicit SpatialNormalizationService(ConfigurationPtr config);
 
     SpatialNormalizationOutput normalize(const SpatialNormalizationRequest& request) override;
 
 private:
     ConfigurationPtr config_;
-    std::shared_ptr<LegacyNormalizerProvider> provider_;
 
     ImageType::Pointer loadInput(const std::string& inputPath) const;
     ImageType::Pointer prepareAdniPetCoreImage(ImageType::Pointer rigidImage,
                                                ImageType::Pointer normalizedImage) const;
 };
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-namespace RefactorPipeline::Metrics::ADAD {
+namespace Pipeline::Metrics::ADAD {
 
 namespace {
 
@@ -42,7 +42,7 @@ void addSpatialNormalizationArguments(argparse::ArgumentParser& parser) {
 class ADADCLI : public IMetricCLI {
 public:
     std::string getSubcommandName() const override {
-        return "refactor-adad";
+        return "adad";
     }
 
     std::string getDescription() const override {
@@ -83,5 +83,5 @@ MetricCLIPtr createCLI() {
     return std::make_shared<ADADCLI>();
 }
 
-} // namespace RefactorPipeline::Metrics::ADAD
+} // namespace Pipeline::Metrics::ADAD
 

@@ -2,7 +2,7 @@
 #include "../interfaces/IConfiguration.h"
 #include <string>
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 struct ConfigurationLoadOptions {
     std::string configPath;
@@ -12,5 +12,5 @@ struct ConfigurationLoadOptions {
 
 ConfigurationPtr loadConfigurationWithLogging(const ConfigurationLoadOptions& options);
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

@@ -1,5 +1,5 @@
 ﻿#include "Configuration.h"
-#include "../../utils/common.h"
+#include "../common/PathUtils.h"
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
@@ -13,7 +13,7 @@ Configuration::Configuration() {
 }
 
 std::string Configuration::getExecutablePath() const {
-  return Common::getExecutablePath();
+  return Common::path::executableDirectory();
 }
 
 void Configuration::initializeDefaults() {
@@ -193,7 +193,7 @@ std::string Configuration::findConfigFile(const std::string &configFileName) {
   }
 
   // 获取可执行文件目录
-  std::string executableDir = Common::getExecutablePath();
+  std::string executableDir = Common::path::executableDirectory();
 
   // 检查可执行文件目录下的configs文件夹
   std::string configsPath = executableDir + "/assets/configs/" + configFileName;

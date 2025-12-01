@@ -1,5 +1,4 @@
 #include "Bootstrap.h"
-#include "../providers/LegacyNormalizerProvider.h"
 #include "../services/SpatialNormalizationService.h"
 #include "../services/MetricService.h"
 #include "../services/MetricModuleRegistry.h"
@@ -7,7 +6,7 @@
 #include "../../metrics/ModuleCatalog.h"
 #include "../config/ConfigLoader.h"
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 std::shared_ptr<ServiceContainer> buildDefaultContainer(const BootstrapOptions& options) {
     ConfigurationLoadOptions loadOptions;
@@ -19,16 +18,10 @@ std::shared_ptr<ServiceContainer> buildDefaultContainer(const BootstrapOptions& 
 
     auto container = std::make_shared<ServiceContainer>();
     container->registerSingleton<IConfiguration>([config](auto&) { return config; });
-    container->registerSingleton<LegacyNormalizerProvider>(
-        [](auto& c) {
-            auto cfg = c.template resolve<IConfiguration>();
-            return std::make_shared<LegacyNormalizerProvider>(cfg);
-        });
     container->registerSingleton<ISpatialNormalizationService>(
         [](auto& c) {
             auto cfg = c.template resolve<IConfiguration>();
-            auto provider = c.template resolve<LegacyNormalizerProvider>();
-            return std::make_shared<SpatialNormalizationService>(cfg, provider);
+            return std::make_shared<SpatialNormalizationService>(cfg);
         });
     container->registerSingleton<IMetricModuleRegistry>(
         [](auto&) {
@@ -60,5 +53,5 @@ std::shared_ptr<PipelineApplication> resolveApplication(ServiceContainer& contai
     return container.resolve<PipelineApplication>();
 }
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

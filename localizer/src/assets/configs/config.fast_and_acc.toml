@@ -1,4 +1,4 @@
-# CentiloidCalculator configuration file (TOML format) - Fast and accurate version
+# DCCCcore configuration file (TOML format) - Fast and accurate version
 # This file contains all configurable parameters
 
 # Model file paths (relative to executable directory)

@@ -3,7 +3,7 @@ import shutil
 
 
 class TestRefactorCentiloidCLI:
-    """Tests for the refactor-centiloid prototype command."""
+    """Tests for the centiloid prototype command."""
 
     def test_refactor_centiloid_basic(self, run_subprocess, tmp_path, test_files):
         """
@@ -11,7 +11,7 @@ class TestRefactorCentiloidCLI:
         """
         output_path = tmp_path / "refactor_centiloid_output.nii"
         args = [
-            "refactor-centiloid",
+            "centiloid",
             "--input",
             str(test_files["input"]),
             "--output",
@@ -21,7 +21,7 @@ class TestRefactorCentiloidCLI:
         result = run_subprocess(args)
 
         assert result.returncode == 0, (
-            "refactor-centiloid command failed.\n"
+            "centiloid command failed.\n"
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
 
@@ -31,7 +31,7 @@ class TestRefactorCentiloidCLI:
         """
         output_path = tmp_path / "refactor_centiloid_skip.nii"
         args = [
-            "refactor-centiloid",
+            "centiloid",
             "--input",
             str(test_files["input"]),
             "--output",
@@ -42,7 +42,7 @@ class TestRefactorCentiloidCLI:
         result = run_subprocess(args)
 
         assert result.returncode == 0, (
-            "refactor-centiloid command failed with --skip-normalization.\n"
+            "centiloid command failed with --skip-normalization.\n"
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
 
@@ -59,7 +59,7 @@ class TestRefactorCentiloidCLI:
         shutil.copy(test_files["input"], sample_path)
 
         args = [
-            "refactor-centiloid",
+            "centiloid",
             "--input",
             str(input_dir),
             "--output",
@@ -70,7 +70,7 @@ class TestRefactorCentiloidCLI:
         result = run_subprocess(args)
 
         assert result.returncode == 0, (
-            "refactor-centiloid batch command failed.\n"
+            "centiloid batch command failed.\n"
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
 

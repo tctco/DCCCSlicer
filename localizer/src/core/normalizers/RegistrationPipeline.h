@@ -1,5 +1,5 @@
 #pragma once
-#include "../utils/common.h"
+#include "../common/ImageTypes.h"
 #include "../preprocessing/ImagePreprocessor.h"
 #include "RigidRegistrationEngine.h"
 #include "NonlinearRegistrationEngine.h"

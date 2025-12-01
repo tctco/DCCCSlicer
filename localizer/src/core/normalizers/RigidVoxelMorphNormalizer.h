@@ -1,6 +1,6 @@
 #pragma once
-#include "../core/interfaces/ISpatialNormalizer.h"
-#include "../core/interfaces/IConfiguration.h"
+#include "../interfaces/ISpatialNormalizer.h"
+#include "../interfaces/IConfiguration.h"
 #include "RegistrationPipeline.h"  // Use new registration pipeline
 
 /**

@@ -2,7 +2,7 @@
 #include "standard/NormalizeCLI.h"
 #include "adni/AdniPetCoreCLI.h"
 
-namespace RefactorPipeline::SpatialNormalization {
+namespace Pipeline::SpatialNormalization {
 
 std::vector<SpatialNormalizationCLIPtr> buildCLIModules() {
     std::vector<SpatialNormalizationCLIPtr> modules;
@@ -11,7 +11,7 @@ std::vector<SpatialNormalizationCLIPtr> buildCLIModules() {
     return modules;
 }
 
-} // namespace RefactorPipeline::SpatialNormalization
+} // namespace Pipeline::SpatialNormalization
 
 
 

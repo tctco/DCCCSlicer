@@ -5,9 +5,9 @@
 #include "../interfaces/IMetricCalculator.h"
 #include "Common.h"
 
-using ImageType = refactorCommon::ImageType;
+using ImageType = Common::ImageType;
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 struct SpatialNormalizationOptions {
     bool useIterativeRigid = false;
@@ -54,8 +54,6 @@ struct ProcessingRequest {
     MetricComputationOptions metricOptions;
 };
 
-inline constexpr const char* kOutputPathHintKey = "__pipeline_output_path";
-
 struct ProcessingResponse {
     SpatialNormalizationOutput normalizationOutput;
     std::vector<MetricResult> metricResults;
@@ -76,5 +74,5 @@ struct BatchProcessingSummary {
     size_t failed = 0;
 };
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

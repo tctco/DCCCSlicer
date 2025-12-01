@@ -5,7 +5,7 @@ from pathlib import Path
 
 class TestBatchProcessing:
     """
-    Test class for batch processing functionality of CentiloidCalculator.
+    Test class for batch processing functionality of DCCCcore.
     """
 
     def test_batch_processing_success(self, exe_path, data_dir, output_dir, run_subprocess):

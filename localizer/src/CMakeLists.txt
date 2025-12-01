@@ -1,7 +1,7 @@
-# CMakeList.txt: CentiloidCalculator Refactored Version
+# CMakeList.txt: DCCCcore Refactored Version
 cmake_minimum_required(VERSION 3.21)
 
-project(CentiloidCalculator VERSION 3.4.0)
+project(DCCCcore VERSION 4.0.0)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -30,17 +30,17 @@ configure_file(
 )
 
 # Create executable
-add_executable(CentiloidCalculator main.cpp)
+add_executable(DCCCcore main.cpp)
 
 # Add interface headers
-target_sources(CentiloidCalculator PRIVATE
+target_sources(DCCCcore PRIVATE
     core/interfaces/ISpatialNormalizer.h
     core/interfaces/IMetricCalculator.h
     core/interfaces/IConfiguration.h
 )
 
 # Add configuration management
-target_sources(CentiloidCalculator PRIVATE
+target_sources(DCCCcore PRIVATE
     core/config/Configuration.h
     core/config/Configuration.cpp
     core/config/ConfigLoader.h
@@ -49,50 +49,27 @@ target_sources(CentiloidCalculator PRIVATE
 )
 
 # Add spatial normalizers
-target_sources(CentiloidCalculator PRIVATE
-    normalizers/RigidVoxelMorphNormalizer.h
-    normalizers/RigidVoxelMorphNormalizer.cpp
-    normalizers/RegistrationPipeline.h
-    normalizers/RegistrationPipeline.cpp
-    normalizers/RigidRegistrationEngine.h
-    normalizers/RigidRegistrationEngine.cpp
-    normalizers/NonlinearRegistrationEngine.h
-    normalizers/NonlinearRegistrationEngine.cpp
+target_sources(DCCCcore PRIVATE
+    core/normalizers/RigidVoxelMorphNormalizer.h
+    core/normalizers/RigidVoxelMorphNormalizer.cpp
+    core/normalizers/RegistrationPipeline.h
+    core/normalizers/RegistrationPipeline.cpp
+    core/normalizers/RigidRegistrationEngine.h
+    core/normalizers/RigidRegistrationEngine.cpp
+    core/normalizers/NonlinearRegistrationEngine.h
+    core/normalizers/NonlinearRegistrationEngine.cpp
 )
 
 # Add image preprocessing module
-target_sources(CentiloidCalculator PRIVATE
-    preprocessing/ImagePreprocessor.h
-    preprocessing/ImagePreprocessor.cpp
-)
-
-# Add factories
-target_sources(CentiloidCalculator PRIVATE
-    factories/SpatialNormalizerFactory.h
-    factories/SpatialNormalizerFactory.cpp
-    factories/MetricCalculatorFactory.h
-    factories/MetricCalculatorFactory.cpp
-)
-
-# Add processing pipeline
-target_sources(CentiloidCalculator PRIVATE
-    pipeline/ProcessingPipeline.h
-    pipeline/ProcessingPipeline.cpp
-    pipeline/BatchProcessor.h
-    pipeline/BatchProcessor.cpp
+target_sources(DCCCcore PRIVATE
+    core/preprocessing/ImagePreprocessor.h
+    core/preprocessing/ImagePreprocessor.cpp
 )
 
 # Add utility sources
-target_sources(CentiloidCalculator PRIVATE
-    utils/common.h
-    utils/common.cpp
-    cli/Options.h
-    cli/Options.cpp
-    cli/CommandHelpers.h
-    cli/CommandHelpers.cpp
-    cli/Commands.h
-    cli/Commands.cpp
+target_sources(DCCCcore PRIVATE
     core/common/Common.h
+    core/common/ImageTypes.h
     core/common/NiftiTypes.h
     core/common/NiftiIO.h
     core/common/NiftiIO.cpp
@@ -111,8 +88,6 @@ target_sources(CentiloidCalculator PRIVATE
     core/interfaces/IMetricCLI.h
     core/interfaces/ISpatialNormalizationCLI.h
     core/di/ServiceContainer.h
-    core/providers/LegacyNormalizerProvider.h
-    core/providers/LegacyNormalizerProvider.cpp
     core/services/ISpatialNormalizationService.h
     core/services/SpatialNormalizationService.h
     core/services/SpatialNormalizationService.cpp
@@ -172,6 +147,8 @@ target_sources(CentiloidCalculator PRIVATE
     spatialNormalizations/ModuleCatalog.cpp
     spatialNormalizations/NullMetric.h
     spatialNormalizations/NullMetric.cpp
+    spatialNormalizations/CLIOptions.h
+    spatialNormalizations/CLIOptions.cpp
     spatialNormalizations/standard/NormalizeCLI.h
     spatialNormalizations/standard/NormalizeCLI.cpp
     spatialNormalizations/adni/AdniPetCoreCLI.h
@@ -179,7 +156,7 @@ target_sources(CentiloidCalculator PRIVATE
 )
 
 # Link libraries
-target_link_libraries(CentiloidCalculator PRIVATE
+target_link_libraries(DCCCcore PRIVATE
     itk::itk
     onnxruntime::onnxruntime
     argparse::argparse
@@ -189,13 +166,13 @@ target_link_libraries(CentiloidCalculator PRIVATE
 
 # Compile options
 if(MSVC)
-    target_compile_options(CentiloidCalculator PRIVATE /W4)
+    target_compile_options(DCCCcore PRIVATE /W4)
 else()
-    target_compile_options(CentiloidCalculator PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(DCCCcore PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 # Set install prefix
-set(CMAKE_INSTALL_PREFIX "E:/projects/paper/CentiloidCalculatorInstall" CACHE PATH "Installation directory")
+set(CMAKE_INSTALL_PREFIX "E:/projects/paper/DCCCcoreInstall" CACHE PATH "Installation directory")
 
 include(InstallRequiredSystemLibraries)
 include(GNUInstallDirs)
@@ -207,7 +184,7 @@ set(centiloid_install_target_args
 )
 
 if(APPLE)
-  set_target_properties(CentiloidCalculator PROPERTIES
+  set_target_properties(DCCCcore PROPERTIES
     BUILD_RPATH "@loader_path"
     INSTALL_RPATH "@loader_path"
   )
@@ -218,7 +195,7 @@ if(APPLE)
   )
 elseif(UNIX)
   # Use $ORIGIN so the executable can locate co-located shared libraries.
-  set_target_properties(CentiloidCalculator PROPERTIES
+  set_target_properties(DCCCcore PROPERTIES
     BUILD_RPATH "$ORIGIN"
     INSTALL_RPATH "$ORIGIN"
   )
@@ -233,7 +210,7 @@ if(centiloid_runtime_dependency_args)
   list(PREPEND centiloid_install_target_args ${centiloid_runtime_dependency_args})
 endif()
 
-install(TARGETS CentiloidCalculator
+install(TARGETS DCCCcore
   ${centiloid_install_target_args}
 )
 
@@ -244,7 +221,7 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/"
 
 # Install dependent runtime DLLs next to the executable (requires CMake 3.21+)
 if(WIN32)
-  install(FILES $<TARGET_RUNTIME_DLLS:CentiloidCalculator>
+  install(FILES $<TARGET_RUNTIME_DLLS:DCCCcore>
     DESTINATION ${CMAKE_INSTALL_BINDIR}
     COMPONENT Runtime)
 endif()
@@ -265,4 +242,4 @@ endif()
 # Output information
 message(STATUS "ITK_LIBRARIES: ${ITK_LIBRARIES}")
 message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
-message(STATUS "Project configured for refactored CentiloidCalculator v${PROJECT_VERSION}")
+message(STATUS "Project configured for refactored DCCCcore v${PROJECT_VERSION}")

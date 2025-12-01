@@ -6,7 +6,7 @@
 #include <set>
 #include <sstream>
 
-namespace RefactorPipeline::BatchLogging {
+namespace Pipeline::BatchLogging {
 
 namespace {
 
@@ -109,6 +109,6 @@ void appendCsvRows(CsvContext& ctx, const std::string& filename, const std::vect
     ctx.stream.flush();
 }
 
-} // namespace RefactorPipeline::BatchLogging
+} // namespace Pipeline::BatchLogging
 
 

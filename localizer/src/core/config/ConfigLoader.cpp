@@ -2,7 +2,7 @@
 #include "Configuration.h"
 #include <iostream>
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 namespace {
 
@@ -43,5 +43,5 @@ ConfigurationPtr loadConfigurationWithLogging(const ConfigurationLoadOptions& op
     return configuration;
 }
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

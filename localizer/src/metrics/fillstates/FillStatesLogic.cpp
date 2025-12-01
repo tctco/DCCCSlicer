@@ -8,7 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 
-namespace RefactorPipeline::Metrics::FillStates {
+namespace Pipeline::Metrics::FillStates {
 
 namespace {
 
@@ -19,7 +19,7 @@ void configureDebugOutputBasePath(FillStatesCLIOptions& options) {
     if (!options.enableDebugOutput || options.outputPath.empty()) {
         return;
     }
-    options.debugOutputBasePath = refactorCommon::path::deriveDebugBasePath(options.outputPath);
+    options.debugOutputBasePath = Common::path::deriveDebugBasePath(options.outputPath);
 }
 
 class FillStatesLogic : public IMetricLogic {
@@ -68,11 +68,11 @@ private:
         }
         const std::string& maskPath = it->second;
         try {
-            refactorCommon::fs::ensureParentDirectory(maskPath);
-            refactorCommon::nifti::saveImage(mask, maskPath);
-            std::cout << "[refactor-fillstates] Fill-states mask saved to " << maskPath << std::endl;
+            Common::fs::ensureParentDirectory(maskPath);
+            Common::nifti::saveImage(mask, maskPath);
+            std::cout << "[fillstates] Fill-states mask saved to " << maskPath << std::endl;
         } catch (const std::exception& ex) {
-            std::cerr << "[refactor-fillstates] Failed to save fill-states mask: " << ex.what() << std::endl;
+            std::cerr << "[fillstates] Failed to save fill-states mask: " << ex.what() << std::endl;
         }
     }
 
@@ -80,14 +80,14 @@ private:
 };
 
 void ensureOutputDirectoryExists(const std::string& outputPath) {
-    refactorCommon::fs::ensureParentDirectory(outputPath);
+    Common::fs::ensureParentDirectory(outputPath);
 }
 
 std::string buildMaskOutputPath(const std::string& outputPath) {
     if (outputPath.empty()) {
         return {};
     }
-    return refactorCommon::path::addSuffix(outputPath, "_fill_states_map");
+    return Common::path::addSuffix(outputPath, "_fill_states_map");
 }
 
 } // namespace
@@ -103,12 +103,12 @@ void registerMetric(ServiceContainer& container) {
 
 int runCommand(const FillStatesCLIOptions& options, const std::string& fullCommand) {
     if (options.batchMode) {
-        std::cerr << "[refactor-fillstates] Batch mode is not supported in the prototype refactor path yet." << std::endl;
+        std::cerr << "[fillstates] Batch mode is not supported in the prototype refactor path yet." << std::endl;
         return EXIT_FAILURE;
     }
 
     if (options.tracer.empty()) {
-        std::cerr << "[refactor-fillstates] --tracer is required." << std::endl;
+        std::cerr << "[fillstates] --tracer is required." << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -120,7 +120,7 @@ int runCommand(const FillStatesCLIOptions& options, const std::string& fullComma
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = optionsCopy.configPath;
     bootstrapOptions.enableConfigDebug = optionsCopy.enableDebugOutput;
-    bootstrapOptions.logTag = "refactor-fillstates";
+    bootstrapOptions.logTag = "fillstates";
 
     auto container = buildDefaultContainer(bootstrapOptions);
 
@@ -142,15 +142,15 @@ int runCommand(const FillStatesCLIOptions& options, const std::string& fullComma
     request.normalization.options.enableDebugOutput = optionsCopy.enableDebugOutput;
     request.normalization.options.debugOutputBasePath = optionsCopy.debugOutputBasePath;
 
-    std::cout << "[refactor-fillstates] Starting processing: " << fullCommand << std::endl;
+    std::cout << "[fillstates] Starting processing: " << fullCommand << std::endl;
     auto app = resolveApplication(*container);
 
     try {
         auto response = app->run(request);
-        std::cout << "\n[refactor-fillstates] Spatial normalization complete. Normalized image saved to "
+        std::cout << "\n[fillstates] Spatial normalization complete. Normalized image saved to "
                   << optionsCopy.outputPath << std::endl;
         if (response.metricResults.empty()) {
-            std::cout << "[refactor-fillstates] No metric results returned." << std::endl;
+            std::cout << "[fillstates] No metric results returned." << std::endl;
         } else {
             std::cout << "\n=== Refactor FillStates Results ===" << std::endl;
             for (const auto& metric : response.metricResults) {
@@ -164,14 +164,14 @@ int runCommand(const FillStatesCLIOptions& options, const std::string& fullComma
             }
         }
     } catch (const std::exception& ex) {
-        std::cerr << "[refactor-fillstates] Pipeline failed: " << ex.what() << std::endl;
+        std::cerr << "[fillstates] Pipeline failed: " << ex.what() << std::endl;
         return EXIT_FAILURE;
     }
 
-    std::cout << "[refactor-fillstates] Processing completed successfully." << std::endl;
+    std::cout << "[fillstates] Processing completed successfully." << std::endl;
     return EXIT_SUCCESS;
 }
 
-} // namespace RefactorPipeline::Metrics::FillStates
+} // namespace Pipeline::Metrics::FillStates
 
 

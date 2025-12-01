@@ -2,7 +2,7 @@
 #include "../../core/di/ServiceContainer.h"
 #include <string>
 
-namespace RefactorPipeline::Metrics::FillStates {
+namespace Pipeline::Metrics::FillStates {
 
 struct FillStatesCLIOptions {
     std::string inputPath;
@@ -21,6 +21,6 @@ struct FillStatesCLIOptions {
 void registerMetric(ServiceContainer& container);
 int runCommand(const FillStatesCLIOptions& options, const std::string& fullCommand);
 
-} // namespace RefactorPipeline::Metrics::FillStates
+} // namespace Pipeline::Metrics::FillStates
 
 

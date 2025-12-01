@@ -1,6 +1,5 @@
 #include "CenTauRCalculator.h"
 #include "../suvr/SUVrCalculator.h"
-#include "../../utils/common.h"
 #include <string>
 
 CenTauRCalculator::CenTauRCalculator(ConfigurationPtr config) : config_(config) {}

@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <stdexcept>
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 void MetricModuleRegistry::registerModule(const MetricPtr& module) {
     if (!module) {
@@ -48,5 +48,5 @@ std::string MetricModuleRegistry::normalizeName(const std::string& name) {
     return lower;
 }
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

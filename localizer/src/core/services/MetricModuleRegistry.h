@@ -2,7 +2,7 @@
 #include "../interfaces/IMetricModuleRegistry.h"
 #include <unordered_map>
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 class MetricModuleRegistry : public IMetricModuleRegistry {
 public:
@@ -21,5 +21,5 @@ private:
     std::unordered_map<std::string, MetricPtr> modules_;
 };
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

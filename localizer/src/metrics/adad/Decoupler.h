@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <map>
 
-#include "../../utils/common.h"
+#include "../../core/common/ImageTypes.h"
 #include "onnxruntime_cxx_api.h"
 
 class DecoupledResult {

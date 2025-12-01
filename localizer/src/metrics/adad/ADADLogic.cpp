@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace RefactorPipeline::Metrics::ADAD {
+namespace Pipeline::Metrics::ADAD {
 
 namespace {
 
@@ -20,11 +20,11 @@ void configureDebugOutputBasePath(ADADCLIOptions& options) {
     if (!options.enableDebugOutput || options.outputPath.empty()) {
         return;
     }
-    options.debugOutputBasePath = refactorCommon::path::deriveDebugBasePath(options.outputPath);
+    options.debugOutputBasePath = Common::path::deriveDebugBasePath(options.outputPath);
 }
 
 std::string normalizeModality(const std::string& raw) {
-    std::string modality = refactorCommon::path::toLower(raw);
+    std::string modality = Common::path::toLower(raw);
     if (modality != "tau") {
         modality = "abeta";
     }
@@ -72,24 +72,24 @@ private:
             throw std::invalid_argument("ADAD metric requires both rigid and normalized images");
         }
 
-        ImageType::Pointer cerebellarGray = refactorCommon::nifti::loadImage(config_->getMaskPath("cerebral_gray"));
+        ImageType::Pointer cerebellarGray = Common::nifti::loadImage(config_->getMaskPath("cerebral_gray"));
         if (!cerebellarGray) {
             throw std::runtime_error("Failed to load cerebellar gray mask");
         }
 
-        ImageType::Pointer resampled = refactorCommon::image::resampleToMatch(cerebellarGray, spatiallyNormalizedImage);
-        double meanGray = refactorCommon::image::calculateMeanInMask(resampled, cerebellarGray);
+        ImageType::Pointer resampled = Common::image::resampleToMatch(cerebellarGray, spatiallyNormalizedImage);
+        double meanGray = Common::image::calculateMeanInMask(resampled, cerebellarGray);
         if (meanGray <= 0.0) {
             throw std::runtime_error("Invalid cerebellar gray mean value computed for ADAD normalization");
         }
 
-        ImageType::Pointer adniTemplate = refactorCommon::nifti::loadImage(config_->getTemplatePath("adni_pet_core"));
+        ImageType::Pointer adniTemplate = Common::nifti::loadImage(config_->getTemplatePath("adni_pet_core"));
         if (!adniTemplate) {
             throw std::runtime_error("Failed to load ADNI PET core template");
         }
 
-        ImageType::Pointer adniStyleImage = refactorCommon::image::resampleToMatch(adniTemplate, rigidImage);
-        refactorCommon::image::divideVoxelsByValue(adniStyleImage, static_cast<float>(meanGray));
+        ImageType::Pointer adniStyleImage = Common::image::resampleToMatch(adniTemplate, rigidImage);
+        Common::image::divideVoxelsByValue(adniStyleImage, static_cast<float>(meanGray));
         return adniStyleImage;
     }
 
@@ -117,10 +117,10 @@ private:
 
         const std::string& outputPath = it->second;
         try {
-            refactorCommon::fs::ensureParentDirectory(outputPath);
+            Common::fs::ensureParentDirectory(outputPath);
             decoupled.SaveResults(outputPath);
         } catch (const std::exception& ex) {
-            std::cerr << "[refactor-adad] Failed to save decoupling outputs: " << ex.what() << std::endl;
+            std::cerr << "[adad] Failed to save decoupling outputs: " << ex.what() << std::endl;
         }
     }
 
@@ -185,12 +185,12 @@ private:
 };
 
 void ensureOutputDirectoryExists(const std::string& outputPath) {
-    refactorCommon::fs::ensureParentDirectory(outputPath);
+    Common::fs::ensureParentDirectory(outputPath);
 }
 
 void printResults(const std::vector<MetricResult>& results, const std::string& modality) {
     if (results.empty()) {
-        std::cout << "[refactor-adad] No metric results returned." << std::endl;
+        std::cout << "[adad] No metric results returned." << std::endl;
         return;
     }
 
@@ -217,7 +217,7 @@ void registerMetric(ServiceContainer& container) {
 
 int runCommand(const ADADCLIOptions& options, const std::string& fullCommand) {
     if (options.batchMode) {
-        std::cerr << "[refactor-adad] Batch mode is not supported in the prototype refactor path yet." << std::endl;
+        std::cerr << "[adad] Batch mode is not supported in the prototype refactor path yet." << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -231,7 +231,7 @@ int runCommand(const ADADCLIOptions& options, const std::string& fullCommand) {
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = optionsCopy.configPath;
     bootstrapOptions.enableConfigDebug = optionsCopy.enableDebugOutput;
-    bootstrapOptions.logTag = "refactor-adad";
+    bootstrapOptions.logTag = "adad";
 
     auto container = buildDefaultContainer(bootstrapOptions);
 
@@ -250,23 +250,23 @@ int runCommand(const ADADCLIOptions& options, const std::string& fullCommand) {
     request.normalization.options.enableDebugOutput = optionsCopy.enableDebugOutput;
     request.normalization.options.debugOutputBasePath = optionsCopy.debugOutputBasePath;
 
-    std::cout << "[refactor-adad] Starting processing: " << fullCommand << std::endl;
+    std::cout << "[adad] Starting processing: " << fullCommand << std::endl;
     auto app = resolveApplication(*container);
 
     try {
         auto response = app->run(request);
-        std::cout << "\n[refactor-adad] Spatial normalization complete. Normalized image saved to "
+        std::cout << "\n[adad] Spatial normalization complete. Normalized image saved to "
                   << optionsCopy.outputPath << std::endl;
         printResults(response.metricResults, normalizedModality);
     } catch (const std::exception& ex) {
-        std::cerr << "[refactor-adad] Pipeline failed: " << ex.what() << std::endl;
+        std::cerr << "[adad] Pipeline failed: " << ex.what() << std::endl;
         return EXIT_FAILURE;
     }
 
-    std::cout << "[refactor-adad] Processing completed successfully." << std::endl;
+    std::cout << "[adad] Processing completed successfully." << std::endl;
     return EXIT_SUCCESS;
 }
 
-} // namespace RefactorPipeline::Metrics::ADAD
+} // namespace Pipeline::Metrics::ADAD
 
 

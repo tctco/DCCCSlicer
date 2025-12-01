@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace RefactorPipeline::BatchLogging {
+namespace Pipeline::BatchLogging {
 
 struct CsvContext {
     std::ofstream stream;
@@ -31,6 +31,6 @@ void finalizeBatchInfo(BatchInfoContext& ctx, const BatchProcessingSummary& summ
 CsvContext openCsv(const std::filesystem::path& outputDir);
 void appendCsvRows(CsvContext& ctx, const std::string& filename, const std::vector<MetricResult>& results);
 
-} // namespace RefactorPipeline::BatchLogging
+} // namespace Pipeline::BatchLogging
 
 

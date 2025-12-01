@@ -2,7 +2,7 @@
 #include "../../core/di/ServiceContainer.h"
 #include <string>
 
-namespace RefactorPipeline::Metrics::Centaurz {
+namespace Pipeline::Metrics::Centaurz {
 
 struct CentaurzCLIOptions {
     std::string inputPath;
@@ -20,6 +20,6 @@ struct CentaurzCLIOptions {
 void registerMetric(ServiceContainer& container);
 int runCommand(const CentaurzCLIOptions& options, const std::string& fullCommand);
 
-} // namespace RefactorPipeline::Metrics::Centaurz
+} // namespace Pipeline::Metrics::Centaurz
 
 

@@ -2,7 +2,7 @@
 
 #include <itkImageFileWriter.h>
 
-namespace refactorCommon::nifti {
+namespace Common::nifti {
 
 void saveImage(ImageType::Pointer image, const std::string& filename) {
     using WriterType = itk::ImageFileWriter<ImageType>;
@@ -19,6 +19,6 @@ ImageType::Pointer loadImage(const std::string& filename) {
     return reader->GetOutput();
 }
 
-}  // namespace refactorCommon::nifti
+}  // namespace Common::nifti
 
 

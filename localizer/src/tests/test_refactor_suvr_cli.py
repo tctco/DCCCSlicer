@@ -2,7 +2,7 @@ import pytest
 
 
 class TestRefactorSUVrCLI:
-    """Tests for the refactor-suvr prototype command."""
+    """Tests for the suvr prototype command."""
 
     def test_refactor_suvr_basic(self, run_subprocess, tmp_path, test_files):
         """
@@ -10,7 +10,7 @@ class TestRefactorSUVrCLI:
         """
         output_path = tmp_path / "refactor_suvr_output.nii"
         args = [
-            "refactor-suvr",
+            "suvr",
             "--input",
             str(test_files["input"]),
             "--output",
@@ -24,7 +24,7 @@ class TestRefactorSUVrCLI:
         result = run_subprocess(args)
 
         assert result.returncode == 0, (
-            "refactor-suvr command failed.\n"
+            "suvr command failed.\n"
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
 
@@ -34,7 +34,7 @@ class TestRefactorSUVrCLI:
         """
         output_path = tmp_path / "refactor_suvr_missing_masks.nii"
         args = [
-            "refactor-suvr",
+            "suvr",
             "--input",
             str(test_files["input"]),
             "--output",
@@ -44,7 +44,7 @@ class TestRefactorSUVrCLI:
         result = run_subprocess(args)
 
         assert result.returncode != 0, (
-            "refactor-suvr command should fail when masks are omitted.\n"
+            "suvr command should fail when masks are omitted.\n"
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
 

@@ -2,12 +2,12 @@
 
 #include <iostream>
 
-namespace refactorCommon::log {
+namespace Common::log {
 
 void debug(const std::string& message) {
     std::cout << message << std::endl;
 }
 
-}  // namespace refactorCommon::log
+}  // namespace Common::log
 
 

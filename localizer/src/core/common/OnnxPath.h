@@ -4,7 +4,7 @@
 
 #include "onnxruntime_cxx_api.h"
 
-namespace refactorCommon::onnx {
+namespace Common::onnx {
 
 inline std::basic_string<ORTCHAR_T> makeOrtPath(const std::string& path) {
 #ifdef _WIN32
@@ -14,6 +14,6 @@ inline std::basic_string<ORTCHAR_T> makeOrtPath(const std::string& path) {
 #endif
 }
 
-}  // namespace refactorCommon::onnx
+}  // namespace Common::onnx
 
 

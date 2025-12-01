@@ -1,5 +1,5 @@
 #pragma once
-#include "../utils/common.h"
+#include "../common/ImageTypes.h"
 #include "itkDiscreteGaussianImageFilter.h"
 #include "itkIntensityWindowingImageFilter.h"
 #include "itkRescaleIntensityImageFilter.h"

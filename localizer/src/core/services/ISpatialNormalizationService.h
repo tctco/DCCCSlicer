@@ -1,7 +1,7 @@
 #pragma once
 #include "../common/ProcessingContracts.h"
 
-namespace RefactorPipeline {
+namespace Pipeline {
 
 class ISpatialNormalizationService {
 public:
@@ -10,5 +10,5 @@ public:
     virtual SpatialNormalizationOutput normalize(const SpatialNormalizationRequest& request) = 0;
 };
 
-} // namespace RefactorPipeline
+} // namespace Pipeline
 

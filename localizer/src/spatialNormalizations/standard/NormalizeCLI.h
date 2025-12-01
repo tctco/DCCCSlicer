@@ -1,11 +1,11 @@
 #pragma once
 #include "../../core/interfaces/ISpatialNormalizationCLI.h"
 
-namespace RefactorPipeline::SpatialNormalization::Standard {
+namespace Pipeline::SpatialNormalization::Standard {
 
 SpatialNormalizationCLIPtr createCLI();
 
-} // namespace RefactorPipeline::SpatialNormalization::Standard
+} // namespace Pipeline::SpatialNormalization::Standard
 
 
 

@@ -10,7 +10,7 @@
 #include <iostream>
 #include <stdexcept>
 
-namespace RefactorPipeline::Metrics::Centaur {
+namespace Pipeline::Metrics::Centaur {
 
 namespace {
 
@@ -18,7 +18,7 @@ void configureDebugOutputBasePath(CenTauRCLIOptions& options) {
     if (!options.enableDebugOutput || options.outputPath.empty()) {
         return;
     }
-    options.debugOutputBasePath = refactorCommon::path::deriveDebugBasePath(options.outputPath);
+    options.debugOutputBasePath = Common::path::deriveDebugBasePath(options.outputPath);
 }
 
 class CenTauRLogic : public IMetricLogic {
@@ -66,7 +66,7 @@ ProcessingRequest buildProcessingRequest(const CenTauRCLIOptions& options,
 
 void logMetricResults(const ProcessingResponse& response, bool includeSUVr) {
     if (response.metricResults.empty()) {
-        std::cout << "[refactor-centaur] No metric results returned." << std::endl;
+        std::cout << "[centaur] No metric results returned." << std::endl;
         return;
     }
     std::cout << "\n=== Refactor CenTauR Results ===" << std::endl;
@@ -84,24 +84,24 @@ void logMetricResults(const ProcessingResponse& response, bool includeSUVr) {
 int runSingle(const CenTauRCLIOptions& options,
               const std::string& fullCommand,
               PipelineApplication& app) {
-    refactorCommon::fs::ensureParentDirectory(options.outputPath);
+    Common::fs::ensureParentDirectory(options.outputPath);
     std::string debugBase =
-        options.enableDebugOutput ? refactorCommon::path::deriveDebugBasePath(options.outputPath) : std::string{};
+        options.enableDebugOutput ? Common::path::deriveDebugBasePath(options.outputPath) : std::string{};
     ProcessingRequest request = buildProcessingRequest(
         options, options.inputPath, options.outputPath, debugBase);
 
-    std::cout << "[refactor-centaur] Starting processing: " << fullCommand << std::endl;
+    std::cout << "[centaur] Starting processing: " << fullCommand << std::endl;
     try {
         auto response = app.run(request);
-        std::cout << "\n[refactor-centaur] Spatial normalization complete. Normalized image saved to "
+        std::cout << "\n[centaur] Spatial normalization complete. Normalized image saved to "
                   << options.outputPath << std::endl;
         logMetricResults(response, options.includeSUVr);
     } catch (const std::exception& ex) {
-        std::cerr << "[refactor-centaur] Pipeline failed: " << ex.what() << std::endl;
+        std::cerr << "[centaur] Pipeline failed: " << ex.what() << std::endl;
         return EXIT_FAILURE;
     }
 
-    std::cout << "[refactor-centaur] Processing completed successfully." << std::endl;
+    std::cout << "[centaur] Processing completed successfully." << std::endl;
     return EXIT_SUCCESS;
 }
 
@@ -112,33 +112,33 @@ int runBatch(const CenTauRCLIOptions& options,
     const std::filesystem::path outputDir(options.outputPath);
 
     if (!std::filesystem::exists(inputDir) || !std::filesystem::is_directory(inputDir)) {
-        std::cerr << "[refactor-centaur] Input directory does not exist: " << options.inputPath << std::endl;
+        std::cerr << "[centaur] Input directory does not exist: " << options.inputPath << std::endl;
         return EXIT_FAILURE;
     }
-    if (!refactorCommon::fs::ensureDirectory(outputDir)) {
-        std::cerr << "[refactor-centaur] Output path must be a directory: " << options.outputPath << std::endl;
+    if (!Common::fs::ensureDirectory(outputDir)) {
+        std::cerr << "[centaur] Output path must be a directory: " << options.outputPath << std::endl;
         return EXIT_FAILURE;
     }
-    if (!options.skipRegistration && !refactorCommon::fs::isDirectoryEmpty(outputDir)) {
-        std::cerr << "[refactor-centaur] Output directory must be empty unless --skip-normalization is set." << std::endl;
+    if (!options.skipRegistration && !Common::fs::isDirectoryEmpty(outputDir)) {
+        std::cerr << "[centaur] Output directory must be empty unless --skip-normalization is set." << std::endl;
         return EXIT_FAILURE;
     }
 
-    auto files = refactorCommon::fs::collectNiftiFiles(inputDir);
+    auto files = Common::fs::collectNiftiFiles(inputDir);
     if (files.empty()) {
-        std::cout << "[refactor-centaur] No NIfTI files found in " << inputDir << std::endl;
+        std::cout << "[centaur] No NIfTI files found in " << inputDir << std::endl;
         return EXIT_SUCCESS;
     }
 
-    std::cout << "[refactor-centaur] Starting batch processing of " << files.size()
+    std::cout << "[centaur] Starting batch processing of " << files.size()
               << " files: " << fullCommand << std::endl;
 
     BatchProcessingRequest batchRequest;
     batchRequest.items.reserve(files.size());
     for (const auto& path : files) {
-        std::string outputPath = refactorCommon::fs::buildOutputPath(path, outputDir, "_centaur_refactor.nii");
+        std::string outputPath = Common::fs::buildOutputPath(path, outputDir, "_centaur_refactor.nii");
         std::string debugBase =
-            options.enableDebugOutput ? refactorCommon::path::deriveDebugBasePath(outputPath) : std::string{};
+            options.enableDebugOutput ? Common::path::deriveDebugBasePath(outputPath) : std::string{};
         ProcessingRequest request = buildProcessingRequest(
             options, path.string(), outputPath, debugBase);
         BatchProcessingItem item;
@@ -152,21 +152,21 @@ int runBatch(const CenTauRCLIOptions& options,
     auto csvCtx = BatchLogging::openCsv(outputDir);
 
     auto onSuccess = [&](const BatchProcessingItem& item, const ProcessingResponse& response) {
-        std::cout << "[refactor-centaur][batch] Processed " << item.label << std::endl;
+        std::cout << "[centaur][batch] Processed " << item.label << std::endl;
         logMetricResults(response, options.includeSUVr);
         BatchLogging::appendSuccessEntry(batchInfo, item.label);
         BatchLogging::appendCsvRows(csvCtx, item.label, response.metricResults);
     };
 
     auto onError = [&](const BatchProcessingItem& item, const std::exception& ex) {
-        std::cerr << "[refactor-centaur][batch] Failed " << item.label << ": " << ex.what() << std::endl;
+        std::cerr << "[centaur][batch] Failed " << item.label << ": " << ex.what() << std::endl;
         BatchLogging::appendFailureEntry(batchInfo, item.label, ex.what());
     };
 
     auto summary = app.runBatch(batchRequest, onSuccess, onError);
     BatchLogging::finalizeBatchInfo(batchInfo, summary);
 
-    std::cout << "[refactor-centaur] Batch complete. Success: "
+    std::cout << "[centaur] Batch complete. Success: "
               << summary.succeeded << ", Failed: " << summary.failed << std::endl;
 
     return summary.failed == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -190,7 +190,7 @@ int runCommand(const CenTauRCLIOptions& options, const std::string& fullCommand)
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = optionsCopy.configPath;
     bootstrapOptions.enableConfigDebug = optionsCopy.enableDebugOutput;
-    bootstrapOptions.logTag = "refactor-centaur";
+    bootstrapOptions.logTag = "centaur";
     auto container = buildDefaultContainer(bootstrapOptions);
     auto app = resolveApplication(*container);
 
@@ -201,6 +201,6 @@ int runCommand(const CenTauRCLIOptions& options, const std::string& fullCommand)
     return runSingle(optionsCopy, fullCommand, *app);
 }
 
-} // namespace RefactorPipeline::Metrics::Centaur
+} // namespace Pipeline::Metrics::Centaur
 
 

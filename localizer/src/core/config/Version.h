@@ -1,5 +1,5 @@
 #pragma once
 #include <string>
 
-const std::string SOFTWARE_VERSION = "3.4.0";
+const std::string SOFTWARE_VERSION = "4.0.0";
 

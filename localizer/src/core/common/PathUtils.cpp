@@ -17,7 +17,7 @@
 #include <unistd.h>
 #endif
 
-namespace refactorCommon::path {
+namespace Common::path {
 
 namespace {
 
@@ -87,6 +87,6 @@ std::string deriveDebugBasePath(const std::string& outputPath) {
     return directory + "/" + baseName;
 }
 
-}  // namespace refactorCommon::path
+}  // namespace Common::path
 
 

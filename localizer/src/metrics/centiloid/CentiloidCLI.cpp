@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-namespace RefactorPipeline::Metrics::Centiloid {
+namespace Pipeline::Metrics::Centiloid {
 
 namespace {
 
@@ -55,11 +55,11 @@ void addSUVrDerivedArguments(argparse::ArgumentParser& parser) {
 class CentiloidCLI : public IMetricCLI {
 public:
     std::string getSubcommandName() const override {
-        return "refactor-centiloid";
+        return "centiloid";
     }
 
     std::string getDescription() const override {
-        return "Prototype Centiloid pipeline built with service/DI refactor";
+        return "Centiloid quantification pipeline powered by the service/DI stack";
     }
 
     void configureArguments(argparse::ArgumentParser& parser) override {
@@ -87,4 +87,4 @@ MetricCLIPtr createCLI() {
     return std::make_shared<CentiloidCLI>();
 }
 
-} // namespace RefactorPipeline::Metrics::Centiloid
+} // namespace Pipeline::Metrics::Centiloid
