@@ -3,10 +3,9 @@
 #include "../../core/common/ProcessingContracts.h"
 #include "../../core/di/Bootstrap.h"
 #include "CentiloidCalculator.h"
-#include "../../config/Configuration.h"
 #include "../../core/common/BatchLogging.h"
-#include "../../config/Version.h"
-#include "../../interfaces/IConfiguration.h"
+#include "../../core/config/Version.h"
+#include "../../core/interfaces/IConfiguration.h"
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -44,20 +43,6 @@ public:
 private:
     ConfigurationPtr config_;
 };
-
-ConfigurationPtr loadConfiguration(const std::string& configPath, bool debug) {
-    auto configuration = std::make_shared<Configuration>();
-    std::string resolvedPath = configPath.empty() ? "config.toml" : Configuration::findConfigFile(configPath);
-    if (!configuration->loadFromFile(resolvedPath)) {
-        std::cerr << "[refactor-centiloid] Failed to load configuration from " << resolvedPath << std::endl;
-    } else {
-        std::cout << "[refactor-centiloid] Loaded configuration from " << resolvedPath << std::endl;
-        if (debug) {
-            configuration->printAllConfigurations();
-        }
-    }
-    return configuration;
-}
 
 ProcessingRequest buildProcessingRequest(const CentiloidCLIOptions& options,
                                          const std::string& inputPath,
@@ -104,7 +89,6 @@ int runSingle(const CentiloidCLIOptions& options,
         options.enableDebugOutput ? refactorCommon::path::deriveDebugBasePath(options.outputPath) : std::string{};
     ProcessingRequest request = buildProcessingRequest(
         options, options.inputPath, options.outputPath, debugBase);
-
     std::cout << "[refactor-centiloid] Starting processing: " << fullCommand << std::endl;
     try {
         auto response = app.run(request);
@@ -202,12 +186,11 @@ int runCommand(const CentiloidCLIOptions& options, const std::string& fullComman
     CentiloidCLIOptions optionsCopy = options;
     configureDebugOutputBasePath(optionsCopy);
 
-    auto config = loadConfiguration(optionsCopy.configPath, optionsCopy.enableDebugOutput);
-    if (!config) {
-        return EXIT_FAILURE;
-    }
-
-    auto container = buildDefaultContainer(config);
+    BootstrapOptions bootstrapOptions;
+    bootstrapOptions.configPath = optionsCopy.configPath;
+    bootstrapOptions.enableConfigDebug = optionsCopy.enableDebugOutput;
+    bootstrapOptions.logTag = "refactor-centiloid";
+    auto container = buildDefaultContainer(bootstrapOptions);
     auto app = resolveApplication(*container);
 
     if (optionsCopy.batchMode) {

@@ -5,14 +5,17 @@
 #include "../services/MetricModuleRegistry.h"
 #include "../services/FileService.h"
 #include "../../metrics/ModuleCatalog.h"
-#include <stdexcept>
+#include "../config/ConfigLoader.h"
 
 namespace RefactorPipeline {
 
-std::shared_ptr<ServiceContainer> buildDefaultContainer(ConfigurationPtr config) {
-    if (!config) {
-        throw std::invalid_argument("buildDefaultContainer requires a valid configuration");
-    }
+std::shared_ptr<ServiceContainer> buildDefaultContainer(const BootstrapOptions& options) {
+    ConfigurationLoadOptions loadOptions;
+    loadOptions.configPath = options.configPath;
+    loadOptions.enableDebugOutput = options.enableConfigDebug;
+    loadOptions.logTag = options.logTag;
+
+    auto config = loadConfigurationWithLogging(loadOptions);
 
     auto container = std::make_shared<ServiceContainer>();
     container->registerSingleton<IConfiguration>([config](auto&) { return config; });

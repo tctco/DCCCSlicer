@@ -17,6 +17,8 @@ private:
     std::shared_ptr<LegacyNormalizerProvider> provider_;
 
     ImageType::Pointer loadInput(const std::string& inputPath) const;
+    ImageType::Pointer prepareAdniPetCoreImage(ImageType::Pointer rigidImage,
+                                               ImageType::Pointer normalizedImage) const;
 };
 
 } // namespace RefactorPipeline

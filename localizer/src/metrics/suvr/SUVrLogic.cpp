@@ -2,8 +2,7 @@
 #include "../../core/interfaces/IMetricModuleRegistry.h"
 #include "../../core/common/ProcessingContracts.h"
 #include "../../core/di/Bootstrap.h"
-#include "../../config/Configuration.h"
-#include "../../interfaces/IConfiguration.h"
+#include "../../core/interfaces/IConfiguration.h"
 #include "SUVrCalculator.h"
 #include <filesystem>
 #include <iostream>
@@ -75,20 +74,6 @@ private:
     ConfigurationPtr config_;
 };
 
-ConfigurationPtr loadConfiguration(const std::string& configPath, bool debug) {
-    auto configuration = std::make_shared<Configuration>();
-    std::string resolvedPath = configPath.empty() ? "config.toml" : Configuration::findConfigFile(configPath);
-    if (!configuration->loadFromFile(resolvedPath)) {
-        std::cerr << "[refactor-suvr] Failed to load configuration from " << resolvedPath << std::endl;
-    } else {
-        std::cout << "[refactor-suvr] Loaded configuration from " << resolvedPath << std::endl;
-        if (debug) {
-            configuration->printAllConfigurations();
-        }
-    }
-    return configuration;
-}
-
 void ensureOutputDirectoryExists(const std::string& outputPath) {
     auto directory = std::filesystem::path(outputPath).parent_path();
     if (!directory.empty() && !std::filesystem::exists(directory)) {
@@ -121,14 +106,13 @@ int runCommand(const SUVrCLIOptions& options, const std::string& fullCommand) {
     SUVrCLIOptions optionsCopy = options;
     configureDebugOutputBasePath(optionsCopy);
 
-    auto config = loadConfiguration(optionsCopy.configPath, optionsCopy.enableDebugOutput);
-    if (!config) {
-        return EXIT_FAILURE;
-    }
-
     ensureOutputDirectoryExists(optionsCopy.outputPath);
 
-    auto container = buildDefaultContainer(config);
+    BootstrapOptions bootstrapOptions;
+    bootstrapOptions.configPath = optionsCopy.configPath;
+    bootstrapOptions.enableConfigDebug = optionsCopy.enableDebugOutput;
+    bootstrapOptions.logTag = "refactor-suvr";
+    auto container = buildDefaultContainer(bootstrapOptions);
 
     ProcessingRequest request;
     request.outputPath = optionsCopy.outputPath;

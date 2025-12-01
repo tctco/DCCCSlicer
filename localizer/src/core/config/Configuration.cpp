@@ -1,5 +1,5 @@
 ﻿#include "Configuration.h"
-#include "../utils/common.h"
+#include "../../utils/common.h"
 #include <algorithm>
 #include <filesystem>
 #include <fstream>

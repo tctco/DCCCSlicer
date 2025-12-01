@@ -24,8 +24,8 @@ find_package(rapidcsv CONFIG REQUIRED)
 
 # Configure version header
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/config/Version.h.in
-    ${CMAKE_CURRENT_SOURCE_DIR}/config/Version.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/config/Version.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/config/Version.h
     @ONLY
 )
 
@@ -34,16 +34,18 @@ add_executable(CentiloidCalculator main.cpp)
 
 # Add interface headers
 target_sources(CentiloidCalculator PRIVATE
-    interfaces/ISpatialNormalizer.h
-    interfaces/IMetricCalculator.h
-    interfaces/IConfiguration.h
+    core/interfaces/ISpatialNormalizer.h
+    core/interfaces/IMetricCalculator.h
+    core/interfaces/IConfiguration.h
 )
 
 # Add configuration management
 target_sources(CentiloidCalculator PRIVATE
-    config/Configuration.h
-    config/Configuration.cpp
-    config/Version.h
+    core/config/Configuration.h
+    core/config/Configuration.cpp
+    core/config/ConfigLoader.h
+    core/config/ConfigLoader.cpp
+    core/config/Version.h
 )
 
 # Add spatial normalizers
@@ -86,6 +88,8 @@ target_sources(CentiloidCalculator PRIVATE
     utils/common.cpp
     cli/Options.h
     cli/Options.cpp
+    cli/CommandHelpers.h
+    cli/CommandHelpers.cpp
     cli/Commands.h
     cli/Commands.cpp
     core/common/Common.h
@@ -105,6 +109,7 @@ target_sources(CentiloidCalculator PRIVATE
     core/interfaces/IMetricLogic.h
     core/interfaces/IMetricModuleRegistry.h
     core/interfaces/IMetricCLI.h
+    core/interfaces/ISpatialNormalizationCLI.h
     core/di/ServiceContainer.h
     core/providers/LegacyNormalizerProvider.h
     core/providers/LegacyNormalizerProvider.cpp
@@ -159,14 +164,18 @@ target_sources(CentiloidCalculator PRIVATE
     metrics/adad/ADADLogic.cpp
     metrics/adad/ADADCLI.h
     metrics/adad/ADADCLI.cpp
+    metrics/adad/Decoupler.h
+    metrics/adad/Decoupler.cpp
     metrics/ModuleCatalog.h
     metrics/ModuleCatalog.cpp
-)
-
-# Add decoupler sources
-target_sources(CentiloidCalculator PRIVATE
-    decouplers/Decoupler.h
-    decouplers/Decoupler.cpp
+    spatialNormalizations/ModuleCatalog.h
+    spatialNormalizations/ModuleCatalog.cpp
+    spatialNormalizations/NullMetric.h
+    spatialNormalizations/NullMetric.cpp
+    spatialNormalizations/standard/NormalizeCLI.h
+    spatialNormalizations/standard/NormalizeCLI.cpp
+    spatialNormalizations/adni/AdniPetCoreCLI.h
+    spatialNormalizations/adni/AdniPetCoreCLI.cpp
 )
 
 # Link libraries

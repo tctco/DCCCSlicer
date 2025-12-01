@@ -1,6 +1,6 @@
 #pragma once
-#include "../../interfaces/IMetricCalculator.h"
-#include "../../interfaces/IConfiguration.h"
+#include "../../core/interfaces/IMetricCalculator.h"
+#include "../../core/interfaces/IConfiguration.h"
 
 /**
  * @brief CenTauRz metric calculator (z-score based formula)

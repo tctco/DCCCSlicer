@@ -1,7 +1,8 @@
 ﻿#include "cli/Commands.h"
 #include "cli/Options.h"
-#include "config/Version.h"
+#include "core/config/Version.h"
 #include "metrics/ModuleCatalog.h"
+#include "spatialNormalizations/ModuleCatalog.h"
 #include <iostream>
 #include <itkNiftiImageIOFactory.h>
 #include <memory>
@@ -61,19 +62,6 @@ int main(int argc, char* argv[]) {
             .default_value(false)
             .implicit_value(true);
         
-        // Normalize subcommand
-        argparse::ArgumentParser normalize_cmd("normalize");
-        normalize_cmd.add_description("Perform spatial normalization on PET images");
-        addBaseArguments(normalize_cmd);
-        addSpatialNormalizationArguments(normalize_cmd);
-        normalize_cmd.add_argument("--method")
-            .help("Normalization method")
-            .default_value("rigid_voxelmorph");
-        normalize_cmd.add_argument("--ADNI-PET-core")
-            .help("Enable ADNI PET core style processing")
-            .default_value(false)
-            .implicit_value(true);
-        
         // Decouple subcommand
         argparse::ArgumentParser decouple_cmd("decouple");
         decouple_cmd.add_description("Decouple PET images to extract AD-related components");
@@ -109,8 +97,21 @@ int main(int argc, char* argv[]) {
         program.add_subparser(centaurz_cmd);
         program.add_subparser(fillstates_cmd);
         program.add_subparser(suvr_cmd);
-        program.add_subparser(normalize_cmd);
         program.add_subparser(decouple_cmd);
+        
+        auto spatialModules = RefactorPipeline::SpatialNormalization::buildCLIModules();
+        std::vector<std::unique_ptr<argparse::ArgumentParser>> spatialModuleParsers;
+        std::vector<std::string> spatialModuleNames;
+        spatialModuleParsers.reserve(spatialModules.size());
+        spatialModuleNames.reserve(spatialModules.size());
+        for (const auto& module : spatialModules) {
+            auto parser = std::make_unique<argparse::ArgumentParser>(module->getSubcommandName());
+            parser->add_description(module->getDescription());
+            module->configureArguments(*parser);
+            program.add_subparser(*parser);
+            spatialModuleNames.push_back(module->getSubcommandName());
+            spatialModuleParsers.push_back(std::move(parser));
+        }
         
         program.parse_args(argc, argv);
         
@@ -125,20 +126,25 @@ int main(int argc, char* argv[]) {
             return executeFillStatesCommand(fillstates_cmd, fullCommand);
         } else if (program.is_subcommand_used("suvr")) {
             return executeSUVrCommand(suvr_cmd, fullCommand);
-        } else if (program.is_subcommand_used("normalize")) {
-            return executeNormalizeCommand(normalize_cmd);
         } else if (program.is_subcommand_used("decouple")) {
             return executeDecoupleCommand(decouple_cmd);
-        } else {
-            for (size_t i = 0; i < refactorModules.size(); ++i) {
-                if (program.is_subcommand_used(refactorModuleNames[i])) {
-                    return refactorModules[i]->execute(*refactorModuleParsers[i], fullCommand);
-                }
-            }
-            std::cerr << "No subcommand specified. Use --help for usage information." << std::endl;
-            std::cerr << program;
-            return EXIT_FAILURE;
         }
+        
+        for (size_t i = 0; i < spatialModules.size(); ++i) {
+            if (program.is_subcommand_used(spatialModuleNames[i])) {
+                return spatialModules[i]->execute(*spatialModuleParsers[i], fullCommand);
+            }
+        }
+        
+        for (size_t i = 0; i < refactorModules.size(); ++i) {
+            if (program.is_subcommand_used(refactorModuleNames[i])) {
+                return refactorModules[i]->execute(*refactorModuleParsers[i], fullCommand);
+            }
+        }
+        
+        std::cerr << "No subcommand specified. Use --help for usage information." << std::endl;
+        std::cerr << program;
+        return EXIT_FAILURE;
         
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

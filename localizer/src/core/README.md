@@ -7,14 +7,15 @@ The `localizer/src/refactor` tree experiments with rebuilding the PET localizati
 - `application/` – thin `PipelineApplication` façade that orchestrates services based on a `ProcessingRequest`.
 - `common/` – request/response contracts (`ProcessingContracts.h`) shared by services and CLIs.
 - `di/` – lightweight `ServiceContainer` plus `Bootstrap` helpers that wire the graph together.
-- `interfaces/` – abstraction layer for CLI modules (`IMetricCLI`), metric logic (`IMetricLogic`), and the runtime registry (`IMetricModuleRegistry`).
+- `config/` – configuration contracts and the TOML-backed `Configuration`/`Version` pair reused by both legacy and refactor paths.
+- `interfaces/` – abstraction layer for CLI modules (`IMetricCLI`), metric logic (`IMetricLogic`), the runtime registry (`IMetricModuleRegistry`), and shared configuration/normalizer contracts.
 - `metrics/` – CLI/logic pairs for each metric family and a `ModuleCatalog` that enumerates available modules. Currently includes `suvr`, `centiloid`, `centaurz`, `fillstates`, and `adad`.
 - `providers/` – adapters that bridge into legacy factories (e.g., `LegacyNormalizerProvider` wraps `SpatialNormalizerFactory` to supply a rigid VoxelMorph normalizer).
 - `services/` – concrete runtime services such as spatial normalization, metric execution, file persistence, and the metric registry façade that exposes them through clean interfaces.
 
 ## Processing flow
 1. **CLI parsing (`IMetricCLI`)** – Each metric-specific CLI (e.g., `SUVrCLI`) now owns its argument definitions, registers any metric modules it needs, and translates CLI arguments into metric-scoped option structs before invoking the pipeline.
-2. **Container bootstrap (`buildDefaultContainer`)** – The CLI loads a `Configuration` (still from the legacy path), calls `buildDefaultContainer`, and receives a `ServiceContainer` populated with singletons: configuration, `LegacyNormalizerProvider`, `SpatialNormalizationService`, `MetricModuleRegistry`, `MetricService`, `FileService`, and `PipelineApplication`.
+2. **Container bootstrap (`buildDefaultContainer`)** – The CLI provides the requested config path + debug flags to `buildDefaultContainer`. Bootstrap invokes `core/config/ConfigLoader`, logs the load results once, and receives a `ServiceContainer` populated with singletons: configuration, `LegacyNormalizerProvider`, `SpatialNormalizationService`, `MetricModuleRegistry`, `MetricService`, `FileService`, and `PipelineApplication`.
 3. **Metric registration (`registerAllMetricModules`)** – `Bootstrap` invokes `Metrics::registerAllMetricModules` immediately after wiring services, so every known `IMetricLogic` (`SUVrLogic`, `CentiloidLogic`, …) is registered with `IMetricModuleRegistry` once per container.
 4. **Application execution (`PipelineApplication::run`)** – The CLI constructs a `ProcessingRequest`, then calls into `PipelineApplication`, which orchestrates normalization, optional persistence, and metric evaluation using the injected services. Responses contain the normalization outputs plus any metric results, which the CLI formats for stdout.
 

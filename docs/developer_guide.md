@@ -96,8 +96,8 @@ graph TD
 Key components:
 
 - **Interfaces** (`interfaces/`): contracts for calculators (`IMetricCalculator`), spatial normalizers (`ISpatialNormalizer`), and configuration (`IConfiguration`).
-- **Calculators** (`calculators/`): implementations of specific metrics (e.g., `Centiloid`, `CenTauR`, `CenTauRz`, `SUVr`, `FillStates`).
-- **Factories** (`factories/`): `MetricCalculatorFactory` and `SpatialNormalizerFactory` manage construction and registration of calculators/normalizers.
+- **Metric modules** (`metrics/<metric>/`): each metric owns its calculator, CLI, and logic alongside supporting helpers. Examples: `metrics/centiloid`, `metrics/centaur`, `metrics/centaurz`, `metrics/fillstates`, `metrics/suvr`, `metrics/adad`.
+- **Factories** (`factories/`): `MetricCalculatorFactory` and `SpatialNormalizerFactory` manage construction and registration of calculators and normalizers.
 - **Pipeline** (`pipeline/`): `ProcessingPipeline` orchestrates I/O, spatial normalization, metric calculation, and decoupling.
 - **Decoupling** (`decouplers/`): deep‑learning–based AD‑related pathology extraction.
 - **Utilities** (`utils/common.*`): ITK image I/O, resampling, mean computation, path helpers, etc.
@@ -108,7 +108,7 @@ Key components:
 
 New metrics in DCCCSlicer typically follow a standard pattern:
 
-1. Define a new `IMetricCalculator` implementation under `localizer/src/calculators/`.
+1. Define a new `IMetricCalculator` implementation under `localizer/src/metrics/<metric>/` (keep calculator/logic/CLI together).
 2. Register it in `MetricCalculatorFactory`.
 3. Add configuration entries (masks, tracer parameters, etc.) in `assets/configs/config.toml`.
 4. Add optional command‑line support (new subcommand) via `cli/Options` and `cli/Commands`.
@@ -121,10 +121,10 @@ Below is a generic step‑by‑step template you can follow.
 Create a new calculator class deriving from `IMetricCalculator`:
 
 ```cpp
-// localizer/src/calculators/MyNewMetricCalculator.h
+// localizer/src/metrics/my_metric/MyNewMetricCalculator.h
 #pragma once
-#include "../interfaces/IMetricCalculator.h"
-#include "../interfaces/IConfiguration.h"
+#include "../../interfaces/IMetricCalculator.h"
+#include "../../interfaces/IConfiguration.h"
 
 class MyNewMetricCalculator : public IMarkerCalculator {
 public:
@@ -155,10 +155,10 @@ In the implementation, you typically:
 - Compute your metric per tracer and populate `MetricResult`.
 
 ```cpp
-// localizer/src/calculators/MyNewMetricCalculator.cpp
+// localizer/src/metrics/my_metric/MyNewMetricCalculator.cpp
 #include "MyNewMetricCalculator.h"
-#include "SUVrCalculator.h"
-#include "../utils/common.h"
+#include "../suvr/SUVrCalculator.h"
+#include "../../utils/common.h"
 
 MyNewMetricCalculator::MyNewMetricCalculator(ConfigurationPtr config)
     : config_(config) {}
@@ -222,7 +222,7 @@ enum class CalculatorType {
 
 ```cpp
 // localizer/src/factories/MetricCalculatorFactory.cpp
-#include "../calculators/MyNewMetricCalculator.h"
+#include "../metrics/my_metric/MyNewMetricCalculator.h"
 
 MetricCalculatorPtr MetricCalculatorFactory::create(CalculatorType type, ConfigurationPtr config) {
     switch (type) {
@@ -579,23 +579,23 @@ This approach ensures your new metric is:
 - Accessible via a clear CLI interface.
 - Covered by automated tests for regression protection.
 
-### 2.6. Prototype: Dependency-injected Pipeline (`localizer/src/refactor`)
+### 2.6. Prototype: Dependency-injected Pipeline (`localizer/src/core` + `localizer/src/metrics`)
 
-To reduce cross-cutting edits when introducing new metrics, a prototype refactor now coexists under `localizer/src/refactor/`. It follows a NestJS-inspired layering:
+To reduce cross-cutting edits when introducing new metrics, the dependency-injected pipeline now lives in `localizer/src/core/` (shared plumbing) and `localizer/src/metrics/` (metric plug-ins). The layered layout remains NestJS-inspired:
 
-- **CLI Controller (`refactor/cli/`)** – e.g., `SUVrCommand` parses CLI arguments and delegates to the application layer.
-- **Application (`refactor/application/PipelineApplication.*`)** – orchestrates *SpatialNormalizationService → MetricService → FileService*.
-- **Services (`refactor/services/`)** – cohesive units handling normalization, metric calculations, and persistence.
-- **Providers (`refactor/providers/`)** – adapters to legacy components (e.g., `LegacyNormalizerProvider` reuses `RigidVoxelMorphNormalizer`).
-- **DI Container (`refactor/di/ServiceContainer.h`)** – lightweight dependency injection that wires services together at runtime.
+- **CLI controllers (`metrics/<metric>/*CLI.*`)** – e.g., `metrics/suvr/SUVrCLI.cpp` parses arguments and delegates to the application layer.
+- **Application (`core/application/PipelineApplication.*`)** – orchestrates *SpatialNormalizationService → MetricService → FileService*.
+- **Services (`core/services/`)** – cohesive units handling normalization, metric calculations, and persistence.
+- **Providers (`core/providers/`)** – adapters to legacy components (e.g., `LegacyNormalizerProvider` reuses `RigidVoxelMorphNormalizer`).
+- **DI Container (`core/di/ServiceContainer.h`)** – lightweight dependency injection that wires services together at runtime.
 
 Key additions for plugin-style expansion:
 
-- **Metric module contracts** – `refactor/interfaces/IMetricModule*.h` define how calculators self-describe (`getName`, `calculate`), while `IMetricCliModule` describes the CLI/controller surface (subcommand name, argument wiring, execution, service registration).
+- **Metric module contracts** – `core/interfaces/IMetricModule*.h` define how calculators self-describe (`getName`, `calculate`), while `IMetricCliModule` describes the CLI/controller surface (subcommand name, argument wiring, execution, service registration).
 - **Registry** – `MetricModuleRegistry` keeps a map of modules and is injected into `MetricService`, so the service simply delegates to the module selected by CLI options.
-- **Metric catalog** – `refactor/metrics/ModuleCatalog.*` builds the list of available CLI modules so `main.cpp` can loop through them to add subcommands dynamically.
-- **Metric folders** – Each metric lives in `refactor/metrics/<metric>/`, containing `*Cli.*` (UI/controller code) and `*Logic.*` (metric registration + processing flow). CLI files only parse/validate arguments, while logic files create containers, register metric calculators, and run the pipeline.
+- **Metric catalog** – `metrics/ModuleCatalog.*` builds the list of available CLI modules so `main.cpp` can loop through them to add subcommands dynamically.
+- **Metric folders** – Each metric lives in `metrics/<metric>/`, containing `*CLI.*` (UI/controller code) and `*Logic.*` (metric registration + processing flow). CLI files only parse/validate arguments, while logic files create containers, register metric calculators, and run the pipeline.
 
-The first end-to-end flows (`refactor-suvr`, `refactor-centiloid` CLI subcommands) demonstrate how new metrics plug in by adding a self-contained module folder plus a CLI entry point, leaving the shared service and application layers untouched.
+The first end-to-end flows (`refactor-suvr`, `refactor-centiloid`, `refactor-centaur` CLI subcommands) continue to demonstrate how new metrics plug in by adding a self-contained module folder plus a CLI entry point, leaving the shared service and application layers untouched.
 
 

@@ -4,8 +4,7 @@
 #include "../../core/common/ProcessingContracts.h"
 #include "../../core/di/Bootstrap.h"
 #include "CenTauRzCalculator.h"
-#include "../../config/Configuration.h"
-#include "../../interfaces/IConfiguration.h"
+#include "../../core/interfaces/IConfiguration.h"
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -51,20 +50,6 @@ private:
     ConfigurationPtr config_;
 };
 
-ConfigurationPtr loadConfiguration(const std::string& configPath, bool debug) {
-    auto configuration = std::make_shared<Configuration>();
-    std::string resolvedPath = configPath.empty() ? "config.toml" : Configuration::findConfigFile(configPath);
-    if (!configuration->loadFromFile(resolvedPath)) {
-        std::cerr << "[refactor-centaurz] Failed to load configuration from " << resolvedPath << std::endl;
-    } else {
-        std::cout << "[refactor-centaurz] Loaded configuration from " << resolvedPath << std::endl;
-        if (debug) {
-            configuration->printAllConfigurations();
-        }
-    }
-    return configuration;
-}
-
 void ensureOutputDirectoryExists(const std::string& outputPath) {
     auto directory = std::filesystem::path(outputPath).parent_path();
     if (!directory.empty() && !std::filesystem::exists(directory)) {
@@ -92,14 +77,14 @@ int runCommand(const CentaurzCLIOptions& options, const std::string& fullCommand
     CentaurzCLIOptions optionsCopy = options;
     configureDebugOutputBasePath(optionsCopy);
 
-    auto config = loadConfiguration(optionsCopy.configPath, optionsCopy.enableDebugOutput);
-    if (!config) {
-        return EXIT_FAILURE;
-    }
-
     ensureOutputDirectoryExists(optionsCopy.outputPath);
 
-    auto container = buildDefaultContainer(config);
+    BootstrapOptions bootstrapOptions;
+    bootstrapOptions.configPath = optionsCopy.configPath;
+    bootstrapOptions.enableConfigDebug = optionsCopy.enableDebugOutput;
+    bootstrapOptions.logTag = "refactor-centaurz";
+
+    auto container = buildDefaultContainer(bootstrapOptions);
 
     ProcessingRequest request;
     request.outputPath = optionsCopy.outputPath;

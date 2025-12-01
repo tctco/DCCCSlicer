@@ -1,5 +1,5 @@
 ﻿#include "Decoupler.h"
-#include "../utils/onnx_path_utils.h"
+#include "../../utils/onnx_path_utils.h"
 
 void DecoupledResult::SaveResults(const std::string& fpath) {
   Common::SaveImage(strippedImage,

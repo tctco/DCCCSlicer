@@ -98,10 +98,11 @@ Perform spatial standardization without metric calculation:
 ./CentiloidCalculator normalize --input pet.nii --output normalized.nii
 
 # ADNI-style processing
-./CentiloidCalculator normalize --input pet.nii --output normalized.nii --ADNI-PET-core
+./CentiloidCalculator adni-pet-core --input pet.nii --output normalized.nii
 
 # Iterative rigid registration
 ./CentiloidCalculator normalize --input pet.nii --output normalized.nii --iterative
+./CentiloidCalculator adni-pet-core --input pet.nii --output normalized.nii --iterative
 ```
 
 #### Decoupling Analysis

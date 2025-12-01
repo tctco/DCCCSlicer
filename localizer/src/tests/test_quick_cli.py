@@ -139,14 +139,13 @@ TEST_CASES: List[Dict[str, Any]] = [
         "expected_failure": False,
     },
     {
-        "id": "normalize_adni_style",
+        "id": "adni_pet_core",
         "args": [
-            "normalize",
+            "adni-pet-core",
             "--input",
             "{input}",
             "--output",
             "{output}",
-            "--ADNI-PET-core",
         ],
         "expected_failure": False,
     },

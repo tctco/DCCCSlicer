@@ -1,8 +1,8 @@
 #pragma once
-#include "../interfaces/ISpatialNormalizer.h"
-#include "../interfaces/IMetricCalculator.h"
-#include "../interfaces/IConfiguration.h"
-#include "../decouplers/Decoupler.h"
+#include "../core/interfaces/ISpatialNormalizer.h"
+#include "../core/interfaces/IMetricCalculator.h"
+#include "../core/interfaces/IConfiguration.h"
+#include "../metrics/adad/Decoupler.h"
 #include <vector>
 
 /**

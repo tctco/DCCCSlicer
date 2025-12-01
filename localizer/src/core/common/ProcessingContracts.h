@@ -2,7 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "../../interfaces/IMetricCalculator.h"
+#include "../interfaces/IMetricCalculator.h"
 #include "Common.h"
 
 using ImageType = refactorCommon::ImageType;
@@ -14,6 +14,7 @@ struct SpatialNormalizationOptions {
     bool useManualFOV = false;
     bool enableDebugOutput = false;
     std::string debugOutputBasePath;
+    bool enableAdniPetCore = false;
     int maxIterations = 5;
     float convergenceThreshold = 2.0f;
 };
@@ -52,6 +53,8 @@ struct ProcessingRequest {
     bool computeMetrics = true;
     MetricComputationOptions metricOptions;
 };
+
+inline constexpr const char* kOutputPathHintKey = "__pipeline_output_path";
 
 struct ProcessingResponse {
     SpatialNormalizationOutput normalizationOutput;

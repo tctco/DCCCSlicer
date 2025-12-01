@@ -8,6 +8,5 @@ int executeCenTauRCommand(const argparse::ArgumentParser& parser, const std::str
 int executeCenTauRzCommand(const argparse::ArgumentParser& parser, const std::string& fullCommand);
 int executeFillStatesCommand(const argparse::ArgumentParser& parser, const std::string& fullCommand);
 int executeSUVrCommand(const argparse::ArgumentParser& parser, const std::string& fullCommand);
-int executeNormalizeCommand(const argparse::ArgumentParser& parser);
 int executeDecoupleCommand(const argparse::ArgumentParser& parser);
 

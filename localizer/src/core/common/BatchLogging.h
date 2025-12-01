@@ -1,6 +1,6 @@
 #pragma once
 #include "./ProcessingContracts.h"
-#include "../../interfaces/IMetricCalculator.h"
+#include "../interfaces/IMetricCalculator.h"
 #include <filesystem>
 #include <fstream>
 #include <string>

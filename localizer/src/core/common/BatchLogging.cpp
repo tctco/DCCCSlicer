@@ -1,6 +1,6 @@
 #include "BatchLogging.h"
 #include "../common/ProcessingContracts.h"
-#include "../../config/Version.h"
+#include "../config/Version.h"
 #include <chrono>
 #include <iomanip>
 #include <set>

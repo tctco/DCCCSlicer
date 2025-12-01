@@ -1,6 +1,6 @@
 #pragma once
 #include "../../core/interfaces/IMetricLogic.h"
-#include "../../interfaces/IConfiguration.h"
+#include "../../core/interfaces/IConfiguration.h"
 #include "../../core/di/ServiceContainer.h"
 #include <string>
 

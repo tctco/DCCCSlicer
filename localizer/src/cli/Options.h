@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <argparse/argparse.hpp>
-#include "../config/Version.h"
+#include "../core/config/Version.h"
 
 /**
  * @brief Command-specific option structures

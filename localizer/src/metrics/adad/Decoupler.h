@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <map>
 
-#include "../utils/common.h"
+#include "../../utils/common.h"
 #include "onnxruntime_cxx_api.h"
 
 class DecoupledResult {

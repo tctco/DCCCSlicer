@@ -1,30 +1,13 @@
 #include "Commands.h"
 #include "Options.h"
-#include "../config/Configuration.h"
-#include "../config/Version.h"
+#include "CommandHelpers.h"
+#include "../core/config/Configuration.h"
+#include "../core/config/Version.h"
 #include "../pipeline/ProcessingPipeline.h"
 #include "../pipeline/BatchProcessor.h"
 #include "../metrics/suvr/SUVrCalculator.h"
 #include "../utils/common.h"
 #include <iostream>
-
-// Helper to load config
-std::shared_ptr<Configuration> loadConfigurationWithLogging(const std::string& configPath, bool debugMode = false) {
-    auto config = std::make_shared<Configuration>();
-    std::string actualConfigPath = configPath.empty() ? "config.toml" : Configuration::findConfigFile(configPath);
-    
-    bool loadSuccess = config->loadFromFile(actualConfigPath);
-    std::cout << "Loading configuration from: " << actualConfigPath;
-    
-    loadSuccess ? std::cout << " [SUCCESS]" << std::endl : 
-                  std::cout << " [FAILED] - using default configuration" << std::endl;
-    
-    if (debugMode) {
-        config->printAllConfigurations();
-    }
-    
-    return config;
-}
 
 SUVrDerivedMetricOptions parseSUVrDerivedMetricOptions(const argparse::ArgumentParser& program, const std::string& metricType) {
     SUVrDerivedMetricOptions options;
@@ -253,41 +236,6 @@ int executeSUVrCommand(const argparse::ArgumentParser& parser, const std::string
     std::cout << "VOI Mask: " << options.voiMaskPath << std::endl;
     std::cout << "Reference Mask: " << options.refMaskPath << std::endl;
     std::cout << "SUVr: " << suvr << std::endl;
-    std::cout << "Processing completed successfully!" << std::endl;
-    
-    return EXIT_SUCCESS;
-}
-
-int executeNormalizeCommand(const argparse::ArgumentParser& parser) {
-    NormalizeCommandOptions options;
-    options.inputPath = parser.get<std::string>("--input");
-    options.outputPath = parser.get<std::string>("--output");
-    options.configPath = parser.get<std::string>("--config");
-    options.normalizationMethod = parser.get<std::string>("--method");
-    options.useIterativeRigid = parser.get<bool>("--iterative");
-    options.useManualFOV = parser.get<bool>("--manual-fov");
-    options.enableADNIStyle = parser.get<bool>("--ADNI-PET-core");
-    options.enableDebugOutput = parser.get<bool>("--debug");
-    
-    setupDebugOutput(options);
-    
-    auto config = loadConfigurationWithLogging(options.configPath, options.enableDebugOutput);
-    
-    ProcessingOptions procOptions;
-    procOptions.skipRegistration = false;
-    procOptions.useIterativeRigid = options.useIterativeRigid;
-    procOptions.useManualFOV = options.useManualFOV;
-    procOptions.enableADNIStyle = options.enableADNIStyle;
-    procOptions.enableDebugOutput = options.enableDebugOutput;
-    procOptions.debugOutputBasePath = options.debugOutputBasePath;
-    procOptions.selectedMetric = "";
-    
-    ProcessingPipeline pipeline(config);
-    std::cout << "Starting spatial normalization: " << options.inputPath << std::endl;
-    ProcessingResult result = pipeline.process(options.inputPath, options.outputPath, procOptions);
-    
-    std::cout << "\n=== Normalization Complete ===" << std::endl;
-    std::cout << "Output image: " << options.outputPath << std::endl;
     std::cout << "Processing completed successfully!" << std::endl;
     
     return EXIT_SUCCESS;

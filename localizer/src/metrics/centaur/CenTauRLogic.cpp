@@ -3,9 +3,8 @@
 #include "../../core/common/ProcessingContracts.h"
 #include "../../core/common/BatchLogging.h"
 #include "../../core/di/Bootstrap.h"
-#include "../../config/Configuration.h"
-#include "../../config/Version.h"
-#include "../../interfaces/IConfiguration.h"
+#include "../../core/config/Version.h"
+#include "../../core/interfaces/IConfiguration.h"
 #include "CenTauRCalculator.h"
 #include <filesystem>
 #include <iostream>
@@ -44,20 +43,6 @@ public:
 private:
     ConfigurationPtr config_;
 };
-
-ConfigurationPtr loadConfiguration(const std::string& configPath, bool debug) {
-    auto configuration = std::make_shared<Configuration>();
-    std::string resolvedPath = configPath.empty() ? "config.toml" : Configuration::findConfigFile(configPath);
-    if (!configuration->loadFromFile(resolvedPath)) {
-        std::cerr << "[refactor-centaur] Failed to load configuration from " << resolvedPath << std::endl;
-    } else {
-        std::cout << "[refactor-centaur] Loaded configuration from " << resolvedPath << std::endl;
-        if (debug) {
-            configuration->printAllConfigurations();
-        }
-    }
-    return configuration;
-}
 
 ProcessingRequest buildProcessingRequest(const CenTauRCLIOptions& options,
                                          const std::string& inputPath,
@@ -202,12 +187,11 @@ int runCommand(const CenTauRCLIOptions& options, const std::string& fullCommand)
     CenTauRCLIOptions optionsCopy = options;
     configureDebugOutputBasePath(optionsCopy);
 
-    auto config = loadConfiguration(optionsCopy.configPath, optionsCopy.enableDebugOutput);
-    if (!config) {
-        return EXIT_FAILURE;
-    }
-
-    auto container = buildDefaultContainer(config);
+    BootstrapOptions bootstrapOptions;
+    bootstrapOptions.configPath = optionsCopy.configPath;
+    bootstrapOptions.enableConfigDebug = optionsCopy.enableDebugOutput;
+    bootstrapOptions.logTag = "refactor-centaur";
+    auto container = buildDefaultContainer(bootstrapOptions);
     auto app = resolveApplication(*container);
 
     if (optionsCopy.batchMode) {
