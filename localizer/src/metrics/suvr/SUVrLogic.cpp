@@ -4,7 +4,9 @@
 #include "../../core/di/Bootstrap.h"
 #include "../../core/interfaces/IConfiguration.h"
 #include "SUVrCalculator.h"
+#include "../shared/BatchMetricExecutor.h"
 #include "../shared/DebugPathHelpers.h"
+#include <filesystem>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -15,6 +17,8 @@ namespace {
 
 constexpr const char* kVoiMaskParam = "voi_mask_path";
 constexpr const char* kRefMaskParam = "ref_mask_path";
+
+using MetricHooks = Pipeline::Metrics::Shared::MetricExecutionHooks<SUVrCLIOptions>;
 
 class SUVrLogic : public IMetricLogic {
 public:
@@ -60,6 +64,87 @@ private:
     ConfigurationPtr config_;
 };
 
+ProcessingRequest buildProcessingRequest(const SUVrCLIOptions& options,
+                                         const std::string& inputPath,
+                                         const std::string& outputPath,
+                                         const std::string& debugBasePath) {
+    ProcessingRequest request;
+    request.outputPath = outputPath;
+    request.persistNormalizedImage = true;
+    request.computeMetrics = true;
+    request.metricOptions.metricName = "suvr";
+
+    if (!options.voiMaskPath.empty()) {
+        request.metricOptions.stringParameters[kVoiMaskParam] = options.voiMaskPath;
+    }
+    if (!options.refMaskPath.empty()) {
+        request.metricOptions.stringParameters[kRefMaskParam] = options.refMaskPath;
+    }
+
+    request.normalization.inputPath = inputPath;
+    request.normalization.skip = options.skipRegistration;
+    request.normalization.options.useIterativeRigid = options.useIterativeRigid;
+    request.normalization.options.useManualFOV = options.useManualFOV;
+    request.normalization.options.enableDebugOutput = options.enableDebugOutput;
+    request.normalization.options.debugOutputBasePath =
+        options.enableDebugOutput ? debugBasePath : std::string{};
+    return request;
+}
+
+void logMetricResults(const ProcessingResponse& response) {
+    if (response.metricResults.empty()) {
+        std::cout << "[suvr] Metric calculation skipped or returned no results." << std::endl;
+        return;
+    }
+
+    std::cout << "\n=== Refactor SUVr Metrics ===" << std::endl;
+    for (const auto& metric : response.metricResults) {
+        std::cout << metric.metricName << ": " << metric.suvr << std::endl;
+    }
+}
+
+MetricHooks createExecutionHooks() {
+    MetricHooks hooks;
+    hooks.logTag = "suvr";
+    hooks.batchOutputSuffix = "_suvr.nii";
+    hooks.buildRequest = [](const SUVrCLIOptions& options,
+                            const std::string& inputPath,
+                            const std::string& outputPath,
+                            const std::string& debugBasePath) {
+        return buildProcessingRequest(options, inputPath, outputPath, debugBasePath);
+    };
+    auto singleResolver = [](const SUVrCLIOptions& options, const std::string& outputPath) {
+        return options.enableDebugOutput ? Common::path::deriveDebugBasePath(outputPath) : std::string{};
+    };
+    hooks.resolveSingleDebug = singleResolver;
+    hooks.resolveBatchDebug = singleResolver;
+    hooks.logResults = [](const SUVrCLIOptions&, const ProcessingResponse& response) {
+        logMetricResults(response);
+    };
+    return hooks;
+}
+
+int runSingle(const SUVrCLIOptions& options,
+              const std::string& fullCommand,
+              PipelineApplication& app) {
+    Common::path::requireOutputDirectoryExists(options.outputPath);
+    return Pipeline::Metrics::Shared::runSingleMetric(
+        options, fullCommand, app, createExecutionHooks());
+}
+
+int runBatch(const SUVrCLIOptions& options,
+             const std::string& fullCommand,
+             PipelineApplication& app) {
+    const std::filesystem::path outputDir(options.outputPath);
+    if (!std::filesystem::exists(outputDir) || !std::filesystem::is_directory(outputDir)) {
+        std::cerr << "[suvr] Output path must be an existing directory: "
+                  << options.outputPath << std::endl;
+        return EXIT_FAILURE;
+    }
+    return Pipeline::Metrics::Shared::runBatchMetric(
+        options, fullCommand, app, createExecutionHooks());
+}
+
 } // namespace
 
 void registerMetric(ServiceContainer& container) {
@@ -72,11 +157,6 @@ void registerMetric(ServiceContainer& container) {
 }
 
 int runCommand(const SUVrCLIOptions& options, const std::string& fullCommand) {
-    if (options.batchMode) {
-        std::cerr << "[suvr] Batch mode is not supported in the prototype refactor path yet." << std::endl;
-        return EXIT_FAILURE;
-    }
-
     if (options.voiMaskPath.empty() || options.refMaskPath.empty()) {
         std::cerr << "[suvr] Both --voi-mask and --ref-mask must be provided for the prototype." << std::endl;
         return EXIT_FAILURE;
@@ -85,55 +165,18 @@ int runCommand(const SUVrCLIOptions& options, const std::string& fullCommand) {
     SUVrCLIOptions optionsCopy = options;
     Pipeline::Metrics::Shared::configureDerivedDebugBasePath(optionsCopy);
 
-    Common::path::requireOutputDirectoryExists(optionsCopy.outputPath);
-
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = optionsCopy.configPath;
     bootstrapOptions.enableConfigDebug = optionsCopy.enableDebugOutput;
     bootstrapOptions.logTag = "suvr";
     auto container = buildDefaultContainer(bootstrapOptions);
-
-    ProcessingRequest request;
-    request.outputPath = optionsCopy.outputPath;
-    request.persistNormalizedImage = true;
-    request.computeMetrics = true;
-    request.metricOptions.metricName = "suvr";
-    if (!optionsCopy.voiMaskPath.empty()) {
-        request.metricOptions.stringParameters[kVoiMaskParam] = optionsCopy.voiMaskPath;
-    }
-    if (!optionsCopy.refMaskPath.empty()) {
-        request.metricOptions.stringParameters[kRefMaskParam] = optionsCopy.refMaskPath;
-    }
-
-    request.normalization.inputPath = optionsCopy.inputPath;
-    request.normalization.skip = optionsCopy.skipRegistration;
-    request.normalization.options.useIterativeRigid = optionsCopy.useIterativeRigid;
-    request.normalization.options.useManualFOV = optionsCopy.useManualFOV;
-    request.normalization.options.enableDebugOutput = optionsCopy.enableDebugOutput;
-    request.normalization.options.debugOutputBasePath = optionsCopy.debugOutputBasePath;
-
-    std::cout << "[suvr] Starting processing: " << fullCommand << std::endl;
     auto app = resolveApplication(*container);
 
-    try {
-        auto response = app->run(request);
-        std::cout << "\n[suvr] Spatial normalization complete. Normalized image saved to "
-                  << optionsCopy.outputPath << std::endl;
-        if (!response.metricResults.empty()) {
-            std::cout << "\n=== Refactor SUVr Metrics ===" << std::endl;
-            for (const auto& metric : response.metricResults) {
-                std::cout << metric.metricName << ": " << metric.suvr << std::endl;
-            }
-        } else {
-            std::cout << "[suvr] Metric calculation skipped or returned no results." << std::endl;
-        }
-    } catch (const std::exception& ex) {
-        std::cerr << "[suvr] Pipeline failed: " << ex.what() << std::endl;
-        return EXIT_FAILURE;
+    if (optionsCopy.batchMode) {
+        return runBatch(optionsCopy, fullCommand, *app);
     }
 
-    std::cout << "[suvr] Processing completed successfully." << std::endl;
-    return EXIT_SUCCESS;
+    return runSingle(optionsCopy, fullCommand, *app);
 }
 
 } // namespace Pipeline::Metrics::SUVr
