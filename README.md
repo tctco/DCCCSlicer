@@ -9,7 +9,7 @@ An open-source, super-simple, ultra-fast, fully-automated, fairly-accurate and P
 
 Abeta, tau, FDG, DAT, MET, synaptic density... you name it!
 
-> DCCCSlicer is currently only available on Windows. To use it on other platforms, you may need to recompile it from the [source](https://github.com/tctco/Beyond-Centiloid-code).
+To use DCCCSlicer, you need to download from our [Release Page](https://github.com/tctco/DCCCSlicer/releases).
 
 Use DCCC to calculate Centiloid and CenTauRz.
 
