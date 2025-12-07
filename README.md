@@ -1,5 +1,7 @@
 # DCCCSlicer
 
+📢📢📢To use DCCCSlicer, you need to download from our [Release Page](https://github.com/tctco/DCCCSlicer/releases).
+
 <p align="center">
 <img src="./DCCCSlicer.png" style="width:20%" alt="logo">
 </p>
@@ -7,9 +9,7 @@
 
 An open-source, super-simple, ultra-fast, fully-automated, fairly-accurate and PET-only solution to conduct spatial normalization and semi-quantification for almost any brain PET modalities.
 
-Abeta, tau, FDG, DAT, MET, synaptic density... you name it!
-
-To use DCCCSlicer, you need to download from our [Release Page](https://github.com/tctco/DCCCSlicer/releases).
+> Abeta, tau, FDG, DAT, MET, synaptic density... you name it!
 
 Use DCCC to calculate Centiloid and CenTauRz.
 
