@@ -37,7 +37,7 @@ It’s always a good idea to manually verify that DCCC has performed spatial nor
 Relative SUV (ratio) error and time consumption on the Centiloid/CenTauRz projects.
 
 $$
-\Delta \mathrm{SUV} \ \\% = \frac{|\mathrm{SUV_{GT} - \mathrm{SUV_{Method}}|}}{\mathrm{SUV_{GT}}}\times 100\\%
+\Delta \mathrm{SUVr} \ \\% = \frac{|\mathrm{SUVr_{GT} - \mathrm{SUVr_{Method}}|}}{\mathrm{SUVr_{GT}}}\times 100\\%
 $$
 
 | **Methods**         | **PiB (%)**          | **AV45 (%)**         | **FBB (%)**          | **FMM (%)**          | **NAV4694 (%)**      | **FTP (%)**          | **Time (s)**         |
