@@ -9,6 +9,7 @@ localizer/Normalized*.nii
 localizer/tmp.nii
 localizer/ref.nii
 localizer/roi.nii
+localizer/templates/fetch_template.ipynb
 tracked_files.txt
 *archive*
 

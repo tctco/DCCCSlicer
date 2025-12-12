@@ -50,6 +50,27 @@ class TestFillStatesCLI:
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
     
+    def test_fillstates_skip_normalization(self, run_subprocess, tmp_path, test_files):
+        """
+        Ensure skipping normalization still produces every artifact for a valid tracer.
+        """
+        output_path = tmp_path / "output_fillstates_skip.nii"
+        args = [
+            "fillstates",
+            "--input",
+            str(test_files["input"]),
+            "--output",
+            str(output_path),
+            "--tracer",
+            "fbp",
+            "--skip-normalization",
+        ]
+        result = run_subprocess(args)
+        assert result.returncode == 0, (
+            "fillstates command failed with --skip-normalization.\n"
+            f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+        )
+    
     @pytest.mark.parametrize("tracer", ['fbp'])
     def test_fillstates_cli_unsupported_configuration(self, run_subprocess, tmp_path, test_files, tracer):
         """
