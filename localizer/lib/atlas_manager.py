@@ -20,7 +20,8 @@ class AtlasManager:
     # Available atlas configurations
     AVAILABLE_ATLASES = {
         "AAL.seg.nrrd": "AAL.seg.nrrd",
-        "BN_Atlas_246_2mm.seg.nrrd": "BN_Atlas_246_2mm.seg.nrrd"
+        "BN_Atlas_246_2mm.seg.nrrd": "BN_Atlas_246_2mm.seg.nrrd",
+        "Tian_Subcortex_S4_7T.seg.nrrd": "Tian_Subcortex_S4_7T.seg.nrrd"
     }
 
     def __init__(self, plugin_path):
