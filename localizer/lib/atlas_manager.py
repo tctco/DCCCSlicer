@@ -17,13 +17,6 @@ from lib.ui_components import MarkupManager
 class AtlasManager:
     """Atlas管理器类，用于处理脑Atlas相关的功能"""
 
-    # Available atlas configurations
-    AVAILABLE_ATLASES = {
-        "AAL.seg.nrrd": "AAL.seg.nrrd",
-        "BN_Atlas_246_2mm.seg.nrrd": "BN_Atlas_246_2mm.seg.nrrd",
-        "Tian_Subcortex_S4_7T.seg.nrrd": "Tian_Subcortex_S4_7T.seg.nrrd"
-    }
-
     def __init__(self, plugin_path):
         """初始化Atlas管理器
 
@@ -32,11 +25,32 @@ class AtlasManager:
         """
         self.plugin_path = Path(plugin_path)
         self.templates_path = self.plugin_path / "templates"
+        self.available_atlases = self._discover_atlases()
         self.current_atlas_name = None
         self.atlas_path = None
         self.atlas_node = None
         self.atlas_node_arr = None
         self.atlas_labels = {}
+
+    def _discover_atlases(self):
+        """Discover atlas files from the templates directory.
+
+        Returns:
+            dict: Mapping of atlas display names to filenames.
+        """
+
+        if not self.templates_path.exists():
+            slicer.util.errorDisplay(
+                f"Templates folder not found: {self.templates_path}"
+            )
+            return {}
+
+        atlases = {}
+        for atlas_file in self.templates_path.glob("*.seg.nrrd"):
+            if atlas_file.is_file():
+                atlases[atlas_file.name] = atlas_file.name
+
+        return atlases
 
     def set_atlas(self, atlas_name):
         """设置当前要使用的Atlas
@@ -47,12 +61,15 @@ class AtlasManager:
         Returns:
             bool: 设置是否成功
         """
-        if atlas_name not in self.AVAILABLE_ATLASES:
+        if atlas_name not in self.available_atlases:
+            self.available_atlases = self._discover_atlases()
+
+        if atlas_name not in self.available_atlases:
             slicer.util.errorDisplay(f"Unknown atlas: {atlas_name}")
             return False
-            
+
         self.current_atlas_name = atlas_name
-        atlas_filename = self.AVAILABLE_ATLASES[atlas_name]
+        atlas_filename = self.available_atlases[atlas_name]
         self.atlas_path = self.templates_path / atlas_filename
         
         # 如果切换Atlas，需要清理之前的数据
@@ -73,7 +90,8 @@ class AtlasManager:
         Returns:
             list: 可用Atlas名称列表
         """
-        return list(self.AVAILABLE_ATLASES.keys())
+        self.available_atlases = self._discover_atlases()
+        return sorted(self.available_atlases.keys())
     
     def get_current_atlas_name(self):
         """获取当前Atlas名称

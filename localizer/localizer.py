@@ -122,6 +122,9 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._setNodes()
         ScriptedLoadableModuleWidget.setup(self)
 
+        # Initialize logic classes early so they are available for UI setup
+        self.atlas_manager = AtlasManager(self.PLUGIN_PATH)
+
         # Load widget from .ui file (created by Qt Designer).
         # Additional widgets can be instantiated manually and added to self.layout.
         uiWidget = slicer.util.loadUI(self.resourcePath("UI/localizer.ui"))
@@ -145,16 +148,8 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         except AttributeError as e:
             print(f"Tracer selector not found in UI: {e}")
 
-        # 设置Atlas选择器，如果存在的话
-        try:
-            if hasattr(self.ui, 'atlasSelector'):
-                available_atlases = self.atlas_manager.get_available_atlases()
-                self.ui.atlasSelector.clear()
-                self.ui.atlasSelector.addItems(available_atlases)
-                print(f"Atlas selector initialized with: {available_atlases}")
-        except AttributeError as e:
-            print(f"Atlas selector not found in UI: {e}")
-            print("Atlas selection will be available via dialog")
+        # Populate Atlas selector from discovered templates
+        self._initialize_atlas_selector()
 
 
         # Create logic classes. Logic implements all computations that should be possible to run
@@ -163,7 +158,6 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.image_alignment = ImageAlignmentLogic()
         self.metric_calculator = MetricCalculatorLogic(self.PLUGIN_PATH)
         self.ai_decoupling = AIDecouplingLogic(self.PLUGIN_PATH)
-        self.atlas_manager = AtlasManager(self.PLUGIN_PATH)
 
         # Connections
 
@@ -216,6 +210,24 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
+
+    def _initialize_atlas_selector(self):
+        """Populate atlas selector from available templates on disk."""
+
+        atlas_selector = getattr(self.ui, "atlasSelector", None)
+        if atlas_selector is None:
+            print("Atlas selector not found in UI. Atlas selection will be available via dialog")
+            return
+
+        available_atlases = self.atlas_manager.get_available_atlases()
+        atlas_selector.blockSignals(True)
+        current_text = atlas_selector.currentText if hasattr(atlas_selector, "currentText") else None
+        atlas_selector.clear()
+        atlas_selector.addItems(available_atlases)
+        if current_text and current_text in available_atlases:
+            atlas_selector.setCurrentText(current_text)
+        atlas_selector.blockSignals(False)
+        print(f"Atlas selector initialized with: {available_atlases}")
 
     def setupReferenceBox(self):
         roiNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsROINode")
@@ -647,7 +659,10 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def onLoadAtlasButton(self) -> None:
         """处理加载Atlas按钮点击事件"""
         print("Loading Atlas...")
-        
+
+        # Refresh available atlases in case new templates were added
+        self._initialize_atlas_selector()
+
         # 获取用户选择的Atlas，如果atlasSelector存在的话
         selected_atlas = None
         try:

@@ -410,16 +410,6 @@
       </item>
       <item row="0" column="0" colspan="2">
        <widget class="QComboBox" name="atlasSelector">
-        <item>
-         <property name="text">
-          <string>AAL.seg.nrrd</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>BN_Atlas_246_2mm.seg.nrrd</string>
-         </property>
-        </item>
        </widget>
       </item>
      </layout>
