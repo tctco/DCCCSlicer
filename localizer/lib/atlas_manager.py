@@ -47,8 +47,13 @@ class AtlasManager:
 
         atlases = {}
         for atlas_file in self.templates_path.glob("*.seg.nrrd"):
-            if atlas_file.is_file():
-                atlases[atlas_file.name] = atlas_file.name
+            if not atlas_file.is_file():
+                continue
+
+            # Use a clean display name without the ".seg" suffix to keep the
+            # selector readable while still mapping back to the filename.
+            display_name = atlas_file.stem.removesuffix(".seg")
+            atlases[display_name] = atlas_file.name
 
         return atlases
 

@@ -224,9 +224,17 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         current_text = atlas_selector.currentText if hasattr(atlas_selector, "currentText") else None
         atlas_selector.clear()
         atlas_selector.addItems(available_atlases)
+        if not current_text and available_atlases:
+            atlas_selector.setCurrentIndex(0)
         if current_text and current_text in available_atlases:
             atlas_selector.setCurrentText(current_text)
         atlas_selector.blockSignals(False)
+
+        # Enable/disable the load button based on whether templates are present
+        load_button = getattr(self.ui, "loadAtlasButton", None)
+        if load_button:
+            load_button.setEnabled(bool(available_atlases))
+
         print(f"Atlas selector initialized with: {available_atlases}")
 
     def setupReferenceBox(self):
@@ -678,7 +686,13 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             # 如果UI组件不存在，使用默认Atlas或显示选择对话框
             available_atlases = self.atlas_manager.get_available_atlases()
             selected_atlas = self._show_atlas_selection_dialog(available_atlases)
-        
+
+        # If no atlas is selected in the UI, default to the first available option
+        if not selected_atlas:
+            available_atlases = self.atlas_manager.get_available_atlases()
+            if available_atlases:
+                selected_atlas = available_atlases[0]
+
         if not selected_atlas:
             slicer.util.warningDisplay("No atlas selected")
             return
