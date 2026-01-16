@@ -27,3 +27,6 @@ localizer/cpp
 .VSCodeCounter/
 .vscode/
 .cache/
+
+# code for generating seg.nrrd atlases
+localizer/templates/*.ipynb
