@@ -7,12 +7,14 @@ import pytest
 TEST_CASES: List[Dict[str, Any]] = [
     {"id": "help_message", "args": ["--help"], "expected_failure": False},
     {"id": "version_information", "args": ["--version"], "expected_failure": False},
+    {"id": "metrics_listing", "args": ["metrics", "--help"], "expected_failure": False},
     {"id": "no_subcommand", "args": [], "expected_failure": True},
     {"id": "refactor_centiloid_help", "args": ["centiloid", "--help"], "expected_failure": False},
     {"id": "refactor_centaur_help", "args": ["centaur", "--help"], "expected_failure": False},
     {"id": "refactor_centaurz_help", "args": ["centaurz", "--help"], "expected_failure": False},
     {"id": "refactor_suvr_help", "args": ["suvr", "--help"], "expected_failure": False},
     {"id": "refactor_fillstates_help", "args": ["fillstates", "--help"], "expected_failure": False},
+    {"id": "refactor_abetaload_help", "args": ["abetaload", "--help"], "expected_failure": False},
     {"id": "normalize_help", "args": ["normalize", "--help"], "expected_failure": False},
     {"id": "adni_pet_core_help", "args": ["adni-pet-core", "--help"], "expected_failure": False},
     {
@@ -43,6 +45,11 @@ TEST_CASES: List[Dict[str, Any]] = [
     {
         "id": "refactor_centaurz_basic",
         "args": ["centaurz", "--input", "{input}", "--output", "{output}"],
+        "expected_failure": False,
+    },
+    {
+        "id": "refactor_abetaload_basic",
+        "args": ["abetaload", "--input", "{input}", "--output", "{output}"],
         "expected_failure": False,
     },
     {

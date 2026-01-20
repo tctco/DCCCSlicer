@@ -117,6 +117,12 @@ target_sources(DCCCcore PRIVATE
     metrics/centiloid/CentiloidCLI.cpp
     metrics/centiloid/CentiloidCalculator.h
     metrics/centiloid/CentiloidCalculator.cpp
+    metrics/abetaload/AbetaLoadLogic.h
+    metrics/abetaload/AbetaLoadLogic.cpp
+    metrics/abetaload/AbetaLoadCLI.h
+    metrics/abetaload/AbetaLoadCLI.cpp
+    metrics/abetaload/AbetaLoadCalculator.h
+    metrics/abetaload/AbetaLoadCalculator.cpp
     metrics/centaur/CenTauRLogic.h
     metrics/centaur/CenTauRLogic.cpp
     metrics/centaur/CenTauRCLI.h
@@ -141,6 +147,8 @@ target_sources(DCCCcore PRIVATE
     metrics/adad/ADADCLI.cpp
     metrics/adad/Decoupler.h
     metrics/adad/Decoupler.cpp
+    metrics/list/MetricsCLI.h
+    metrics/list/MetricsCLI.cpp
     metrics/ModuleCatalog.h
     metrics/ModuleCatalog.cpp
     spatialNormalizations/ModuleCatalog.h

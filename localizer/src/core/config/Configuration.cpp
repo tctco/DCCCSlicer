@@ -27,6 +27,8 @@ void Configuration::initializeDefaults() {
   // 模板路径
   configMap["templates.adni_pet_core"] = "nii/ADNI_empty.nii";
   configMap["templates.padded"] = "nii/paddedTemplate.nii";
+  configMap["templates.abeta_ns"] = "assets/nii/abeta_load/NS_AV45.nii.gz";
+  configMap["templates.abeta_k"] = "assets/nii/abeta_load/K_AV45.nii.gz";
 
   // 掩膜路径
   configMap["masks.cerebral_gray"] = "nii/voi_CerebGry_2mm.nii";

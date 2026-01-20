@@ -24,6 +24,8 @@ tau_decoupler = [
 [templates]
 adni_pet_core = "assets/nii/ADNI_empty.nii"
 padded = "assets/nii/paddedTemplate.nii"
+abeta_ns = "assets/nii/abeta_load/NS_AV45.nii.gz"
+abeta_k = "assets/nii/abeta_load/K_AV45.nii.gz"
 
 # Mask file paths
 [masks]
