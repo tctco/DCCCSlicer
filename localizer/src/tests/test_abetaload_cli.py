@@ -5,6 +5,8 @@ import pytest
 
 SAMPLE_FILES = ["YC03_PET.nii", "ED02_PET.nii"]
 
+# TODO: test on more samples and write a brief reproduction report
+
 
 @pytest.mark.parametrize("filename", SAMPLE_FILES)
 def test_abetaload_cli_on_samples(run_subprocess, tmp_path, test_files, filename):
