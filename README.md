@@ -66,7 +66,11 @@ Metrics:
 - `Centiloid`: Klunk WE, Koeppe RA, Price JC, Benzinger TL, Devous Sr. MD, Jagust WJ, et al. The Centiloid Project: Standardizing quantitative amyloid plaque estimation by PET. Alzheimer’s & Dementia. 2015;11(1):1-15.e4.
 - `CenTauR`: Leuzy A, Raket LL, Villemagne VL, Klein G, Tonietto M, Olafson E, et al. Harmonizing tau positron emission tomography in Alzheimer’s disease: The CenTauR scale and the joint propagation model. Alzheimer’s & Dementia. 2024;20(9):5833–48.
 - `CenTauRz`: Villemagne VL, Leuzy A, Bohorquez SS, Bullich S, Shimada H, Rowe CC, et al. CenTauR: Toward a universal scale and masks for standardizing tau imaging studies. Alzheimer’s & Dementia: Diagnosis, Assessment & Disease Monitoring. 2023;15(3):e12454.
-- `Fill States`: Doering E, Hoenig MC, Giehl K, et al. “Fill States”: PET-derived Markers of the Spatial Extent of Alzheimer Disease Pathology. Radiology. 2025;314(3):e241482. doi:10.1148/radiol.241482
+- `Fill States`: Doering E, Hoenig MC, Giehl K, et al. “Fill States”: PET-derived Markers of the Spatial Extent of Alzheimer Disease Pathology. Radiology. 2025;314(3):e241482. doi:10.1148/radiol.241482    
+- [ ] `Abeta load / AmyloidIQ` (working on 🚧, the following publications used the same algorithm) :
+  - Whittington A, Sharp DJ, Gunn RN. Spatiotemporal Distribution of β-Amyloid in Alzheimer Disease Is the Result of Heterogeneous Regional Carrying Capacities. Journal of Nuclear Medicine. 2018 May 1;59(5):822–7.
+  - Whittington A, Gunn RN. Amyloid Load: A More Sensitive Biomarker for Amyloid Imaging. Journal of Nuclear Medicine. 2019 Apr 1;60(4):536–40. 
+  - Rizzo G, Whittington A, Hesterman J, Gunn RN. AmyloidIQ: An advanced analytical algorithm to quantify amyloid-PET [18F]NAV4694 scans. Alzheimer’s & Dementia. 2020 Dec;16(S4):e043823. 
 - `ADAD`: not published yet
 
 Spatial normalization algorithms:
