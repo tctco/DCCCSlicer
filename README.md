@@ -73,6 +73,9 @@ Metrics:
   - Whittington A, Sharp DJ, Gunn RN. Spatiotemporal Distribution of β-Amyloid in Alzheimer Disease Is the Result of Heterogeneous Regional Carrying Capacities. Journal of Nuclear Medicine. 2018 May 1;59(5):822–7.
   - Whittington A, Gunn RN. Amyloid Load: A More Sensitive Biomarker for Amyloid Imaging. Journal of Nuclear Medicine. 2019 Apr 1;60(4):536–40. 
   - Rizzo G, Whittington A, Hesterman J, Gunn RN. AmyloidIQ: An advanced analytical algorithm to quantify amyloid-PET [18F]NAV4694 scans. Alzheimer’s & Dementia. 2020 Dec;16(S4):e043823. 
+- [ ] `Abeta index` (working on 🚧, the following publications used the same algorithm) :
+  - Lilja J, Leuzy A, Chiotis K, Savitcheva I, Sörensen J, Nordberg A. Spatial normalization of 18F-flutemetamol PET images using an adaptive principal-component template. Journal of Nuclear Medicine. 2019;60(2):285–291.
+  - Leuzy A, Lilja J, Buckley CJ, Ossenkoppele R, Palmqvist S, Battle M, et al. Derivation and utility of an Aβ-PET pathology accumulation index to estimate Aβ load. Neurology. 2020;95(21):e2834–e2844.
 - `ADAD`: not published yet
 
 Spatial normalization algorithms:
@@ -98,7 +101,7 @@ For users who prefer running the core calculator from the command line (includin
   - [x] Added support for Fast and Accurate Amyloid Brain PET Quantification Without MRI Using Deep Neural Networks
 - [ ] Improve the UI.
 
-> Check our reproduction reports on [fill states](./docs/Fill-states.md) and [Abeta load](./docs/Abeta-load.md)!
+> Check our reproduction reports on [fill states](./docs/Fill-states.md), [Abeta load](./docs/Abeta-load.md) and [Abeta index](./docs/Abeta-index.md)!
 
 ## Acknowledgements
 
