@@ -19,6 +19,10 @@ https://github.com/user-attachments/assets/7ba5346a-3214-4a92-80f3-370f4c46f29c
 
 https://github.com/user-attachments/assets/680490d2-ebec-4846-871c-98fdc383b513
 
+## News 🎉🎉🎉
+
+20260208: Our paper entitled _Decoupling Alzheimer’s Disease Pathology in PET with Improved Clinical Relevance via Interpretable Adversarial Decomposition Learning_ has just been accepted by _Radiology_! You can try out the `ADAD` score in our 3DSlicer plugin!
+
 ## Quality control
 
 It’s always a good idea to manually verify that DCCC has performed spatial normalization correctly. After processing, click the `Show Normalization` button to inspect the normalization quality. Poorly normalized images will result in inaccurate semi-quantitative metrics - see this [issue](https://github.com/tctco/DCCCSlicer/issues/1) for details. This is especially important for PET scans containing substantial non-brain anatomy (e.g., neck, shoulders). If automatic spatial normalization proves suboptimal, **roll back to the original image and try one of these** rescue strategies:
