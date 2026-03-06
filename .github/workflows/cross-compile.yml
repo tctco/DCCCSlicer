@@ -243,6 +243,49 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "platform=${platform}" >> "$GITHUB_OUTPUT"
 
+      - name: Assemble standalone core package (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        working-directory: localizer/src
+        run: |
+          set -euo pipefail
+          package_dir="$GITHUB_WORKSPACE/DCCCcore-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}"
+          rm -rf "$package_dir"
+          mkdir -p "$package_dir"
+          cp -a install/bin/. "$package_dir/"
+          cp README.md "$package_dir/README.md"
+          cp "$GITHUB_WORKSPACE/LICENSE.md" "$package_dir/LICENSE.md"
+
+      - name: Assemble standalone core package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        working-directory: localizer/src
+        run: |
+          $packageDir = Join-Path $env:GITHUB_WORKSPACE "DCCCcore-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM"
+
+          if (Test-Path $packageDir) {
+            Remove-Item $packageDir -Recurse -Force
+          }
+
+          New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
+          Copy-Item -Path install/bin/* -Destination $packageDir -Recurse -Force
+          Copy-Item -Path README.md -Destination (Join-Path $packageDir 'README.md') -Force
+          Copy-Item -Path (Join-Path $env:GITHUB_WORKSPACE 'LICENSE.md') -Destination (Join-Path $packageDir 'LICENSE.md') -Force
+
+      - name: Create distributable zip (standalone core)
+        uses: thedoctor0/zip-release@0.7.6
+        with:
+          type: 'zip'
+          filename: DCCCcore-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}.zip
+          path: DCCCcore-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}
+
+      - name: Upload standalone core artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DCCCcore-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}
+          path: DCCCcore-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}.zip
+          if-no-files-found: error
+
       - name: Clean packaging workspace (Linux/macOS)
         if: runner.os != 'Windows'
         shell: bash
@@ -254,6 +297,8 @@ jobs:
             demo \
             ninja-build \
             localizer/src \
+            "DCCCcore-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}" \
+            "DCCCcore-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}.zip" \
             "DCCCSlicer-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}" \
             "DCCCSlicer-${PACKAGE_VERSION}-${PACKAGE_PLATFORM}.zip"
           rm -f .gitmodules
@@ -268,6 +313,8 @@ jobs:
             'demo',
             'ninja-build',
             'localizer\src',
+            "DCCCcore-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM",
+            "DCCCcore-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM.zip",
             "DCCCSlicer-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM",
             "DCCCSlicer-$env:PACKAGE_VERSION-$env:PACKAGE_PLATFORM.zip"
           )
@@ -305,7 +352,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: DCCCSlicer-*
+          pattern: DCCC*
           merge-multiple: true
           path: dist
 
@@ -314,6 +361,7 @@ jobs:
         with:
           files: |
             dist/DCCCSlicer-*.zip
+            dist/DCCCcore-*.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

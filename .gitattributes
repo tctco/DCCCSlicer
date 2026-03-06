@@ -1,3 +1,5 @@
+* text=auto eol=lf
+
 ## Git LFS tracking for large binary assets
 ## NOTE: After modifying this file, run:
 ##   git lfs install

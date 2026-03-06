@@ -90,7 +90,7 @@ Spatial normalization algorithms:
 
 ## Command-line interface
 
-For users who prefer running the core calculator from the command line (including batch processing and advanced options), please refer to the standalone [CLI documentation](./localizer/src/README.md).
+For users who prefer running the core calculator from the command line (including batch processing and advanced options), please refer to the standalone [CLI documentation](./localizer/src/README.md). Release assets now publish the headless package separately as `DCCCcore-<version>-<platform>.zip`, alongside the full `DCCCSlicer` extension package.
 
 ## TODO
 
