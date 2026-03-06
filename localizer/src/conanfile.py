@@ -21,3 +21,7 @@ class AppConan(ConanFile):
         self.requires("eigen/3.4.0")
         # If you decide to *force* a direct one instead (when you also require eigen directly):
         # self.requires("eigen/3.4.0", force=True)
+    
+    def configure(self):
+        # https://github.com/conan-io/conan-center-index/issues/29427?utm_source=chatgpt.com
+        self.options["hwloc"].shared = True
