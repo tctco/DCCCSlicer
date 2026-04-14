@@ -20,3 +20,7 @@ class AppConan(ConanFile):
         self.requires("eigen/3.4.0")
         # If you decide to *force* a direct one instead (when you also require eigen directly):
         # self.requires("eigen/3.4.0", force=True)
+
+    def configure(self):
+        # Avoid the current Conan/onetbb hwloc linkage issue seen on master.
+        self.options["hwloc"].shared = True
