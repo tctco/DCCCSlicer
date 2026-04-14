@@ -1,27 +1,24 @@
 #pragma once
-#include "../../core/interfaces/IMetricCalculator.h"
-#include "../../core/interfaces/IConfiguration.h"
 
-/**
- * @brief CenTauR metric calculator (percentile-based formula)
- */
-class CenTauRCalculator : public IMetricCalculator {
+#include "../../core/common/ImageTypes.h"
+#include "../shared/MetricTypes.h"
+#include <map>
+#include <string>
+#include <vector>
+
+class CenTauRCalculator {
 public:
-    explicit CenTauRCalculator(ConfigurationPtr config);
-    virtual ~CenTauRCalculator() = default;
-    
-    MetricResult calculate(ImageType::Pointer spatialNormalizedImage) override;
-    std::string getName() const override;
-    std::vector<std::string> getSupportedTracers() const override;
-    
-private:
-    ConfigurationPtr config_;
-    
     struct TracerParams {
         float baselineSuvr;
         float maxSuvr;
     };
-    
-    std::map<std::string, TracerParams> getTracerParameters() const;
-};
 
+    struct Input {
+        ImageType::Pointer spatiallyNormalizedImage;
+        std::string voiMaskPath;
+        std::string refMaskPath;
+        std::map<std::string, TracerParams> tracerParameters;
+    };
+
+    Pipeline::Metrics::MetricResult calculate(const Input& input) const;
+};

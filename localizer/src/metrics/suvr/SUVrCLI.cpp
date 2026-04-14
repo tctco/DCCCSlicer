@@ -1,6 +1,7 @@
 #include "SUVrCLI.h"
-#include "../../core/interfaces/IMetricCLI.h"
-#include "SUVrLogic.h"
+
+#include "../../core/di/Bootstrap.h"
+#include "SUVrService.h"
 #include <memory>
 #include <string>
 
@@ -73,7 +74,14 @@ public:
     options.useManualFOV = parser.get<bool>("--manual-fov");
     options.voiMaskPath = parser.get<std::string>("--voi-mask");
     options.refMaskPath = parser.get<std::string>("--ref-mask");
-    return runCommand(options, fullCommand);
+
+    BootstrapOptions bootstrapOptions;
+    bootstrapOptions.configPath = options.configPath;
+    bootstrapOptions.enableConfigDebug = options.enableDebugOutput;
+    bootstrapOptions.logTag = "suvr";
+    auto container = buildCoreContainer(bootstrapOptions);
+    auto service = createService(*container);
+    return service->run(options, fullCommand);
   }
 };
 

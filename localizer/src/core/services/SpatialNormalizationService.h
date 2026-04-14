@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ISpatialNormalizationService.h"
 #include "../interfaces/IConfiguration.h"
 
@@ -19,4 +20,3 @@ private:
 };
 
 } // namespace Pipeline
-

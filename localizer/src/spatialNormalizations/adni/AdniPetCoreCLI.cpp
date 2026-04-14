@@ -1,9 +1,11 @@
 #include "AdniPetCoreCLI.h"
 #include "../CLIOptions.h"
 #include "../../core/common/Filesystem.h"
-#include "../../core/common/ProcessingContracts.h"
+#include "../../core/common/NormalizationContracts.h"
 #include "../../core/di/Bootstrap.h"
-#include "../NullMetric.h"
+#include "../../core/services/IFileService.h"
+#include "../../core/services/ISpatialNormalizationService.h"
+#include <exception>
 #include <iostream>
 
 namespace Pipeline::SpatialNormalization::Adni {
@@ -18,40 +20,38 @@ struct RunConfig {
 int runNormalization(const NormalizeCommandOptions& options,
                      const RunConfig& config,
                      const std::string& fullCommand) {
-    Common::fs::ensureParentDirectory(options.outputPath);
+    if (!Common::fs::ensureParentDirectory(options.outputPath)) {
+        std::cerr << "[" << config.logTag << "] Failed to prepare output directory: "
+                  << options.outputPath << std::endl;
+        return EXIT_FAILURE;
+    }
 
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = options.configPath;
     bootstrapOptions.enableConfigDebug = options.enableDebugOutput;
     bootstrapOptions.logTag = config.logTag;
 
-    auto container = Pipeline::buildDefaultContainer(bootstrapOptions);
-    SpatialNormalization::registerNullMetric(*container);
-
-    ProcessingRequest request;
-    request.outputPath = options.outputPath;
-    request.persistNormalizedImage = true;
-    request.computeMetrics = true;
-    request.metricOptions.metricName = SpatialNormalization::kNullMetricName;
-
-    request.normalization.inputPath = options.inputPath;
-    request.normalization.skip = false;
-    request.normalization.options.useIterativeRigid = options.useIterativeRigid;
-    request.normalization.options.useManualFOV = options.useManualFOV;
-    request.normalization.options.enableDebugOutput = options.enableDebugOutput;
-    request.normalization.options.debugOutputBasePath = options.debugOutputBasePath;
-    request.normalization.options.enableAdniPetCore = config.enableAdniPetCore;
+    auto container = Pipeline::buildCoreContainer(bootstrapOptions);
+    SpatialNormalizationRequest request;
+    request.inputPath = options.inputPath;
+    request.skip = false;
+    request.options.useIterativeRigid = options.useIterativeRigid;
+    request.options.useManualFOV = options.useManualFOV;
+    request.options.enableDebugOutput = options.enableDebugOutput;
+    request.options.debugOutputBasePath = options.debugOutputBasePath;
+    request.options.enableAdniPetCore = config.enableAdniPetCore;
 
     std::cout << "[" << config.logTag << "] Starting processing: " << fullCommand << std::endl;
-    auto app = Pipeline::resolveApplication(*container);
+    auto spatialService = container->resolve<ISpatialNormalizationService>();
+    auto fileService = container->resolve<IFileService>();
 
     try {
-        auto response = app->run(request);
-        (void)response;
+        auto output = spatialService->normalize(request);
+        fileService->saveNormalizedImage({output.spatiallyNormalizedImage, options.outputPath});
         std::cout << "\n[" << config.logTag << "] ADNI PET Core normalization complete. Output saved to "
                   << options.outputPath << std::endl;
     } catch (const std::exception& ex) {
-        std::cerr << "[" << config.logTag << "] Pipeline failed: " << ex.what() << std::endl;
+        std::cerr << "[" << config.logTag << "] Processing failed: " << ex.what() << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -105,4 +105,3 @@ SpatialNormalizationCLIPtr createCLI() {
 }
 
 } // namespace Pipeline::SpatialNormalization::Adni
-

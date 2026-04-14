@@ -1,6 +1,7 @@
 #include "ADADCLI.h"
-#include "../../core/interfaces/IMetricCLI.h"
-#include "ADADLogic.h"
+
+#include "../../core/di/Bootstrap.h"
+#include "ADADService.h"
 #include <memory>
 #include <string>
 
@@ -68,7 +69,14 @@ public:
         options.useIterativeRigid = parser.get<bool>("--iterative");
         options.useManualFOV = parser.get<bool>("--manual-fov");
         options.modality = parser.get<std::string>("--modality");
-        return runCommand(options, fullCommand);
+
+        BootstrapOptions bootstrapOptions;
+        bootstrapOptions.configPath = options.configPath;
+        bootstrapOptions.enableConfigDebug = options.enableDebugOutput;
+        bootstrapOptions.logTag = "adad";
+        auto container = buildCoreContainer(bootstrapOptions);
+        auto service = createService(*container);
+        return service->run(options, fullCommand);
     }
 };
 
@@ -79,4 +87,3 @@ MetricCLIPtr createCLI() {
 }
 
 } // namespace Pipeline::Metrics::ADAD
-

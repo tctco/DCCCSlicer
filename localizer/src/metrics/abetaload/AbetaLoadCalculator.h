@@ -1,18 +1,15 @@
 #pragma once
-#include "../../core/interfaces/IMetricCalculator.h"
-#include "../../core/interfaces/IConfiguration.h"
 
-/**
- * @brief AbetaLoad metric calculator that decomposes PET signal into NS and K components.
- */
-class AbetaLoadCalculator : public IMetricCalculator {
+#include "../../core/common/ImageTypes.h"
+#include "../../core/interfaces/IConfiguration.h"
+#include "../shared/MetricTypes.h"
+
+class AbetaLoadCalculator {
 public:
     explicit AbetaLoadCalculator(ConfigurationPtr config);
-    ~AbetaLoadCalculator() override = default;
+    ~AbetaLoadCalculator() = default;
 
-    MetricResult calculate(ImageType::Pointer spatialNormalizedImage) override;
-    std::string getName() const override;
-    std::vector<std::string> getSupportedTracers() const override;
+    Pipeline::Metrics::MetricResult calculate(ImageType::Pointer spatialNormalizedImage);
 
 private:
     ConfigurationPtr config_;

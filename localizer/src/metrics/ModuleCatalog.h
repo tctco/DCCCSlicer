@@ -1,12 +1,12 @@
 #pragma once
+
+#include <string>
 #include <vector>
-#include "../core/interfaces/IMetricCLI.h"
-#include "../core/di/ServiceContainer.h"
+#include "shared/IMetricCLI.h"
 
 namespace Pipeline::Metrics {
 
 std::vector<MetricCLIPtr> buildCLIModules();
-void registerAllMetricModules(ServiceContainer& container);
+std::vector<std::string> listMetricNames();
 
 } // namespace Pipeline::Metrics
-

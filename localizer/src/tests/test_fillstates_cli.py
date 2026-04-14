@@ -1,7 +1,6 @@
 import pytest
 from pathlib import Path
 
-
 class TestFillStatesCLI:
     """Tests for the fillstates CLI subcommand."""
 
@@ -93,5 +92,3 @@ class TestFillStatesCLI:
             f"fillstates should have failed for tracer={tracer}.\n"
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
-
-

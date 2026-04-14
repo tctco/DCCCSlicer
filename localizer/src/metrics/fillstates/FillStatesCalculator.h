@@ -1,7 +1,8 @@
 #pragma once
-#include "../../core/interfaces/IMetricCalculator.h"
-#include "../../core/interfaces/IConfiguration.h"
+
 #include "../../core/common/ImageTypes.h"
+#include "../../core/interfaces/IConfiguration.h"
+#include "../shared/MetricTypes.h"
 #include <string>
 #include <vector>
 /**
@@ -10,14 +11,12 @@
  * Computes the proportion of suprathreshold voxels within a meta-ROI based on
  * voxel-wise z-score maps derived from tracer-specific mean/std templates.
  */
-class FillStatesCalculator : public IMetricCalculator {
+class FillStatesCalculator {
 public:
     explicit FillStatesCalculator(ConfigurationPtr config);
-    virtual ~FillStatesCalculator() = default;
+    ~FillStatesCalculator() = default;
 
-    MetricResult calculate(ImageType::Pointer spatialNormalizedImage) override;
-    std::string getName() const override;
-    std::vector<std::string> getSupportedTracers() const override;
+    Pipeline::Metrics::MetricResult calculate(ImageType::Pointer spatialNormalizedImage);
 
     /**
      * @brief Set tracer name used for this calculation.
@@ -47,5 +46,4 @@ private:
     TracerResources getTracerResources() const;
     static std::string toLowerCopy(const std::string& v);
 };
-
 

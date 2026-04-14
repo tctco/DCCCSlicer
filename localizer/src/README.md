@@ -8,7 +8,7 @@ The Deep Cascaded Cerebral Calculator Core is a comprehensive C++ toolkit design
 
 ### Key Features
 
-- **Multi-biomarker Support**: Calculates Centiloid (amyloid), CenTauR/CenTauRz (tau), fill-states, and custom SUVr metrics
+- **Multi-biomarker Support**: Calculates Centiloid (amyloid), AbetaIndex/AbetaLoad (amyloid), CenTauR/CenTauRz (tau), fill-states, and custom SUVr metrics
 - **Deep Learning Pipeline**: Utilizes ONNX-based neural networks for spatial normalization
 - **Modular Architecture**: Extensible design with clean interfaces for adding new biomarkers
 - **Multi-tracer Compatibility**: Supports various PET tracers with tracer-specific calibrations
@@ -54,6 +54,16 @@ Calculate standardized tau burden scores:
 
 # CenTauRz z-score scale
 ./DCCCcore centaurz --input tau_pet.nii --output result.nii
+```
+
+#### AbetaIndex Analysis
+Calculate the AV45-only AbetaIndex coefficient using the `mean`, `PC1`, and fixed-`PC2` templates:
+
+```bash
+./DCCCcore abetaindex --input amyloid_pet.nii --output result.nii
+
+# Batch mode
+./DCCCcore abetaindex --input input_dir --output output_dir --batch
 ```
 
 #### Fill-states Analysis
@@ -122,7 +132,7 @@ Run the ADAD decoupling-based metric:
 |--------|-------------|
 | `--config <file>` | Configuration file path (default: config.toml) |
 | `--debug` | Enable debug mode with intermediate outputs |
-| `--batch` | Enable batch processing mode. In batch mode, `--input` and `--output` are treated as directories, all `.nii` / `.nii.gz` files in the input directory are processed, and outputs are written as `<filename>_processed.nii` together with `results.csv` and `batch_info.txt` in the output directory. Currently supported for `centiloid`, `centaur`, `centaurz`, `suvr`, and `adad` commands. When registration is enabled (no `--skip-normalization`), the output directory must be empty to avoid overwriting. |
+| `--batch` | Enable batch processing mode. In batch mode, `--input` and `--output` are treated as directories, all `.nii` / `.nii.gz` files in the input directory are processed, and outputs are written as `<filename>_processed.nii` together with `results.csv` and `batch_info.txt` in the output directory. Currently supported for `centiloid`, `centaur`, `centaurz`, `suvr`, `abetaindex`, and `abetaload` commands. When registration is enabled (no `--skip-normalization`), the output directory must be empty to avoid overwriting. |
 | `--iterative` | Use iterative rigid transformation |
 | `--manual-fov` | Enable manual field-of-view placement |
 | `--skip-normalization` | Skip spatial normalization step |

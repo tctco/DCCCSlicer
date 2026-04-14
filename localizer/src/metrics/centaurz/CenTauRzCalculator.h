@@ -1,26 +1,23 @@
 #pragma once
-#include "../../core/interfaces/IMetricCalculator.h"
-#include "../../core/interfaces/IConfiguration.h"
 
-/**
- * @brief CenTauRz metric calculator (z-score based formula)
- */
-class CenTauRzCalculator : public IMetricCalculator {
+#include "../../core/common/ImageTypes.h"
+#include "../shared/MetricTypes.h"
+#include <map>
+#include <string>
+
+class CenTauRzCalculator {
 public:
-    explicit CenTauRzCalculator(ConfigurationPtr config);
-    virtual ~CenTauRzCalculator() = default;
-    
-    MetricResult calculate(ImageType::Pointer spatialNormalizedImage) override;
-    std::string getName() const override;
-    std::vector<std::string> getSupportedTracers() const override;
-    
-private:
-    ConfigurationPtr config_;
-    
     struct TracerParams {
         float slope;
         float intercept;
     };
-    
-    std::map<std::string, TracerParams> getTracerParameters() const;
+
+    struct Input {
+        ImageType::Pointer spatiallyNormalizedImage;
+        std::string voiMaskPath;
+        std::string refMaskPath;
+        std::map<std::string, TracerParams> tracerParameters;
+    };
+
+    Pipeline::Metrics::MetricResult calculate(const Input& input) const;
 };

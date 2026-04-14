@@ -1,7 +1,8 @@
 #pragma once
+
 #include <memory>
+#include <string>
 #include "ServiceContainer.h"
-#include "../application/PipelineApplication.h"
 
 namespace Pipeline {
 
@@ -11,8 +12,6 @@ struct BootstrapOptions {
     std::string logTag;
 };
 
-std::shared_ptr<ServiceContainer> buildDefaultContainer(const BootstrapOptions& options);
-std::shared_ptr<PipelineApplication> resolveApplication(ServiceContainer& container);
+std::shared_ptr<ServiceContainer> buildCoreContainer(const BootstrapOptions& options);
 
 } // namespace Pipeline
-

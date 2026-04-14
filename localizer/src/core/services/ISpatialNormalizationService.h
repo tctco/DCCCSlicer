@@ -1,5 +1,6 @@
 #pragma once
-#include "../common/ProcessingContracts.h"
+
+#include "../common/NormalizationContracts.h"
 
 namespace Pipeline {
 
@@ -11,4 +12,3 @@ public:
 };
 
 } // namespace Pipeline
-

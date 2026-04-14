@@ -1,4 +1,5 @@
 #pragma once
+
 #include "IFileService.h"
 
 namespace Pipeline {
@@ -12,4 +13,3 @@ public:
 };
 
 } // namespace Pipeline
-

@@ -1,5 +1,7 @@
 # DCCCSlicer
 
+📢📢📢To use DCCCSlicer, download the packaged binaries from our [Release Page](https://github.com/tctco/DCCCSlicer/releases).
+
 <p align="center">
 <img src="./DCCCSlicer.png" style="width:20%" alt="logo">
 </p>
@@ -7,7 +9,7 @@
 
 An open-source, super-simple, ultra-fast, fully-automated, fairly-accurate and PET-only solution to conduct spatial normalization and semi-quantification for almost any brain PET modalities.
 
-Abeta, tau, FDG, DAT, MET, synaptic density... you name it!
+> Abeta, tau, FDG, DAT, MET, synaptic density... you name it!
 
 > DCCCSlicer is currently only available on Windows. To use it on other platforms, you may need to recompile it from the [source](https://github.com/tctco/Beyond-Centiloid-code).
 
@@ -18,6 +20,11 @@ https://github.com/user-attachments/assets/7ba5346a-3214-4a92-80f3-370f4c46f29c
 **Shiny new features** DCCCSlicer can interpret input Abeta and tau PET images now. It not only help determine if a patient may have AD, but also identifies the regions of pathological deposition (you may need to adjust the window/level to get a better illustration).
 
 https://github.com/user-attachments/assets/680490d2-ebec-4846-871c-98fdc383b513
+
+## News 🎉🎉🎉
+
+- 20260208: Our paper entitled _Decoupling Alzheimer’s Disease Pathology in PET with Improved Clinical Relevance via Interpretable Adversarial Decomposition Learning_ was accepted by _Radiology_.
+- 20260408: The paper is now published online by [Radiology](https://pubs.rsna.org/doi/10.1148/radiol.252321).
 
 ## Quality control
 
@@ -34,10 +41,10 @@ It’s always a good idea to manually verify that DCCC has performed spatial nor
 
 ## Metrics
 
-Relative SUV (ratio) error and time consumption on the Centiloid/CenTauRz projects.
+Relative SUVr error and time consumption on the Centiloid/CenTauRz projects.
 
 $$
-\Delta \mathrm{SUV} \ \\% = \frac{|\mathrm{SUV_{GT} - \mathrm{SUV_{Method}}|}}{\mathrm{SUV_{GT}}}\times 100\\%
+\Delta \mathrm{SUVr} \ \\% = \frac{|\mathrm{SUVr_{GT} - \mathrm{SUVr_{Method}}|}}{\mathrm{SUVr_{GT}}}\times 100\\%
 $$
 
 | **Methods**         | **PiB (%)**          | **AV45 (%)**         | **FBB (%)**          | **FMM (%)**          | **NAV4694 (%)**      | **FTP (%)**          | **Time (s)**         |
@@ -67,6 +74,13 @@ Metrics:
 - `CenTauR`: Leuzy A, Raket LL, Villemagne VL, Klein G, Tonietto M, Olafson E, et al. Harmonizing tau positron emission tomography in Alzheimer’s disease: The CenTauR scale and the joint propagation model. Alzheimer’s & Dementia. 2024;20(9):5833–48.
 - `CenTauRz`: Villemagne VL, Leuzy A, Bohorquez SS, Bullich S, Shimada H, Rowe CC, et al. CenTauR: Toward a universal scale and masks for standardizing tau imaging studies. Alzheimer’s & Dementia: Diagnosis, Assessment & Disease Monitoring. 2023;15(3):e12454.
 - `Fill States`: Doering E, Hoenig MC, Giehl K, et al. “Fill States”: PET-derived Markers of the Spatial Extent of Alzheimer Disease Pathology. Radiology. 2025;314(3):e241482. doi:10.1148/radiol.241482
+- `Abeta load / AmyloidIQ`:
+  - Whittington A, Sharp DJ, Gunn RN. Spatiotemporal Distribution of β-Amyloid in Alzheimer Disease Is the Result of Heterogeneous Regional Carrying Capacities. Journal of Nuclear Medicine. 2018 May 1;59(5):822–7.
+  - Whittington A, Gunn RN. Amyloid Load: A More Sensitive Biomarker for Amyloid Imaging. Journal of Nuclear Medicine. 2019 Apr 1;60(4):536–40.
+  - Rizzo G, Whittington A, Hesterman J, Gunn RN. AmyloidIQ: An advanced analytical algorithm to quantify amyloid-PET [18F]NAV4694 scans. Alzheimer’s & Dementia. 2020 Dec;16(S4):e043823.
+- `Abeta index`:
+  - Lilja J, Leuzy A, Chiotis K, Savitcheva I, Sörensen J, Nordberg A. Spatial normalization of 18F-flutemetamol PET images using an adaptive principal-component template. Journal of Nuclear Medicine. 2019;60(2):285–291.
+  - Leuzy A, Lilja J, Buckley CJ, Ossenkoppele R, Palmqvist S, Battle M, et al. Derivation and utility of an Aβ-PET pathology accumulation index to estimate Aβ load. Neurology. 2020;95(21):e2834–e2844.
 - `ADAD`: not published yet
 
 Spatial normalization algorithms:
@@ -81,7 +95,7 @@ Spatial normalization algorithms:
 
 ## Command-line interface
 
-For users who prefer running the core calculator from the command line (including batch processing and advanced options), please refer to the standalone [CLI documentation](./localizer/src/README.md).
+For users who prefer running the core calculator from the command line (including batch processing and advanced options), please refer to the standalone [CLI documentation](./localizer/src/README.md). Release assets also publish the headless package separately as `DCCCcore-<version>-<platform>.zip`, alongside the full `DCCCSlicer` extension package.
 
 ## TODO
 
@@ -92,7 +106,7 @@ For users who prefer running the core calculator from the command line (includin
   - [x] Added support for Fast and Accurate Amyloid Brain PET Quantification Without MRI Using Deep Neural Networks
 - [ ] Improve the UI.
 
-> Check our [reproduction report](./docs/Fill-states.md) on fill states!
+> Check our reproduction reports on [Fill States](./docs/Fill-states.md), [Abeta load](./docs/Abeta-load.md), and [Abeta index](./docs/Abeta-index.md).
 
 ## Acknowledgements
 
@@ -124,6 +138,25 @@ We sincerely thank the passionate and outstanding users and contributors of DCCC
     </tr>
   </tbody>
 </table>
+
+## Citation
+
+If you find this repository helpful for your work, please cite:
+
+```bibtex
+@article{doi:10.1148/radiol.252321,
+  author = {Tang, Cheng and Sun, Xun and Tang, Anqi and Ruan, Weiwei and Liu, Fang and Fang, Hanyi and Gai, Yongkang and Liang, Zhihou and Su, Ying and Wang, Xinggang and Lan, Xiaoli},
+  title = {Decoupling Alzheimer Disease Pathologic Abnormalities at PET with Improved Clinical Relevance by Interpretable Adversarial Decomposition Learning},
+  journal = {Radiology},
+  volume = {319},
+  number = {1},
+  pages = {e252321},
+  year = {2026},
+  doi = {10.1148/radiol.252321},
+  note = {PMID: 41944723},
+  url = {https://doi.org/10.1148/radiol.252321}
+}
+```
 
 ## License
 

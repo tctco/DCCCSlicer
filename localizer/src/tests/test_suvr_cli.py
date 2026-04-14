@@ -38,4 +38,3 @@ class TestSUVRCLI:
             "suvr command should fail when masks are omitted.\n"
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
-

@@ -1,6 +1,7 @@
 #include "FillStatesCalculator.h"
 
 #include "../../core/common/Common.h"
+#include <algorithm>
 #include <filesystem>
 #include <stdexcept>
 #include <cctype>
@@ -57,7 +58,7 @@ FillStatesCalculator::TracerResources FillStatesCalculator::getTracerResources()
     return res;
 }
 
-MetricResult FillStatesCalculator::calculate(ImageType::Pointer spatialNormalizedImage) {
+Pipeline::Metrics::MetricResult FillStatesCalculator::calculate(ImageType::Pointer spatialNormalizedImage) {
     if (!spatialNormalizedImage) {
         throw std::invalid_argument("FillStatesCalculator::calculate received null image.");
     }
@@ -165,7 +166,7 @@ MetricResult FillStatesCalculator::calculate(ImageType::Pointer spatialNormalize
         }
     }
 
-    MetricResult result;
+    Pipeline::Metrics::MetricResult result;
     result.metricName = "FillStates";
     result.suvr = 0.0; // Not defined for fill-states; reserved for future use.
 
@@ -191,13 +192,4 @@ MetricResult FillStatesCalculator::calculate(ImageType::Pointer spatialNormalize
 
     return result;
 }
-
-std::string FillStatesCalculator::getName() const {
-    return "FillStates";
-}
-
-std::vector<std::string> FillStatesCalculator::getSupportedTracers() const {
-    return {"fbp", "fdg", "ftp"};
-}
-
 

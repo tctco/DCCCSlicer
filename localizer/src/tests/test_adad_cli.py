@@ -9,8 +9,6 @@ def _expected_adad_outputs(base: Path):
 def _with_suffix(base: Path, suffix: str) -> Path:
     return base.with_name(f"{base.stem}{suffix}{base.suffix}")
 
-
-
 class TestADADCLI:
     """Targeted coverage for the ADAD pipeline."""
 

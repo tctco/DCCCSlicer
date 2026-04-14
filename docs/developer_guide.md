@@ -1,168 +1,385 @@
-# Developer Guide: Deep Cascaded Cerebral Calculator Core
+# Developer Guide
 
-This guide describes the current `localizer/src` layout, explains how the refactored pipeline wires metrics into the application, and documents the workflow for adding new biomarkers.
+This guide describes the current `localizer/src` architecture after the metric refactor. The main rule is simple:
 
-## Project Layout (`localizer/src`)
+- `core/` provides shared capabilities
+- `metrics/` owns metric workflows
+- `spatialNormalizations/` exposes normalization-only CLIs
 
-- `assets/` - tracer templates, masks, and default TOML configuration consumed by calculators.
-- `core/` - shared runtime infrastructure:
-  - `application/` holds `PipelineApplication`, the orchestrator for normalization, metric computation, and persistence.
-  - `common/` defines cross-cutting helpers plus `ProcessingContracts.h` (requests/responses shared by CLIs and services).
-  - `config/` wraps configuration discovery/loading so both legacy and refactored paths reuse TOML data.
-  - `di/` contains the lightweight `ServiceContainer` and `Bootstrap` helpers responsible for dependency injection.
-  - `interfaces/` enumerates contracts such as `IMetricCLI`, `IMetricLogic`, `IMetricModuleRegistry`, `ISpatialNormalizationCLI`, and configuration adapters.
-  - `services/` implements spatial normalization, metric dispatch, file output, and the runtime metric registry facade.
-  - `normalizers/` relocates the VoxelMorph plus rigid registration engines reused by `SpatialNormalizationService`.
-  - `preprocessing/` exposes reusable ITK image/mask utilities.
-- `metrics/` - self-contained metric plug-ins. Each metric folder (e.g., `suvr`, `centiloid`, `fillstates`, `adad`) bundles its CLI module, metric logic, configuration hooks, and helpers. `metrics/shared/` keeps reusable execution utilities such as `BatchMetricExecutor` and debug-path helpers.
-- `spatialNormalizations/` - CLI surface for running normalization-only workflows (`normalize`, `adni-pet-core`) plus support code such as `NullMetric`, which lets spatial-only commands reuse the pipeline without emitting metric results.
-- `install/`, `build/`, and `tests/` - Conan/CMake helpers, generated build products, and pytest-based CLI regression suites.
+There is no longer a global metric pipeline in `core`.
+
+## Architecture
+
+### `core/`
+
+`core/` is the foundation layer. It should not know how a specific metric works.
+
+Key areas:
+
+- `core/config/`
+  - TOML loading
+  - executable-relative path resolution
+  - default configuration values
+- `core/common/`
+  - NIfTI IO
+  - image operations
+  - filesystem/path helpers
+  - logging helpers
+  - normalization contracts
+- `core/services/`
+  - `SpatialNormalizationService`
+  - `FileService`
+- `core/di/`
+  - `ServiceContainer`
+  - `buildCoreContainer(...)`
+- `core/normalizers/`
+  - rigid + deformable normalization implementation details
+
+`core/` should not contain:
+
+- metric registries for calculation dispatch
+- metric logic abstractions
+- metric-specific workflows
+- metric CLI abstractions
+- a global `PipelineApplication`
+
+### `metrics/`
+
+Each metric is a self-contained module under `localizer/src/metrics/<name>/`.
+
+Current examples:
+
+- `suvr/`
+- `centiloid/`
+- `centaur/`
+- `centaurz/`
+- `fillstates/`
+- `abetaload/`
+- `abetaindex/`
+- `adad/`
+
+Each metric should own its own execution path:
+
+- parse arguments in its CLI
+- build a core container
+- resolve shared services
+- decide whether to normalize
+- call its calculator
+- format outputs
+
+### `metrics/shared/`
+
+This folder is for metric-facing shared utilities that do not belong in `core/`.
+
+Current shared pieces:
+
+- `IMetricCLI.h`
+- `MetricRegistry.*`
+- `MetricTypes.h`
+- `MetricRunResult.h`
+- `SingleRunner.h`
+- `BatchRunner.h`
+- `BatchLogging.*`
+- `DebugPathHelpers.h`
+
+Use `metrics/shared/` for cross-metric helpers. Do not push metric workflow abstractions back into `core/`.
+
+### `spatialNormalizations/`
+
+These commands expose normalization without metric calculation:
+
+- `normalize`
+- `adni-pet-core`
+
+They directly use `ISpatialNormalizationService` and `IFileService`. They do not go through a metric pipeline.
 
 ## Runtime Flow
 
-```mermaid
-graph TD
-    subgraph CLI Layer
-        Main[main.cpp] --> BuildParsers["buildCLIModules()"]
-        BuildParsers -->|Metric subcommand| MetricCLI[Metric CLI Modules]
-        BuildParsers -->|Normalization subcommand| SpatialCLI[Spatial CLI Modules]
-    end
+The executable entrypoint is [main.cpp](../localizer/src/main.cpp).
 
-    subgraph Bootstrap Stage
-        MetricCLI --> BootstrapNode["buildDefaultContainer()"]
-        SpatialCLI --> BootstrapNode
-        BootstrapNode --> ConfigLoader[ConfigLoader]
-        BootstrapNode --> Container[ServiceContainer]
-        Container --> RegisterMetrics["Metrics::registerAllMetricModules()"]
-        RegisterMetrics --> MetricRegistry[MetricModuleRegistry]
-    end
+At startup:
 
-    subgraph Services
-        Container --> SpatialSvc[SpatialNormalizationService]
-        Container --> MetricSvc[MetricService]
-        Container --> FileSvc[FileService]
-    end
+1. `main.cpp` builds metric CLIs from `Pipeline::Metrics::buildCLIModules()`
+2. `main.cpp` builds normalization CLIs from `Pipeline::SpatialNormalization::buildCLIModules()`
+3. the selected subcommand executes its own module
 
-    subgraph Application
-        Container --> PipelineApp[PipelineApplication]
-        PipelineApp --> SpatialSvc
-        PipelineApp --> MetricSvc
-        PipelineApp --> FileSvc
-    end
+For a metric command, the flow is:
 
-    subgraph Execution
-        MetricCLI --> Requests[ProcessingRequest/MetricOptions]
-        SpatialCLI --> Requests
-        Requests --> PipelineApp
-        PipelineApp --> Responses[ProcessingResponse + MetricResult]
-        Responses --> Output[Normalized images, metrics, logs]
-    end
+1. CLI parses arguments into a metric-specific options struct
+2. CLI calls `buildCoreContainer(...)`
+3. metric service resolves:
+   - `IConfiguration`
+   - `ISpatialNormalizationService`
+   - `IFileService`
+4. metric service runs single-file or batch workflow
+5. calculator performs the actual metric computation
+
+In other words:
+
+- `main.cpp` dispatches commands
+- `core` provides capabilities
+- `metric service` owns workflow
+- `metric calculator` owns computation
+
+## Current Module Shape
+
+The preferred metric shape is:
+
+```text
+metrics/<name>/
+  <Name>CLI.h
+  <Name>CLI.cpp
+  <Name>Service.h
+  <Name>Service.cpp
+  <Name>Calculator.h
+  <Name>Calculator.cpp
+  <Name>Module.h
+  <Name>Module.cpp
 ```
 
-### 1. CLI discovery
-`main.cpp` builds the executable's command surface at runtime. It iterates over `Pipeline::Metrics::buildCLIModules()` and `Pipeline::SpatialNormalization::buildCLIModules()`, creating an `argparse::ArgumentParser` per module and delegating execution back to the module that owns the selected subcommand.
+Responsibilities:
 
-### 2. Container bootstrap and service graph
-Each CLI configures `BootstrapOptions` and calls `Pipeline::buildDefaultContainer(...)`:
-1. `ConfigLoader` finds and parses the TOML configuration once.
-2. The `ServiceContainer` lazily registers singletons for `IConfiguration`, `ISpatialNormalizationService`, `IMetricModuleRegistry`, `IMetricService`, `IFileService`, and `PipelineApplication`.
-3. `Metrics::registerAllMetricModules(container)` immediately populates the metric registry so later requests can resolve by name.
+- `CLI`
+  - declares subcommand name
+  - defines CLI arguments
+  - builds options
+  - creates the core container
+  - calls the service
+- `Service`
+  - validates metric-specific runtime requirements
+  - builds normalization requests
+  - chooses single vs batch execution
+  - saves normalized output
+  - prepares calculator inputs from config/assets
+- `Calculator`
+  - pure metric computation
+  - should not parse CLI flags
+  - should not bootstrap services
+- `Module`
+  - registers the CLI with `MetricRegistry`
 
-### 3. Metric registration and dispatch
-- Every metric exposes `registerMetric(ServiceContainer&)`, which resolves the shared `IMetricModuleRegistry` and registers an `IMetricLogic` implementation under a normalized name (for example, `Centiloid::registerMetric` registers `CentiloidLogic`).
-- `MetricModuleRegistry` enforces uniqueness, stores the `IMetricLogic` instances, and resolves them on demand via `run(metricName, request)`.
-- `MetricService` bridges application code and the registry: `PipelineApplication` hands it a `MetricComputationRequest`, and the service simply lowercases the metric name, looks it up in the registry, and returns whatever the logic calculated.
+If a metric is very small, `Service` and `Calculator` may look close in size. That is acceptable. The important split is:
 
-### 4. Application execution
-`PipelineApplication::run` is invoked for both single-file and batch flows:
-1. `ISpatialNormalizationService::normalize` loads the PET volume, applies optional rigid plus voxel-morph registration, and returns the `SpatialNormalizationResponse` (rigid/aligned images plus metadata).
-2. If `ProcessingRequest::persistNormalizedImage` is true, `IFileService` saves the normalized NIfTI alongside any auxiliary maps (for example, FillStates masks).
-3. When `ProcessingRequest::computeMetrics` is set, the previously registered metric logic receives the `MetricComputationRequest`, performs calculator-specific work, and returns `MetricResult` records (SUVr, tracer conversions, custom masks, etc.).
-4. CLI modules format those results for stdout or CSV (batch mode) and may emit additional files (for example, FillStates saves `<output>_fill_states_map.nii`).
+- workflow in `Service`
+- numeric/image computation in `Calculator`
 
-### 5. Batch processing
-Most metric CLIs share `metrics/shared/BatchMetricExecutor.*`. A module supplies a `MetricExecutionHooks` struct that:
-- Builds a `ProcessingRequest` per input (including CLI-specific metric parameters).
-- Resolves debug output paths consistently across single and batch flows.
-- Logs per-case success/failure and appends metric results to `results.csv` and `batch_info.txt` via `core/common/BatchLogging`.
-`PipelineApplication::runBatch` then loops through `BatchProcessingRequest.items`, invoking user-provided success/error callbacks.
+## Registry and Discovery
 
-### 6. Spatial-only commands
-`spatialNormalizations/standard/NormalizeCLI` and `adni/AdniPetCoreCLI` reuse the exact same services. They register `NullMetric` (name `__spatial_normalization_null`) so that the pipeline can execute with `computeMetrics=true` but without any calculator output, ensuring normalization-only workflows still benefit from shared logging and file persistence.
+Metric discovery is handled in:
+
+- [metrics/shared/MetricRegistry.h](../localizer/src/metrics/shared/MetricRegistry.h)
+- [metrics/ModuleCatalog.cpp](../localizer/src/metrics/ModuleCatalog.cpp)
+
+This registry is for CLI/module discovery, not for a core-side metric dispatch pipeline.
+
+To expose a new metric:
+
+1. implement `createCLI()` in the metric folder
+2. implement `registerModule(MetricRegistry&)`
+3. add the metric module to `metrics/ModuleCatalog.cpp`
+
+## Shared Execution Helpers
+
+Most metrics should reuse the shared runners:
+
+- `SingleRunner.h`
+- `BatchRunner.h`
+
+These helpers standardize:
+
+- logging
+- batch iteration
+- debug path derivation
+- `results.csv` / `batch_info.txt`
+
+Use them when the metric fits the common pattern:
+
+- normalize
+- save normalized output
+- calculate metric
+- report results
+
+If a metric has a special flow, it can still own that flow directly inside its service.
+
+## Configuration Rules
+
+Default configuration lives in:
+
+- [localizer/src/assets/configs/config.toml](../localizer/src/assets/configs/config.toml)
+- [localizer/src/assets/configs/config.fast_and_acc.toml](../localizer/src/assets/configs/config.fast_and_acc.toml)
+
+Important rules:
+
+- add metric-specific templates, masks, and coefficients to the config that actually supports that metric
+- do not silently enable a metric under an incompatible normalization strategy
+- if a metric depends on a specific normalization regime, validate that explicitly in the service
+
+Example:
+
+- `abetaindex` is intentionally enabled only in the standard `config.toml`
+- `config.fast_and_acc.toml` does not declare it
+- `AbetaIndexService` validates that the metric is enabled and that its templates exist
+
+That pattern is preferred over silently falling back to defaults.
 
 ## Adding a New Metric
 
-1. **Create a metric module folder** under `metrics/<name>/` and add two core files:
-   - `<Name>CLI.{h,cpp}` implementing `IMetricCLI`. The CLI is responsible for:
-     - Declaring the subcommand name and description.
-     - Configuring relevant arguments (input, output, config, debug, tracer switches, VOI/reference masks, etc.).
-     - Translating parsed flags into an options struct that `runCommand` can consume.
-   - `<Name>Logic.{h,cpp}` implementing `IMetricLogic`. The logic receives the normalized image plus any options encoded in `MetricComputationOptions` (string, bool, or numeric parameters) and returns `std::vector<MetricResult>` entries. Reuse helpers such as `SUVrCalculator`, `FillStatesCalculator`, or new calculators as needed. Throw `std::runtime_error` with descriptive messages for invalid inputs to ensure CLI failures are explicit.
+### 1. Create the metric folder
 
-2. **Define CLI execution helpers**. Follow existing modules by:
-   - Creating an options struct (e.g., `CentiloidCLIOptions`).
-   - Reusing `MetricExecutionHooks` and `Shared::runSingleMetric` / `Shared::runBatchMetric` to encapsulate processing, logging, and debug output handling.
-   - Building each `ProcessingRequest` with `computeMetrics=true`, `metricOptions.metricName = "<name>"`, and any metric-specific parameters stored in `metricOptions.stringParameters`, `boolParameters`, or `numericParameters`.
+Add:
 
-3. **Register the metric** inside your module's `registerMetric(ServiceContainer&)` function:
-   - Resolve `IMetricModuleRegistry` and `IConfiguration` via the container.
-   - Instantiate your `IMetricLogic` (injecting configuration or other services as needed) and call `registry->registerModule(...)`.
-   - Guard against double-registration so repeated CLI invocations remain idempotent.
+- `<Name>CLI.*`
+- `<Name>Service.*`
+- `<Name>Calculator.*`
+- `<Name>Module.*`
 
-4. **Expose the CLI to the binary** by updating `metrics/ModuleCatalog.cpp`:
-   - Append `modules.push_back(<Namespace>::createCLI())` in `buildCLIModules()` so `main.cpp` discovers your subcommand.
-   - Call `<Namespace>::registerMetric(container)` inside `registerAllMetricModules()` so the metric is registered during bootstrap.
+Start from one of these references:
 
-5. **Extend configuration and assets** as required. For SUVr-derived metrics, add `[masks]` entries for VOI/reference regions plus tracer sections under `[metric_name.tracers.<tracer>]`. For data-driven metrics (FillStates, ADAD), add paths for template maps, slopes/intercepts, model URIs, etc.
+- `centiloid/` for a typical derived metric
+- `suvr/` for a simple VOI/reference metric
+- `fillstates/` for a metric with extra output files
+- `abetaindex/` for a config-gated template metric
+- `adad/` for a model-driven metric
 
-6. **Add regression coverage**. Mirror the structure under `localizer/src/tests/` by:
-   - Adding a CLI smoke test (e.g., `test_my_metric_cli.py`) that exercises single-file execution with synthetic data.
-   - Including accuracy tests that compare computed values with known reference CSVs where feasible.
+### 2. Add the CLI
 
-7. **Document user-facing behavior** by updating `localizer/src/README.md` with the new subcommand, flags, and practical examples.
+The CLI should:
 
-## Commands and Typical Usage
+- inherit `Pipeline::Metrics::IMetricCLI`
+- define the subcommand name and description
+- configure arguments
+- map parser values into a metric-specific options struct
+- call `buildCoreContainer(...)`
+- call `createService(*container)`
 
-All commands are dispatched through the dynamically registered CLIs. Common workflows:
+Look at:
 
-### Centiloid (amyloid burden)
-```bash
-./DCCCcore centiloid --input amyloid_pet.nii --output result.nii
-./DCCCcore centiloid --input amyloid_pet.nii --output result.nii --config custom_config.toml --suvr
-./DCCCcore centiloid --input input_dir --output output_dir --batch
+- [CentiloidCLI.cpp](../localizer/src/metrics/centiloid/CentiloidCLI.cpp)
+- [AbetaIndexCLI.cpp](../localizer/src/metrics/abetaindex/AbetaIndexCLI.cpp)
+
+### 3. Add the service
+
+The service should:
+
+- accept shared services through the constructor
+- validate configuration and runtime preconditions
+- build `SpatialNormalizationRequest`
+- save the normalized NIfTI via `IFileService`
+- build calculator input
+- call `runSingle(...)` or `runBatch(...)`
+
+Prefer reusing:
+
+- `Pipeline::Metrics::Shared::runSingle(...)`
+- `Pipeline::Metrics::Shared::runBatch(...)`
+
+### 4. Add the calculator
+
+The calculator should:
+
+- accept an explicit `Input` struct
+- return `Pipeline::Metrics::MetricResult`
+- throw descriptive `std::runtime_error` / `std::invalid_argument` when inputs are invalid
+
+Keep it focused on the actual metric math or image operation.
+
+### 5. Register the module
+
+Implement:
+
+```cpp
+void registerModule(MetricRegistry& registry) {
+    registry.registerModule({"my_metric", true, &createCLI});
+}
 ```
 
-### CenTauR / CenTauRz (tau burden)
-```bash
-./DCCCcore centaur --input tau_pet.nii --output result.nii
-./DCCCcore centaurz --input tau_pet.nii --output result.nii --suvr
-```
+Then add it to [metrics/ModuleCatalog.cpp](../localizer/src/metrics/ModuleCatalog.cpp).
 
-### Fill-states (tracer-specific abnormal voxel fractions)
-```bash
-./DCCCcore fillstates --input amyloid_pet.nii --output result.nii --tracer fbp
-./DCCCcore fillstates --input ftp_pet.nii --output result.nii --tracer ftp --suvr
-```
-This command additionally writes `<output>_fill_states_map.nii` containing the binary suprathreshold mask.
+### 6. Add config and assets
 
-### Custom SUVr and ADAD
-```bash
-./DCCCcore suvr --input pet.nii --output normalized.nii --voi-mask target_region.nii --ref-mask reference_region.nii
-./DCCCcore adad --input pet.nii --output result.nii --modality tau --iterative
-```
+Typical things you may need:
 
-### Spatial normalization only
-```bash
-./DCCCcore normalize --input pet.nii --output normalized.nii
-./DCCCcore adni-pet-core --input pet.nii --output normalized.nii --iterative
-```
-All commands accept `--batch`, `--skip-normalization`, `--iterative`, `--manual-fov`, and `--debug` where applicable, matching the options described in `localizer/src/README.md`.
+- mask paths
+- template paths
+- tracer parameters
+- model paths
+- feature flags such as `enabled = true`
 
-## Current Limitations and Next Steps
+If a metric should only work with one config profile, encode that intentionally and validate it in the service.
 
-- Batch mode currently exists for `centiloid`, `centaur`, `centaurz`, `suvr`, and `adad`. Other CLIs emit explicit errors when `--batch` is supplied so downstream tooling can react.
-- Only the rigid VoxelMorph normalizer is wired into `SpatialNormalizationService`; supporting alternative engines requires extending that service to construct different implementations.
-- Error handling favors descriptive exceptions and console logs but does not yet emit structured status codes for downstream automation.
-- The service container is built per CLI invocation. Long-lived or interactive scenarios would need scoped lifetimes or a reused container instance.
+### 7. Add tests
 
-Armed with this structure, you can confidently navigate the refactored pipeline, register new biomarker modules, and understand how the CLI drives normalization plus metric computation end-to-end.
+At minimum:
+
+- add `--help` and basic invocation coverage to [test_quick_cli.py](../localizer/src/tests/test_quick_cli.py)
+- add a metric-specific CLI test under `localizer/src/tests/`
+
+Examples:
+
+- [test_abetaload_cli.py](../localizer/src/tests/test_abetaload_cli.py)
+- [test_abetaindex_cli.py](../localizer/src/tests/test_abetaindex_cli.py)
+- [test_fillstates_cli.py](../localizer/src/tests/test_fillstates_cli.py)
+- [test_adad_cli.py](../localizer/src/tests/test_adad_cli.py)
+
+If the metric has known reference values, add a dedicated accuracy test.
+
+### 8. Update documentation
+
+Update:
+
+- [localizer/src/README.md](../localizer/src/README.md) for CLI behavior
+- root [README.md](../README.md) if the metric is user-facing at the product level
+- metric reproduction docs under `docs/` if applicable
+
+## Design Rules
+
+When extending the project, prefer these rules:
+
+- keep `core` ignorant of metric business logic
+- keep metric workflow inside the metric service
+- keep computation inside the calculator
+- put cross-metric workflow helpers in `metrics/shared/`, not `core`
+- avoid adding vague abstractions like `Logic`, `Handler`, or a global metric pipeline unless there is a strong, proven need
+- validate configuration compatibility explicitly
+
+## Notes on Existing Metrics
+
+- `centiloid`, `centaur`, `centaurz`
+  - normalization + metric conversion workflows
+- `suvr`
+  - custom VOI/reference masks supplied through CLI
+- `fillstates`
+  - writes an extra mask output
+- `abetaload`
+  - template decomposition metric
+- `abetaindex`
+  - AV45-only template metric with config gating
+- `adad`
+  - decoupler-based metric, single-file only
+
+## What Not to Reintroduce
+
+Do not add back:
+
+- `IMetricLogic`
+- `IMetricService` as a core dispatch abstraction
+- `IMetricModuleRegistry` in `core`
+- `PipelineApplication`
+- `NullMetric`
+- a core-owned global metric orchestration layer
+
+Those abstractions were removed on purpose because they blurred the boundary between shared infrastructure and metric business logic.
+
+## Practical References
+
+Useful files when working on new modules:
+
+- [localizer/src/core/README.md](../localizer/src/core/README.md)
+- [localizer/src/core/di/Bootstrap.cpp](../localizer/src/core/di/Bootstrap.cpp)
+- [localizer/src/core/common/NormalizationContracts.h](../localizer/src/core/common/NormalizationContracts.h)
+- [localizer/src/metrics/shared/SingleRunner.h](../localizer/src/metrics/shared/SingleRunner.h)
+- [localizer/src/metrics/shared/BatchRunner.h](../localizer/src/metrics/shared/BatchRunner.h)
+- [localizer/src/metrics/shared/BatchLogging.cpp](../localizer/src/metrics/shared/BatchLogging.cpp)
+- [localizer/src/metrics/ModuleCatalog.cpp](../localizer/src/metrics/ModuleCatalog.cpp)
+
+If a new feature does not clearly fit the current boundaries, fix the boundary first in your head before writing code. Most architecture drift in this codebase comes from letting `core` absorb metric-specific workflow.

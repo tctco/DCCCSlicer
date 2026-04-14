@@ -1,6 +1,7 @@
 #include "CentaurzCLI.h"
-#include "../../core/interfaces/IMetricCLI.h"
-#include "CentaurzLogic.h"
+
+#include "../../core/di/Bootstrap.h"
+#include "CentaurzService.h"
 #include <memory>
 #include <string>
 
@@ -77,7 +78,14 @@ public:
         options.useManualFOV = parser.get<bool>("--manual-fov");
         options.enableDebugOutput = parser.get<bool>("--debug");
         options.batchMode = parser.get<bool>("--batch");
-        return runCommand(options, fullCommand);
+
+        BootstrapOptions bootstrapOptions;
+        bootstrapOptions.configPath = options.configPath;
+        bootstrapOptions.enableConfigDebug = options.enableDebugOutput;
+        bootstrapOptions.logTag = "centaurz";
+        auto container = buildCoreContainer(bootstrapOptions);
+        auto service = createService(*container);
+        return service->run(options, fullCommand);
     }
 };
 
@@ -88,5 +96,4 @@ MetricCLIPtr createCLI() {
 }
 
 } // namespace Pipeline::Metrics::Centaurz
-
 

@@ -1,6 +1,7 @@
 #include "FillStatesCLI.h"
-#include "../../core/interfaces/IMetricCLI.h"
-#include "FillStatesLogic.h"
+
+#include "../../core/di/Bootstrap.h"
+#include "FillStatesService.h"
 #include <memory>
 #include <string>
 
@@ -77,7 +78,14 @@ public:
         options.useIterativeRigid = parser.get<bool>("--iterative");
         options.useManualFOV = parser.get<bool>("--manual-fov");
         options.enableDebugOutput = parser.get<bool>("--debug");
-        return runCommand(options, fullCommand);
+
+        BootstrapOptions bootstrapOptions;
+        bootstrapOptions.configPath = options.configPath;
+        bootstrapOptions.enableConfigDebug = options.enableDebugOutput;
+        bootstrapOptions.logTag = "fillstates";
+        auto container = buildCoreContainer(bootstrapOptions);
+        auto service = createService(*container);
+        return service->run(options, fullCommand);
     }
 };
 
@@ -88,5 +96,4 @@ MetricCLIPtr createCLI() {
 }
 
 } // namespace Pipeline::Metrics::FillStates
-
 
