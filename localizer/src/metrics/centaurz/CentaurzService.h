@@ -4,6 +4,7 @@
 #include "../../core/interfaces/IConfiguration.h"
 #include "../../core/services/IFileService.h"
 #include "../../core/services/ISpatialNormalizationService.h"
+#include "../shared/MetricRunResult.h"
 #include "../shared/MetricTypes.h"
 #include <memory>
 #include <string>
@@ -20,6 +21,7 @@ struct CentaurzCLIOptions {
     bool useManualFOV = false;
     bool enableDebugOutput = false;
     bool batchMode = false;
+    bool reportDetailedRegions = false;
     std::string debugOutputBasePath;
 };
 
@@ -32,10 +34,10 @@ public:
     int run(CentaurzCLIOptions options, const std::string& fullCommand);
 
 private:
-    Metrics::MetricResult executeForImage(const CentaurzCLIOptions& options,
-                                          const std::string& inputPath,
-                                          const std::string& outputPath,
-                                          const std::string& debugBasePath) const;
+    Pipeline::Metrics::Shared::MetricRunResult executeForImage(const CentaurzCLIOptions& options,
+                                                               const std::string& inputPath,
+                                                               const std::string& outputPath,
+                                                               const std::string& debugBasePath) const;
     int runSingle(const CentaurzCLIOptions& options, const std::string& fullCommand) const;
     int runBatch(const CentaurzCLIOptions& options, const std::string& fullCommand) const;
     static void logMetricResult(const Metrics::MetricResult& result, bool includeSUVr);

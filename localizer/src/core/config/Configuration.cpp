@@ -36,6 +36,14 @@ void Configuration::initializeDefaults() {
   configMap["masks.whole_cerebral"] = "nii/voi_WhlCbl_2mm.nii";
   configMap["masks.centaur_voi"] = "nii/CenTauR.nii";
   configMap["masks.centaur_ref"] = "nii/voi_CerebGry_tau_2mm.nii";
+  configMap["masks.centaurz_mesial_temporal_voi"] =
+      "assets/nii/centaurz/Mesial_CenTauR.nii.gz";
+  configMap["masks.centaurz_meta_temporal_voi"] =
+      "assets/nii/centaurz/Meta_CenTauR.nii.gz";
+  configMap["masks.centaurz_temporo_parietal_voi"] =
+      "assets/nii/centaurz/TP_CenTauR.nii.gz";
+  configMap["masks.centaurz_frontal_voi"] =
+      "assets/nii/centaurz/Frontal_CenTauR.nii.gz";
 
   // 处理参数
   configMap["processing.max_iter"] = "5";
@@ -71,6 +79,58 @@ void Configuration::initializeDefaults() {
   configMap["fillstates.tracers.ftp.mean"] = "assets/nii/fill_states/fs_FTP_mean.nii.gz";
   configMap["fillstates.tracers.ftp.std"]  = "assets/nii/fill_states/fs_FTP_std.nii.gz";
   configMap["fillstates.tracers.ftp.roi"]  = "assets/nii/CenTauR.nii";
+
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.ftp.slope"] = "10.42";
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.ftp.intercept"] = "-12.11";
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.gtp1.slope"] = "7.88";
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.gtp1.intercept"] = "-8.75";
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.mk6240.slope"] = "7.28";
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.mk6240.intercept"] = "-7.01";
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.pi2620.slope"] = "6.03";
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.pi2620.intercept"] = "-6.83";
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.ro948.slope"] = "11.76";
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.ro948.intercept"] = "-13.08";
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.pmpbb3.slope"] = "7.97";
+  configMap["centaurz.detailed_regions.mesial_temporal.tracers.pmpbb3.intercept"] = "-7.83";
+
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.ftp.slope"] = "12.95";
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.ftp.intercept"] = "-15.37";
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.gtp1.slope"] = "9.60";
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.gtp1.intercept"] = "-11.10";
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.mk6240.slope"] = "9.36";
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.mk6240.intercept"] = "-10.60";
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.pi2620.slope"] = "7.78";
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.pi2620.intercept"] = "-9.33";
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.ro948.slope"] = "13.16";
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.ro948.intercept"] = "-16.19";
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.pmpbb3.slope"] = "11.78";
+  configMap["centaurz.detailed_regions.meta_temporal.tracers.pmpbb3.intercept"] = "-11.21";
+
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.ftp.slope"] = "13.75";
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.ftp.intercept"] = "-15.92";
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.gtp1.slope"] = "10.84";
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.gtp1.intercept"] = "-12.27";
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.mk6240.slope"] = "9.98";
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.mk6240.intercept"] = "-10.15";
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.pi2620.slope"] = "8.21";
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.pi2620.intercept"] = "-9.52";
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.ro948.slope"] = "13.05";
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.ro948.intercept"] = "-15.62";
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.pmpbb3.slope"] = "16.16";
+  configMap["centaurz.detailed_regions.temporo_parietal.tracers.pmpbb3.intercept"] = "-14.68";
+
+  configMap["centaurz.detailed_regions.frontal.tracers.ftp.slope"] = "11.61";
+  configMap["centaurz.detailed_regions.frontal.tracers.ftp.intercept"] = "-13.01";
+  configMap["centaurz.detailed_regions.frontal.tracers.gtp1.slope"] = "9.41";
+  configMap["centaurz.detailed_regions.frontal.tracers.gtp1.intercept"] = "-9.71";
+  configMap["centaurz.detailed_regions.frontal.tracers.mk6240.slope"] = "10.05";
+  configMap["centaurz.detailed_regions.frontal.tracers.mk6240.intercept"] = "-8.91";
+  configMap["centaurz.detailed_regions.frontal.tracers.pi2620.slope"] = "9.07";
+  configMap["centaurz.detailed_regions.frontal.tracers.pi2620.intercept"] = "-9.01";
+  configMap["centaurz.detailed_regions.frontal.tracers.ro948.slope"] = "12.61";
+  configMap["centaurz.detailed_regions.frontal.tracers.ro948.intercept"] = "-13.45";
+  configMap["centaurz.detailed_regions.frontal.tracers.pmpbb3.slope"] = "15.70";
+  configMap["centaurz.detailed_regions.frontal.tracers.pmpbb3.intercept"] = "-13.18";
 }
 
 std::string Configuration::getString(const std::string &key,

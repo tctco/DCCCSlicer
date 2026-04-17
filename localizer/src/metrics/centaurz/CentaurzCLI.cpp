@@ -51,6 +51,10 @@ void addSUVrDerivedArguments(argparse::ArgumentParser& parser) {
         .help("Skip spatial normalization and calculate metrics directly")
         .default_value(false)
         .implicit_value(true);
+    parser.add_argument(kDetailedRegionReportFlag)
+        .help("Report detailed CenTauRz sub-region SUVr and tracer values")
+        .default_value(false)
+        .implicit_value(true);
 }
 
 class CentaurzCLI : public IMetricCLI {
@@ -74,6 +78,7 @@ public:
         options.configPath = parser.get<std::string>("--config");
         options.includeSUVr = parser.get<bool>("--suvr");
         options.skipRegistration = parser.get<bool>("--skip-normalization");
+        options.reportDetailedRegions = parser.get<bool>(kDetailedRegionReportFlag);
         options.useIterativeRigid = parser.get<bool>("--iterative");
         options.useManualFOV = parser.get<bool>("--manual-fov");
         options.enableDebugOutput = parser.get<bool>("--debug");
@@ -96,4 +101,3 @@ MetricCLIPtr createCLI() {
 }
 
 } // namespace Pipeline::Metrics::Centaurz
-

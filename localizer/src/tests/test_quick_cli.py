@@ -50,6 +50,18 @@ TEST_CASES: List[Dict[str, Any]] = [
         "expected_failure": False,
     },
     {
+        "id": "refactor_centaurz_detailed_regions",
+        "args": [
+            "centaurz",
+            "--input",
+            "{input}",
+            "--output",
+            "{output}",
+            "--report-detailed-regions",
+        ],
+        "expected_failure": False,
+    },
+    {
         "id": "refactor_abetaindex_basic",
         "args": ["abetaindex", "--input", "{input}", "--output", "{output}"],
         "expected_failure": False,

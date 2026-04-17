@@ -37,6 +37,10 @@ centiloid_voi = "assets/nii/voi_ctx_2mm.nii"
 whole_cerebral = "assets/nii/voi_WhlCbl_2mm.nii"
 centaur_voi = "assets/nii/CenTauR.nii"
 centaur_ref = "assets/nii/voi_CerebGry_tau_2mm.nii"
+centaurz_mesial_temporal_voi = "assets/nii/centaurz/Mesial_CenTauR.nii.gz"
+centaurz_meta_temporal_voi = "assets/nii/centaurz/Meta_CenTauR.nii.gz"
+centaurz_temporo_parietal_voi = "assets/nii/centaurz/TP_CenTauR.nii.gz"
+centaurz_frontal_voi = "assets/nii/centaurz/Frontal_CenTauR.nii.gz"
 
 # Processing parameters
 [processing]
@@ -119,6 +123,102 @@ intercept = -15.57
 [centaurz.tracers.pmpbb3]
 slope = 16.73
 intercept = -15.34
+
+[centaurz.detailed_regions.mesial_temporal.tracers.ftp]
+slope = 10.42
+intercept = -12.11
+
+[centaurz.detailed_regions.mesial_temporal.tracers.gtp1]
+slope = 7.88
+intercept = -8.75
+
+[centaurz.detailed_regions.mesial_temporal.tracers.mk6240]
+slope = 7.28
+intercept = -7.01
+
+[centaurz.detailed_regions.mesial_temporal.tracers.pi2620]
+slope = 6.03
+intercept = -6.83
+
+[centaurz.detailed_regions.mesial_temporal.tracers.ro948]
+slope = 11.76
+intercept = -13.08
+
+[centaurz.detailed_regions.mesial_temporal.tracers.pmpbb3]
+slope = 7.97
+intercept = -7.83
+
+[centaurz.detailed_regions.meta_temporal.tracers.ftp]
+slope = 12.95
+intercept = -15.37
+
+[centaurz.detailed_regions.meta_temporal.tracers.gtp1]
+slope = 9.60
+intercept = -11.10
+
+[centaurz.detailed_regions.meta_temporal.tracers.mk6240]
+slope = 9.36
+intercept = -10.60
+
+[centaurz.detailed_regions.meta_temporal.tracers.pi2620]
+slope = 7.78
+intercept = -9.33
+
+[centaurz.detailed_regions.meta_temporal.tracers.ro948]
+slope = 13.16
+intercept = -16.19
+
+[centaurz.detailed_regions.meta_temporal.tracers.pmpbb3]
+slope = 11.78
+intercept = -11.21
+
+[centaurz.detailed_regions.temporo_parietal.tracers.ftp]
+slope = 13.75
+intercept = -15.92
+
+[centaurz.detailed_regions.temporo_parietal.tracers.gtp1]
+slope = 10.84
+intercept = -12.27
+
+[centaurz.detailed_regions.temporo_parietal.tracers.mk6240]
+slope = 9.98
+intercept = -10.15
+
+[centaurz.detailed_regions.temporo_parietal.tracers.pi2620]
+slope = 8.21
+intercept = -9.52
+
+[centaurz.detailed_regions.temporo_parietal.tracers.ro948]
+slope = 13.05
+intercept = -15.62
+
+[centaurz.detailed_regions.temporo_parietal.tracers.pmpbb3]
+slope = 16.16
+intercept = -14.68
+
+[centaurz.detailed_regions.frontal.tracers.ftp]
+slope = 11.61
+intercept = -13.01
+
+[centaurz.detailed_regions.frontal.tracers.gtp1]
+slope = 9.41
+intercept = -9.71
+
+[centaurz.detailed_regions.frontal.tracers.mk6240]
+slope = 10.05
+intercept = -8.91
+
+[centaurz.detailed_regions.frontal.tracers.pi2620]
+slope = 9.07
+intercept = -9.01
+
+[centaurz.detailed_regions.frontal.tracers.ro948]
+slope = 12.61
+intercept = -13.45
+
+[centaurz.detailed_regions.frontal.tracers.pmpbb3]
+slope = 15.70
+intercept = -13.18
 
 # ADAD conversion formula
 [adad_abeta.tracers.pib]
