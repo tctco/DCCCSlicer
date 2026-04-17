@@ -28,3 +28,6 @@ localizer/cpp
 .VSCodeCounter/
 .vscode/
 .cache/
+
+# codex
+.codex
