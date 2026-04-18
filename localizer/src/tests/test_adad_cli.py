@@ -1,5 +1,6 @@
 import pytest
 from pathlib import Path
+import shutil
 
 
 def _expected_adad_outputs(base: Path):
@@ -112,3 +113,31 @@ class TestAdniPetCoreCLI:
             "adni-pet-core command should fail when --input is omitted.\n"
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
+
+    def test_batch_mode_outputs(self, run_subprocess, tmp_path, test_files):
+        input_dir = tmp_path / "adni_pet_core_batch_inputs"
+        output_dir = tmp_path / "adni_pet_core_batch_outputs"
+        input_dir.mkdir()
+        output_dir.mkdir()
+
+        shutil.copy(test_files["input"], input_dir / "sample_adni_pet_core.nii")
+
+        result = run_subprocess(
+            [
+                "adni-pet-core",
+                "--input",
+                str(input_dir),
+                "--output",
+                str(output_dir),
+                "--batch",
+            ]
+        )
+
+        assert result.returncode == 0, (
+            "adni-pet-core batch command failed.\n"
+            f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+        )
+
+        generated = list(output_dir.glob("*.nii"))
+        assert generated, "adni-pet-core batch run did not produce any output files."
+        assert (output_dir / "batch_info.txt").exists(), "adni-pet-core batch run missing batch_info.txt"

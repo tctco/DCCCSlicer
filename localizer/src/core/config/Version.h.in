@@ -1,5 +1,4 @@
 #pragma once
 #include <string>
 
-const std::string SOFTWARE_VERSION = "@PROJECT_VERSION@";
-
+const std::string SOFTWARE_VERSION = "@DCCCCORE_SOFTWARE_VERSION@";

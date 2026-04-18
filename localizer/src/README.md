@@ -132,7 +132,7 @@ Run the ADAD decoupling-based metric:
 |--------|-------------|
 | `--config <file>` | Configuration file path (default: config.toml) |
 | `--debug` | Enable debug mode with intermediate outputs |
-| `--batch` | Enable batch processing mode. In batch mode, `--input` and `--output` are treated as directories, all `.nii` / `.nii.gz` files in the input directory are processed, and outputs are written as `<filename>_processed.nii` together with `results.csv` and `batch_info.txt` in the output directory. Currently supported for `centiloid`, `centaur`, `centaurz`, `suvr`, `abetaindex`, and `abetaload` commands. When registration is enabled (no `--skip-normalization`), the output directory must be empty to avoid overwriting. |
+| `--batch` | Enable batch processing mode. In batch mode, `--input` and `--output` are treated as directories, all `.nii` / `.nii.gz` files in the input directory are processed, and outputs are written as `<filename>_processed.nii`. Metric commands also generate `results.csv`, and batch-capable commands generate `batch_info.txt` in the output directory. Currently supported for `centiloid`, `centaur`, `centaurz`, `suvr`, `abetaindex`, `abetaload`, and `adni-pet-core`. When registration is enabled (no `--skip-normalization`), the output directory must be empty to avoid overwriting. |
 | `--iterative` | Use iterative rigid transformation |
 | `--manual-fov` | Enable manual field-of-view placement |
 | `--skip-normalization` | Skip spatial normalization step |

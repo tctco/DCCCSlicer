@@ -8,7 +8,19 @@ class TestBatchProcessing:
     Test class for batch processing functionality of DCCCcore.
     """
 
-    def test_batch_processing_success(self, exe_path, data_dir, output_dir, run_subprocess):
+    @pytest.mark.parametrize(
+        ("subcommand", "expects_results_csv"),
+        [("centiloid", True), ("adni-pet-core", False)],
+    )
+    def test_batch_processing_success(
+        self,
+        subcommand,
+        expects_results_csv,
+        exe_path,
+        data_dir,
+        output_dir,
+        run_subprocess,
+    ):
         """
         Test that the batch processing command runs successfully and produces output.
         Equivalent to the original test_batch() function.
@@ -16,41 +28,40 @@ class TestBatchProcessing:
         # Ensure input directory is valid (or populate it if needed)
         assert data_dir.exists(), "Input directory must exist"
         
-        # Construct arguments
-        # Original: ["centiloid", "--input", "./inputs", "--output", "./outputs", "--batch"]
-        # We use absolute paths from fixtures to be safe
         args = [
-            "centiloid",
+            subcommand,
             "--input", str(data_dir),
             "--output", str(output_dir),
             "--batch"
         ]
         
-        # Run command
         result = run_subprocess(args)
         
-        # Assertions
-        assert result.returncode == 0, f"Command failed with stderr: {result.stderr}"
+        assert result.returncode == 0, (
+            f"{subcommand} batch command failed.\n"
+            f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+        )
         
-        # Verify outputs were created (if input dir was not empty)
-        # If input dir is empty, the tool might still exit 0 but produce nothing.
-        # Depending on the tool's behavior, we might want to check stdout.
         if any(data_dir.iterdir()):
-            # Check for required batch output files
-            results_csv = output_dir / "results.csv"
             batch_info = output_dir / "batch_info.txt"
-            
-            assert results_csv.exists(), "results.csv was not created in output directory"
             assert batch_info.exists(), "batch_info.txt was not created in output directory"
 
-    def test_batch_processing_missing_input(self, exe_path, output_dir, run_subprocess, tmp_path):
+            if expects_results_csv:
+                results_csv = output_dir / "results.csv"
+                assert results_csv.exists(), "results.csv was not created in output directory"
+
+            generated = list(output_dir.glob("*.nii"))
+            assert generated, f"{subcommand} batch run did not produce any output .nii files."
+
+    @pytest.mark.parametrize("subcommand", ["centiloid", "adni-pet-core"])
+    def test_batch_processing_missing_input(self, subcommand, exe_path, output_dir, run_subprocess, tmp_path):
         """
         Test behavior when input directory does not exist or is invalid.
         """
         non_existent_input = tmp_path / "non_existent_inputs"
         
         args = [
-            "centiloid",
+            subcommand,
             "--input", str(non_existent_input),
             "--output", str(output_dir),
             "--batch"

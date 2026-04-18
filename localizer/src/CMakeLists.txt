@@ -1,7 +1,9 @@
 # CMakeList.txt: DCCCcore Refactored Version
 cmake_minimum_required(VERSION 3.21)
 
-project(DCCCcore VERSION 4.0.0)
+project(DCCCcore VERSION 4.1.1)
+set(DCCCCORE_VERSION_SUFFIX "-alpha")
+set(DCCCCORE_SOFTWARE_VERSION "${PROJECT_VERSION}${DCCCCORE_VERSION_SUFFIX}")
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -268,4 +270,4 @@ endif()
 # Output information
 message(STATUS "ITK_LIBRARIES: ${ITK_LIBRARIES}")
 message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
-message(STATUS "Project configured for refactored DCCCcore v${PROJECT_VERSION}")
+message(STATUS "Project configured for refactored DCCCcore v${DCCCCORE_SOFTWARE_VERSION}")

@@ -43,7 +43,7 @@ public:
   std::string getSubcommandName() const override { return "suvr"; }
 
   std::string getDescription() const override {
-    return "Prototype SUVR pipeline built with service/DI refactor";
+    return "Custom SUVr calculation with user-defined regions";
   }
 
   void configureArguments(argparse::ArgumentParser &parser) override {
