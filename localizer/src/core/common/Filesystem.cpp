@@ -1,11 +1,12 @@
 #include "Filesystem.h"
 
+#include "PathUtils.h"
 #include <algorithm>
 
 namespace Common::fs {
 
 bool ensureParentDirectory(const std::string& filePath) {
-    auto directory = std::filesystem::path(filePath).parent_path();
+    auto directory = Common::path::fromUtf8(filePath).parent_path();
     if (directory.empty()) {
         return true;
     }
@@ -32,12 +33,12 @@ bool isDirectoryEmpty(const std::filesystem::path& dir) {
 }
 
 bool isNiftiFile(const std::filesystem::path& path) {
-    auto ext = path.extension().string();
+    auto ext = Common::path::toLower(Common::path::toUtf8(path.extension()));
     if (ext == ".nii") {
         return true;
     }
     if (ext == ".gz") {
-        auto stemExt = path.stem().extension().string();
+        auto stemExt = Common::path::toLower(Common::path::toUtf8(path.stem().extension()));
         return stemExt == ".nii";
     }
     return false;
@@ -45,9 +46,9 @@ bool isNiftiFile(const std::filesystem::path& path) {
 
 std::string baseNameFromNifti(const std::filesystem::path& file) {
     if (file.extension() == ".gz" && file.stem().extension() == ".nii") {
-        return file.stem().stem().string();
+        return Common::path::toUtf8(file.stem().stem());
     }
-    return file.stem().string();
+    return Common::path::toUtf8(file.stem());
 }
 
 std::vector<std::filesystem::path> collectNiftiFiles(const std::filesystem::path& directory) {
@@ -69,9 +70,8 @@ std::string buildOutputPath(const std::filesystem::path& inputFile,
                             const std::filesystem::path& outputDir,
                             const std::string& suffix) {
     std::string baseName = baseNameFromNifti(inputFile);
-    return (outputDir / (baseName + suffix)).string();
+    return Common::path::toUtf8(outputDir / Common::path::fromUtf8(baseName + suffix));
 }
 
 }  // namespace Common::fs
-
 

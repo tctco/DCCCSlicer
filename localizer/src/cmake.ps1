@@ -2,8 +2,8 @@
 # conan profile detect --force
 
 # remove build and install directories
-# Remove-Item -Recurse -Force build
-# Remove-Item -Recurse -Force install
+Remove-Item -Recurse -Force build
+Remove-Item -Recurse -Force install
 
 conan install . --output-folder=build --build=missing -s build_type=Release `
   -s compiler.cppstd=17 `

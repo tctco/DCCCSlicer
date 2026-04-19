@@ -1,5 +1,6 @@
 #include "CLIOptions.h"
 
+#include "../core/common/PathUtils.h"
 #include <filesystem>
 
 void addBaseArguments(argparse::ArgumentParser& parser) {
@@ -38,9 +39,9 @@ void setupDebugOutput(BaseCommandOptions& options) {
         return;
     }
 
-    std::filesystem::path outputFilePath(options.outputPath);
-    std::string baseName = outputFilePath.stem().string();
-    std::string directory = outputFilePath.parent_path().string();
+    std::filesystem::path outputFilePath = Common::path::fromUtf8(options.outputPath);
+    std::string baseName = Common::path::toUtf8(outputFilePath.stem());
+    std::string directory = Common::path::toUtf8(outputFilePath.parent_path());
 
     if (!directory.empty()) {
         options.debugOutputBasePath = directory + "/" + baseName;
@@ -48,5 +49,4 @@ void setupDebugOutput(BaseCommandOptions& options) {
         options.debugOutputBasePath = baseName;
     }
 }
-
 

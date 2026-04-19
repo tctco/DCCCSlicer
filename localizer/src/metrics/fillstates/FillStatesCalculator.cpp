@@ -43,9 +43,10 @@ FillStatesCalculator::TracerResources FillStatesCalculator::getTracerResources()
     }
 
     const std::string execDir = Common::path::executableDirectory();
-    res.meanPath = (std::filesystem::path(execDir) / meanRel).string();
-    res.stdPath  = (std::filesystem::path(execDir) / stdRel).string();
-    res.roiPath  = (std::filesystem::path(execDir) / roiRel).string();
+    const std::filesystem::path execDirPath = Common::path::fromUtf8(execDir);
+    res.meanPath = Common::path::toUtf8(execDirPath / Common::path::fromUtf8(meanRel));
+    res.stdPath  = Common::path::toUtf8(execDirPath / Common::path::fromUtf8(stdRel));
+    res.roiPath  = Common::path::toUtf8(execDirPath / Common::path::fromUtf8(roiRel));
 
     if (t == "fbp" || t == "fdg") {
         res.refMaskKey = "whole_cerebral"; // Centiloid-style reference
@@ -192,4 +193,3 @@ Pipeline::Metrics::MetricResult FillStatesCalculator::calculate(ImageType::Point
 
     return result;
 }
-

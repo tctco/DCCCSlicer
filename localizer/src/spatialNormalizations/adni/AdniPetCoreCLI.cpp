@@ -2,6 +2,7 @@
 #include "../CLIOptions.h"
 #include "../../core/common/Filesystem.h"
 #include "../../core/common/NormalizationContracts.h"
+#include "../../core/common/PathUtils.h"
 #include "../../core/config/Version.h"
 #include "../../core/di/Bootstrap.h"
 #include "../../core/services/IFileService.h"
@@ -28,9 +29,9 @@ std::string resolveDebugBasePath(const NormalizeCommandOptions& options, const s
         return {};
     }
 
-    std::filesystem::path outputFilePath(outputPath);
-    std::string baseName = outputFilePath.stem().string();
-    std::string directory = outputFilePath.parent_path().string();
+    std::filesystem::path outputFilePath = Common::path::fromUtf8(outputPath);
+    std::string baseName = Common::path::toUtf8(outputFilePath.stem());
+    std::string directory = Common::path::toUtf8(outputFilePath.parent_path());
     return directory.empty() ? baseName : directory + "/" + baseName;
 }
 
@@ -101,8 +102,8 @@ int runSingleNormalization(const NormalizeCommandOptions& options,
 int runBatchNormalization(const NormalizeCommandOptions& options,
                           const RunConfig& config,
                           const std::string& fullCommand) {
-    const std::filesystem::path inputDir(options.inputPath);
-    const std::filesystem::path outputDir(options.outputPath);
+    const std::filesystem::path inputDir = Common::path::fromUtf8(options.inputPath);
+    const std::filesystem::path outputDir = Common::path::fromUtf8(options.outputPath);
 
     if (!std::filesystem::exists(inputDir) || !std::filesystem::is_directory(inputDir)) {
         std::cerr << "[" << config.logTag << "] Input directory does not exist: "
@@ -123,7 +124,8 @@ int runBatchNormalization(const NormalizeCommandOptions& options,
 
     const auto files = Common::fs::collectNiftiFiles(inputDir);
     if (files.empty()) {
-        std::cout << "[" << config.logTag << "] No NIfTI files found in " << inputDir << std::endl;
+        std::cout << "[" << config.logTag << "] No NIfTI files found in "
+                  << Common::path::toUtf8(inputDir) << std::endl;
         return EXIT_SUCCESS;
     }
 
@@ -138,13 +140,15 @@ int runBatchNormalization(const NormalizeCommandOptions& options,
         summary.processed++;
         const std::string outputPath =
             Common::fs::buildOutputPath(inputFile, outputDir, kBatchOutputSuffix);
+        const std::string inputPath = Common::path::toUtf8(inputFile);
+        const std::string fileLabel = Common::path::toUtf8(inputFile.filename());
         const std::string debugBase = resolveDebugBasePath(options, outputPath);
 
         try {
             const int result = processSingleImage(
                 options,
                 config,
-                inputFile.string(),
+                inputPath,
                 outputPath,
                 debugBase,
                 false);
@@ -154,15 +158,15 @@ int runBatchNormalization(const NormalizeCommandOptions& options,
 
             summary.succeeded++;
             std::cout << "[" << config.logTag << "][batch] Processed "
-                      << inputFile.filename().string() << std::endl;
+                      << fileLabel << std::endl;
             Pipeline::Metrics::Shared::appendSuccessEntry(
-                batchInfo, inputFile.filename().string());
+                batchInfo, fileLabel);
         } catch (const std::exception& ex) {
             summary.failed++;
             std::cerr << "[" << config.logTag << "][batch] Failed "
-                      << inputFile.filename().string() << ": " << ex.what() << std::endl;
+                      << fileLabel << ": " << ex.what() << std::endl;
             Pipeline::Metrics::Shared::appendFailureEntry(
-                batchInfo, inputFile.filename().string(), ex.what());
+                batchInfo, fileLabel, ex.what());
         }
     }
 

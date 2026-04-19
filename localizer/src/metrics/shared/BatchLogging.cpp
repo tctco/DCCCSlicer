@@ -1,5 +1,6 @@
 #include "BatchLogging.h"
 
+#include "../../core/common/PathUtils.h"
 #include <chrono>
 #include <ctime>
 #include <iomanip>
@@ -35,8 +36,8 @@ BatchInfoContext openBatchInfo(const std::filesystem::path& outputDir,
     ctx.stream << "Command: " << commandLine << '\n';
     ctx.stream << "Start Time: " << currentTimeString() << '\n';
     ctx.stream << "Config Path: " << configPath << '\n';
-    ctx.stream << "Input Directory: " << inputDir.string() << '\n';
-    ctx.stream << "Output Directory: " << outputDir.string() << '\n';
+    ctx.stream << "Input Directory: " << Common::path::toUtf8(inputDir) << '\n';
+    ctx.stream << "Output Directory: " << Common::path::toUtf8(outputDir) << '\n';
     ctx.stream.flush();
     return ctx;
 }
@@ -116,7 +117,7 @@ void appendCsvRows(CsvContext& ctx,
         }
         ctx.document->SetCell("SUVr", row, metric.suvr);
     }
-    ctx.document->Save(ctx.outputPath.string());
+    ctx.document->Save(Common::path::legacyFileName(ctx.outputPath));
 }
 
 } // namespace Pipeline::Metrics::Shared

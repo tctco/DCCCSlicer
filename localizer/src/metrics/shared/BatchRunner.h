@@ -3,6 +3,7 @@
 #include "BatchLogging.h"
 #include "MetricRunResult.h"
 #include "../../core/common/Filesystem.h"
+#include "../../core/common/PathUtils.h"
 #include "../../core/config/Version.h"
 #include <cstdlib>
 #include <exception>
@@ -35,8 +36,8 @@ template <typename Options>
 int runBatch(const Options& options,
              const std::string& fullCommand,
              const BatchRunnerHooks<Options>& hooks) {
-    const std::filesystem::path inputDir(options.inputPath);
-    const std::filesystem::path outputDir(options.outputPath);
+    const std::filesystem::path inputDir = Common::path::fromUtf8(options.inputPath);
+    const std::filesystem::path outputDir = Common::path::fromUtf8(options.outputPath);
 
     if (!std::filesystem::exists(inputDir) || !std::filesystem::is_directory(inputDir)) {
         std::cerr << "[" << hooks.logTag << "] Input directory does not exist: "
@@ -57,7 +58,8 @@ int runBatch(const Options& options,
 
     const auto files = Common::fs::collectNiftiFiles(inputDir);
     if (files.empty()) {
-        std::cout << "[" << hooks.logTag << "] No NIfTI files found in " << inputDir << std::endl;
+        std::cout << "[" << hooks.logTag << "] No NIfTI files found in "
+                  << Common::path::toUtf8(inputDir) << std::endl;
         return EXIT_SUCCESS;
     }
 
@@ -73,26 +75,28 @@ int runBatch(const Options& options,
         summary.processed++;
         const std::string outputPath =
             Common::fs::buildOutputPath(inputFile, outputDir, hooks.batchOutputSuffix);
+        const std::string inputPath = Common::path::toUtf8(inputFile);
+        const std::string fileLabel = Common::path::toUtf8(inputFile.filename());
         const std::string debugBase = hooks.resolveDebugBase
             ? hooks.resolveDebugBase(options, outputPath)
             : std::string{};
 
         try {
             MetricRunResult result =
-                hooks.execute(options, inputFile.string(), outputPath, debugBase);
+                hooks.execute(options, inputPath, outputPath, debugBase);
             summary.succeeded++;
             std::cout << "[" << hooks.logTag << "][batch] Processed "
-                      << inputFile.filename().string() << std::endl;
+                      << fileLabel << std::endl;
             if (hooks.logResults) {
                 hooks.logResults(options, result);
             }
-            appendSuccessEntry(batchInfo, inputFile.filename().string());
-            appendCsvRows(csvCtx, inputFile.filename().string(), result.metricResults);
+            appendSuccessEntry(batchInfo, fileLabel);
+            appendCsvRows(csvCtx, fileLabel, result.metricResults);
         } catch (const std::exception& ex) {
             summary.failed++;
             std::cerr << "[" << hooks.logTag << "][batch] Failed "
-                      << inputFile.filename().string() << ": " << ex.what() << std::endl;
-            appendFailureEntry(batchInfo, inputFile.filename().string(), ex.what());
+                      << fileLabel << ": " << ex.what() << std::endl;
+            appendFailureEntry(batchInfo, fileLabel, ex.what());
         }
     }
 

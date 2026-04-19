@@ -210,7 +210,15 @@ void Configuration::setString(const std::string &key,
 
 bool Configuration::loadFromFile(const std::string &configPath) {
   try {
-    toml::table config = toml::parse_file(configPath);
+    const std::filesystem::path configFilePath = Common::path::fromUtf8(configPath);
+    std::ifstream stream(configFilePath, std::ios::binary);
+    if (!stream.is_open()) {
+      throw std::runtime_error("Unable to open config file.");
+    }
+
+    std::stringstream buffer;
+    buffer << stream.rdbuf();
+    toml::table config = toml::parse(buffer.str());
     configMap.clear(); // 清空现有配置
     listMap.clear();   // 清空数组配置
     flattenTomlTable(config); // 递归解析TOML表并扁平化
@@ -237,11 +245,12 @@ std::string Configuration::getTempDirPath() const {
 
   // 只有当使用默认的./tmp路径时才自动创建目录
   if (tempDir == "./tmp") {
-    std::string fullTempPath = executableDir + "/" + tempDir;
+    const std::filesystem::path fullTempPath =
+        Common::path::fromUtf8(executableDir) / Common::path::fromUtf8(tempDir);
     if (!std::filesystem::exists(fullTempPath)) {
       std::filesystem::create_directories(fullTempPath);
     }
-    return fullTempPath;
+    return Common::path::toUtf8(fullTempPath);
   }
 
   // 如果不是默认路径，直接返回配置的路径（可能是绝对路径或其他相对路径）
@@ -250,7 +259,7 @@ std::string Configuration::getTempDirPath() const {
 
 std::string Configuration::findConfigFile(const std::string &configFileName) {
   // 先检查当前工作目录
-  if (std::filesystem::exists(configFileName)) {
+  if (std::filesystem::exists(Common::path::fromUtf8(configFileName))) {
     return configFileName;
   }
 
@@ -258,14 +267,18 @@ std::string Configuration::findConfigFile(const std::string &configFileName) {
   std::string executableDir = Common::path::executableDirectory();
 
   // 检查可执行文件目录下的configs文件夹
-  std::string configsPath = executableDir + "/assets/configs/" + configFileName;
-  if (std::filesystem::exists(configsPath)) {
+  std::string configsPath =
+      Common::path::toUtf8(Common::path::fromUtf8(executableDir) / "assets" / "configs" /
+                           Common::path::fromUtf8(configFileName));
+  if (std::filesystem::exists(Common::path::fromUtf8(configsPath))) {
     return configsPath;
   }
 
   // 检查可执行文件目录下的文件
-  std::string execDirPath = executableDir + "/" + configFileName;
-  if (std::filesystem::exists(execDirPath)) {
+  std::string execDirPath =
+      Common::path::toUtf8(Common::path::fromUtf8(executableDir) /
+                           Common::path::fromUtf8(configFileName));
+  if (std::filesystem::exists(Common::path::fromUtf8(execDirPath))) {
     return execDirPath;
   }
 

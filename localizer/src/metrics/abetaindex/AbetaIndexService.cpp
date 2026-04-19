@@ -1,6 +1,7 @@
 #include "AbetaIndexService.h"
 
 #include "../../core/common/Filesystem.h"
+#include "../../core/common/PathUtils.h"
 #include "../../core/common/NormalizationContracts.h"
 #include "../../metrics/shared/BatchRunner.h"
 #include "../../metrics/shared/DebugPathHelpers.h"
@@ -37,9 +38,12 @@ void validateAbetaIndexConfiguration(ConfigurationPtr config) {
     const std::string meanPath = config->getTemplatePath("abeta_index_mean");
     const std::string pc1Path = config->getTemplatePath("abeta_index_pc1");
     const std::string pc2Path = config->getTemplatePath("abeta_index_pc2");
-    if (!std::filesystem::exists(meanPath) || !std::filesystem::is_regular_file(meanPath) ||
-        !std::filesystem::exists(pc1Path) || !std::filesystem::is_regular_file(pc1Path) ||
-        !std::filesystem::exists(pc2Path) || !std::filesystem::is_regular_file(pc2Path)) {
+    if (!std::filesystem::exists(Common::path::fromUtf8(meanPath)) ||
+        !std::filesystem::is_regular_file(Common::path::fromUtf8(meanPath)) ||
+        !std::filesystem::exists(Common::path::fromUtf8(pc1Path)) ||
+        !std::filesystem::is_regular_file(Common::path::fromUtf8(pc1Path)) ||
+        !std::filesystem::exists(Common::path::fromUtf8(pc2Path)) ||
+        !std::filesystem::is_regular_file(Common::path::fromUtf8(pc2Path))) {
         throw std::runtime_error(
             "AbetaIndex template files are missing for the active configuration. "
             "Please ensure the selected config defines templates.abeta_index_mean/pc1/pc2 "
