@@ -37,15 +37,19 @@ SpatialNormalizationOutput SpatialNormalizationService::normalize(const SpatialN
                 request.options.maxIterations,
                 request.options.convergenceThreshold);
             output.rigidAlignedImage = normResult.rigidAlignedImage;
-            output.spatiallyNormalizedImage = normResult.spatiallyNormalizedImage;
+            output.spatiallyNormalizedImage = request.options.rigidOnly
+                                                 ? normResult.rigidAlignedImage
+                                                 : normResult.spatiallyNormalizedImage;
         } else {
             auto normResult = normalizer->normalizeWithIntermediateResults(inputImage);
             output.rigidAlignedImage = normResult.rigidAlignedImage;
-            output.spatiallyNormalizedImage = normResult.spatiallyNormalizedImage;
+            output.spatiallyNormalizedImage = request.options.rigidOnly
+                                                 ? normResult.rigidAlignedImage
+                                                 : normResult.spatiallyNormalizedImage;
         }
     }
 
-    if (request.options.enableAdniPetCore) {
+    if (request.options.enableAdniPetCore && !request.options.rigidOnly) {
         output.spatiallyNormalizedImage = prepareAdniPetCoreImage(
             output.rigidAlignedImage,
             output.spatiallyNormalizedImage);
@@ -90,4 +94,3 @@ ImageType::Pointer SpatialNormalizationService::prepareAdniPetCoreImage(ImageTyp
 }
 
 } // namespace Pipeline
-
