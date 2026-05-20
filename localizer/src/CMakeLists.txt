@@ -180,6 +180,8 @@ target_sources(DCCCcore PRIVATE
     spatialNormalizations/standard/NormalizeCLI.cpp
     spatialNormalizations/adni/AdniPetCoreCLI.h
     spatialNormalizations/adni/AdniPetCoreCLI.cpp
+    spatialNormalizations/rigid/RigidCLI.h
+    spatialNormalizations/rigid/RigidCLI.cpp
 )
 
 # Link libraries

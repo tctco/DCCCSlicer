@@ -19,6 +19,7 @@ TEST_CASES: List[Dict[str, Any]] = [
     {"id": "refactor_adad_help", "args": ["adad", "--help"], "expected_failure": False},
     {"id": "normalize_help", "args": ["normalize", "--help"], "expected_failure": False},
     {"id": "adni_pet_core_help", "args": ["adni-pet-core", "--help"], "expected_failure": False},
+    {"id": "rigid_help", "args": ["rigid", "--help"], "expected_failure": False},
     {
         "id": "refactor_centiloid_basic",
         "args": ["centiloid", "--input", "{input}", "--output", "{output}"],

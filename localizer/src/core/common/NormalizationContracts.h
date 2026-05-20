@@ -8,6 +8,7 @@ namespace Pipeline {
 struct SpatialNormalizationOptions {
     bool useIterativeRigid = false;
     bool useManualFOV = false;
+    bool rigidOnly = false;
     bool enableDebugOutput = false;
     std::string debugOutputBasePath;
     bool enableAdniPetCore = false;
