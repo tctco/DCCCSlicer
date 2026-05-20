@@ -49,15 +49,15 @@ inline std::string stageModelPathIfNeeded(const std::string& path) {
 inline std::basic_string<ORTCHAR_T> makeOrtPath(const std::string& path) {
     const std::string preparedPath = detail::stageModelPathIfNeeded(path);
 
-    if constexpr (std::is_same_v<ORTCHAR_T, wchar_t>) {
 #ifdef _WIN32
+    if constexpr (std::is_same_v<ORTCHAR_T, wchar_t>) {
         return Common::path::utf8ToWide(preparedPath);
-#else
-        return std::wstring(preparedPath.begin(), preparedPath.end());
-#endif
     } else {
         return preparedPath;
     }
+#else
+    return preparedPath;
+#endif
 }
 
 }  // namespace Common::onnx
