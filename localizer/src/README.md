@@ -143,3 +143,42 @@ Run the ADAD decoupling-based metric:
 ## Developers
 
 To add your own brain PET metric, please refer to the [developer guide](../../docs/developer_guide.md).
+
+## Docker Development Environment
+
+The C++ core can be built in a Linux Docker container with Conan and CMake. This is the recommended path for reproducible development across machines.
+
+Build the development image:
+
+```bash
+docker compose -f docker-compose.core.yml build
+```
+
+Build and install the C++ core:
+
+```bash
+docker compose -f docker-compose.core.yml run --rm dccc-core /workspace/scripts/docker-build-core.sh
+```
+
+The installed executable will be written to `localizer/src/install/bin/DCCCcore`. Conan packages and the CMake build tree are kept in Docker volumes so later builds can reuse downloaded and compiled dependencies. The script defaults to `CONAN_CPPSTD=gnu17` on Linux to reuse more Conan Center binaries; use `CONAN_CPPSTD=17` if you need a strict non-GNU C++17 profile.
+
+The first run can still take a long time because Conan Center may not provide matching Linux binaries for heavy packages such as ITK, ONNX Runtime, Boost, HDF5, GDCM, or TBB. Let the first build finish once on a machine, then keep the Docker volumes for normal incremental development.
+
+Run the CLI from an interactive shell:
+
+```bash
+docker compose -f docker-compose.core.yml run --rm dccc-core
+./install/bin/DCCCcore --help
+```
+
+Run Python CLI tests after building:
+
+```bash
+docker compose -f docker-compose.core.yml run --rm dccc-core pytest tests
+```
+
+To force a clean dependency/build cache, remove the Docker volumes:
+
+```bash
+docker compose -f docker-compose.core.yml down -v
+```
