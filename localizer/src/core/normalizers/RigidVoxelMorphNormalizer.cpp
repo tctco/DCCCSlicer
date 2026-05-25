@@ -129,7 +129,7 @@ ImageType::Pointer RigidVoxelMorphNormalizer::performRigidAlignment(ImageType::P
     ImageType::Pointer originalImage = inputImage;  // Use original image to get new origin and direction
     auto newOriginAndDirection = registrationPipeline_->getNewOriginAndDirection(
         processedImage, originalImage, 
-        orientation["ac"], orientation["nose"], orientation["top"]);
+        orientation["ac"], orientation["pa"], orientation["is"]);
     
     ImageType::PointType newOrigin = std::get<0>(newOriginAndDirection);
     ImageType::DirectionType newDirection = std::get<1>(newOriginAndDirection);

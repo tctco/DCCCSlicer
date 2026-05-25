@@ -65,7 +65,9 @@ std::unordered_map<std::string, std::vector<float>> RigidRegistrationEngine::pre
     auto input_name_allocated = session_->GetInputNameAllocated(0, allocator);
     const char* input_name = input_name_allocated.get();
     
-    std::vector<int64_t> input_shape = {1, 1, 64, 64, 64};
+    std::vector<int64_t> input_shape = inputShape.empty()
+                                           ? std::vector<int64_t>{1, 1, 64, 64, 64}
+                                           : inputShape;
     Ort::MemoryInfo memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
     Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
@@ -73,7 +75,7 @@ std::unordered_map<std::string, std::vector<float>> RigidRegistrationEngine::pre
         input_shape.data(), input_shape.size());
     
     // Define output names
-    const char* output_names[] = {"ac", "nose", "top"};
+    const char* output_names[] = {"ac", "pa", "is"};
     size_t num_outputs = 3;
 
     // Run inference
@@ -111,9 +113,11 @@ RigidRegistrationEngine::getNewOriginAndDirection(
     const std::vector<float>& IS) {
     
     std::vector<float> ac = AC, pa = PA, is = IS;
-    std::for_each(ac.begin(), ac.end(), [](float& x) { x *= 64; });
-    std::for_each(pa.begin(), pa.end(), [](float& x) { x *= 99999; });
-    std::for_each(is.begin(), is.end(), [](float& x) { x *= 99999; });
+    const ImageType::SizeType preprocessedSize =
+        preprocessedImage->GetLargestPossibleRegion().GetSize();
+    for (unsigned int i = 0; i < 3 && i < ac.size(); ++i) {
+        ac[i] *= static_cast<float>(preprocessedSize[i]);
+    }
 
     const ImageType::DirectionType& preprocessedDirection =
         preprocessedImage->GetDirection();
@@ -123,7 +127,7 @@ RigidRegistrationEngine::getNewOriginAndDirection(
         preprocessedImage->GetSpacing();
     const ImageType::SpacingType& originalSpacing = originalImage->GetSpacing();
 
-    // Calculate ac nose top in physical space
+    // Calculate AC and orientation vectors in physical space.
     auto acPhysical = getPhysicalPoint(ac, preprocessedDirection,
                                        preprocessedOrigin, preprocessedSpacing);
     auto originalVoxelAC =
