@@ -23,6 +23,10 @@ public:
 
     void configureArguments(argparse::ArgumentParser& parser) override {
         addBaseArguments(parser);
+        parser.add_argument("-i", "--iterative")
+            .help("Use iterative rigid transformation")
+            .default_value(false)
+            .implicit_value(true);
     }
 
     int execute(const argparse::ArgumentParser& parser, const std::string& fullCommand) override {
@@ -30,6 +34,7 @@ public:
         options.inputPath = parser.get<std::string>("--input");
         options.outputPath = parser.get<std::string>("--output");
         options.configPath = parser.get<std::string>("--config");
+        options.useIterativeRigid = parser.get<bool>("--iterative");
         options.enableDebugOutput = parser.get<bool>("--debug");
 
         if (!Common::fs::ensureParentDirectory(options.outputPath)) {
@@ -56,6 +61,7 @@ public:
         request.inputPath = options.inputPath;
         request.skip = false;
         request.options.rigidOnly = true;
+        request.options.useIterativeRigid = options.useIterativeRigid;
         request.options.enableDebugOutput = options.enableDebugOutput;
         request.options.debugOutputBasePath = options.debugOutputBasePath;
 
