@@ -1,0 +1,11 @@
+.git
+.cache
+.mypy_cache
+__pycache__
+build
+localizer/src/build
+localizer/src/install
+localizer/cpp
+.VSCodeCounter
+.vscode
+*archive*
