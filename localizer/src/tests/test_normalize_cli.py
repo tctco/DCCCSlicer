@@ -55,3 +55,21 @@ class TestNormalizeCLI:
         )
         assert output_path.exists(), "normalize --iterative did not create the expected output file."
 
+    def test_rigid_iterative_flag(self, run_subprocess, tmp_path, test_files):
+        output_path = tmp_path / "rigid_iterative_output.nii"
+        result = run_subprocess(
+            [
+                "rigid",
+                "--input",
+                str(test_files["input"]),
+                "--output",
+                str(output_path),
+                "--iterative",
+            ]
+        )
+
+        assert result.returncode == 0, (
+            "rigid command with --iterative failed.\n"
+            f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+        )
+        assert output_path.exists(), "rigid --iterative did not create the expected output file."

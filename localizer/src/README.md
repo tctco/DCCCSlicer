@@ -113,6 +113,7 @@ Perform spatial standardization without metric calculation:
 # Iterative rigid registration
 ./DCCCcore normalize --input pet.nii --output normalized.nii --iterative
 ./DCCCcore adni-pet-core --input pet.nii --output normalized.nii --iterative
+./DCCCcore rigid --input pet.nii --output rigid.nii --iterative
 ```
 
 #### ADAD Analysis
