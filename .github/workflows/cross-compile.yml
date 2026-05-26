@@ -7,12 +7,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches:
-      - dev
-      - master
-      - main
-    paths-ignore:
-      - '**/*.md'
   pull_request:
   workflow_dispatch:
 
@@ -23,14 +17,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest, macos-14]
+        os: ${{ fromJSON(startsWith(github.ref, 'refs/tags/') && '["ubuntu-latest","windows-latest","macos-latest","macos-14"]' || '["ubuntu-latest","windows-latest"]') }}
 
     steps:
       - name: Checkout (with Git LFS)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: true
+          lfs: ${{ startsWith(github.ref, 'refs/tags/') }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -111,8 +105,17 @@ jobs:
         shell: bash
         run: cmake --install build --config Release
 
+      - name: Run PR smoke tests on installed binary (Linux)
+        if: github.event_name == 'pull_request' && runner.os == 'Linux'
+        working-directory: localizer/src/tests
+        shell: bash
+        run: |
+          set -e
+          python -m pip install pytest pandas
+          python -m pytest -v test_ui_metric_command_builder.py test_quick_cli.py -k "help or version_information or no_subcommand"
+
       - name: Run pytest on installed binary (Linux/macOS)
-        if: runner.os != 'Windows'
+        if: startsWith(github.ref, 'refs/tags/') && runner.os != 'Windows'
         working-directory: localizer/src/tests
         shell: bash
         run: |
@@ -172,8 +175,16 @@ jobs:
         shell: pwsh
         run: cmake --install build --config Release
 
+      - name: Run PR smoke tests on installed binary (Windows)
+        if: github.event_name == 'pull_request' && runner.os == 'Windows'
+        working-directory: localizer/src/tests
+        shell: pwsh
+        run: |
+          python -m pip install pytest pandas
+          python -m pytest -v test_ui_metric_command_builder.py test_quick_cli.py -k "help or version_information or no_subcommand"
+
       - name: Run pytest on installed binary (Windows)
-        if: runner.os == 'Windows'
+        if: startsWith(github.ref, 'refs/tags/') && runner.os == 'Windows'
         working-directory: localizer/src/tests
         shell: pwsh
         run: |
@@ -181,7 +192,7 @@ jobs:
           python -m pytest -v
 
       - name: Copy install/bin into localizer/cpp (Linux/macOS)
-        if: runner.os != 'Windows'
+        if: startsWith(github.ref, 'refs/tags/') && runner.os != 'Windows'
         shell: bash
         working-directory: localizer/src
         run: |
@@ -190,7 +201,7 @@ jobs:
           cp -a install/bin/. "$GITHUB_WORKSPACE/localizer/cpp/"
 
       - name: Copy install/bin into localizer/cpp (Windows)
-        if: runner.os == 'Windows'
+        if: startsWith(github.ref, 'refs/tags/') && runner.os == 'Windows'
         shell: pwsh
         working-directory: localizer/src
         run: |
@@ -198,6 +209,7 @@ jobs:
           Copy-Item -Path install/bin/* -Destination "$env:GITHUB_WORKSPACE/localizer/cpp/" -Recurse -Force
 
       - name: Determine package metadata
+        if: startsWith(github.ref, 'refs/tags/')
         id: package-metadata
         shell: bash
         env:
@@ -245,7 +257,7 @@ jobs:
           echo "platform=${platform}" >> "$GITHUB_OUTPUT"
 
       - name: Assemble standalone core package (Linux/macOS)
-        if: runner.os != 'Windows'
+        if: startsWith(github.ref, 'refs/tags/') && runner.os != 'Windows'
         shell: bash
         working-directory: localizer/src
         run: |
@@ -258,7 +270,7 @@ jobs:
           cp "$GITHUB_WORKSPACE/LICENSE.md" "$package_dir/LICENSE.md"
 
       - name: Assemble standalone core package (Windows)
-        if: runner.os == 'Windows'
+        if: startsWith(github.ref, 'refs/tags/') && runner.os == 'Windows'
         shell: pwsh
         working-directory: localizer/src
         run: |
@@ -274,6 +286,7 @@ jobs:
           Copy-Item -Path (Join-Path $env:GITHUB_WORKSPACE 'LICENSE.md') -Destination (Join-Path $packageDir 'LICENSE.md') -Force
 
       - name: Create distributable zip (standalone core)
+        if: startsWith(github.ref, 'refs/tags/')
         uses: thedoctor0/zip-release@0.7.6
         with:
           type: 'zip'
@@ -281,6 +294,7 @@ jobs:
           path: DCCCcore-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}
 
       - name: Upload standalone core artifact
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
           name: DCCCcore-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}
@@ -288,7 +302,7 @@ jobs:
           if-no-files-found: error
 
       - name: Clean packaging workspace (Linux/macOS)
-        if: runner.os != 'Windows'
+        if: startsWith(github.ref, 'refs/tags/') && runner.os != 'Windows'
         shell: bash
         run: |
           set -euo pipefail
@@ -305,7 +319,7 @@ jobs:
           rm -f .gitmodules
 
       - name: Clean packaging workspace (Windows)
-        if: runner.os == 'Windows'
+        if: startsWith(github.ref, 'refs/tags/') && runner.os == 'Windows'
         shell: pwsh
         run: |
           $pathsToRemove = @(
@@ -331,6 +345,7 @@ jobs:
           }
 
       - name: Create distributable zip (entire project)
+        if: startsWith(github.ref, 'refs/tags/')
         uses: thedoctor0/zip-release@0.7.6
         with:
           type: 'zip'
@@ -338,6 +353,7 @@ jobs:
           path: .
 
       - name: Upload artifact
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
           name: DCCCSlicer-${{ env.PACKAGE_VERSION }}-${{ env.PACKAGE_PLATFORM }}
@@ -366,4 +382,3 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
