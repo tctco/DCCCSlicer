@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use DCCCSlicer in your research, please cite this software."
+title: "DCCCSlicer: A 3D Slicer Plugin for Deep Cascaded Cerebral Calculator"
+type: software
+
+authors:
+  - family-names: Tang
+    given-names: Cheng
+    alias: tctco
+
+repository-code: "https://github.com/tctco/DCCCSlicer"
+url: "https://github.com/tctco/DCCCSlicer"
+
+abstract: >
+  DCCCSlicer is a 3D Slicer plugin for Deep Cascaded Cerebral Calculator,
+  formerly known as Deep Cascaded Centiloid Calculator. It provides a
+  PET-only solution for brain PET spatial normalization and semi-quantitative
+  analysis, including metrics such as Centiloid and CenTauRz.
+
+keywords:
+  - brain PET
+  - spatial normalization
+  - semi-quantification
+  - Centiloid
+  - CenTauRz
+  - Alzheimer's disease
+  - 3D Slicer
+  - deep learning
+
+license: "CC-BY-NC-4.0"
