@@ -15,6 +15,27 @@ services:
     tty: true
     stdin_open: true
 
+
+  dccc-core-legacy:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.core.legacy
+      args:
+        USER_UID: "${UID:-1000}"
+        USER_GID: "${GID:-1000}"
+    image: dccc-core-dev:legacy-glibc217
+    working_dir: /workspace/localizer/src
+    volumes:
+      - .:/workspace
+      - dccc-conan-cache-legacy:/home/dev/.conan2
+      - dccc-cmake-build-legacy:/workspace/localizer/src/build
+    environment:
+      CONAN_CPPSTD: "gnu17"
+    tty: true
+    stdin_open: true
+
 volumes:
   dccc-conan-cache:
   dccc-cmake-build:
+  dccc-conan-cache-legacy:
+  dccc-cmake-build-legacy:

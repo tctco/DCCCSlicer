@@ -1,0 +1,37 @@
+FROM quay.io/pypa/manylinux2014_x86_64
+
+ARG USERNAME=dev
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+ENV TZ=Etc/UTC \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    CONAN_HOME=/home/${USERNAME}/.conan2 \
+    PATH=/opt/python/cp311-cp311/bin:/opt/rh/devtoolset-10/root/usr/bin:$PATH \
+    LD_LIBRARY_PATH=/opt/rh/devtoolset-10/root/usr/lib64:/opt/rh/devtoolset-10/root/usr/lib \
+    CC=gcc \
+    CXX=g++
+
+RUN yum install -y \
+      sudo \
+      zlib-devel \
+    && yum clean all
+
+RUN python -m pip install --no-cache-dir --default-timeout=120 --retries=10 \
+      "cmake>=3.27,<4" \
+      "conan>=2.0,<3" \
+      ninja \
+      pandas \
+      pytest
+
+RUN groupadd --gid ${USER_GID} ${USERNAME} \
+    && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} -s /bin/bash \
+    && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
+    && chmod 0440 /etc/sudoers.d/${USERNAME}
+
+USER ${USERNAME}
+WORKDIR /workspace/localizer/src
+
+RUN conan profile detect --force
+
+CMD ["/bin/bash"]
