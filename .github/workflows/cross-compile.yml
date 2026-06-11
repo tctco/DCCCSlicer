@@ -53,7 +53,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/dccc-conan2-legacy
-          key: ${{ runner.os }}-legacy-glibc217-conan-${{ hashFiles('localizer/src/conanfile.py', 'docker/Dockerfile.core.legacy') }}
+          key: ${{ runner.os }}-legacy-glibc217-conan-${{ hashFiles('localizer/src/conanfile.py', 'docker/Dockerfile.core.legacy', 'scripts/docker-build-core.sh', '.github/workflows/cross-compile.yml') }}
           restore-keys: |
             ${{ runner.os }}-legacy-glibc217-conan-
 
@@ -138,6 +138,7 @@ jobs:
             -v "$GITHUB_WORKSPACE:/workspace" \
             -v "$legacy_conan_home:/home/dev/.conan2" \
             -e CONAN_CPPSTD=gnu17 \
+            -e CONAN_BUILD_ARGS='--build=missing --build=b2/*' \
             -e BUILD_TYPE=Release \
             -e INSTALL_PREFIX=./install \
             dccc-core-dev:legacy-glibc217 \
