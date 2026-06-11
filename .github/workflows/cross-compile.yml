@@ -36,13 +36,26 @@ jobs:
           python -m pip install --upgrade pip
           pip install conan
 
-      - name: Cache Conan packages
+      - name: Cache Conan packages (Windows/macOS)
+        if: runner.os != 'Linux'
         uses: actions/cache@v4
         with:
           path: ~/.conan2
           key: ${{ runner.os }}-conan-${{ hashFiles('localizer/src/conanfile.py') }}
           restore-keys: |
             ${{ runner.os }}-conan-
+
+      # Keep the legacy cache separate from the normal Linux cache: Conan may cache
+      # build tools such as Boost's b2, and tools built on ubuntu-latest can require
+      # newer glibc symbols than the manylinux2014/CentOS 7 container provides.
+      - name: Cache legacy Linux Conan packages
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/dccc-conan2-legacy
+          key: ${{ runner.os }}-legacy-glibc217-conan-${{ hashFiles('localizer/src/conanfile.py', 'docker/Dockerfile.core.legacy') }}
+          restore-keys: |
+            ${{ runner.os }}-legacy-glibc217-conan-
 
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v4
@@ -119,10 +132,11 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          mkdir -p "$HOME/.conan2"
+          legacy_conan_home="$RUNNER_TEMP/dccc-conan2-legacy"
+          mkdir -p "$legacy_conan_home"
           docker run --rm \
             -v "$GITHUB_WORKSPACE:/workspace" \
-            -v "$HOME/.conan2:/home/dev/.conan2" \
+            -v "$legacy_conan_home:/home/dev/.conan2" \
             -e CONAN_CPPSTD=gnu17 \
             -e BUILD_TYPE=Release \
             -e INSTALL_PREFIX=./install \
