@@ -13,9 +13,12 @@ ENV TZ=Etc/UTC \
     CXX=g++
 
 RUN yum install -y \
+      perl-IPC-Cmd \
       sudo \
       zlib-devel \
     && yum clean all
+
+RUN perl -MIPC::Cmd -e 1
 
 RUN python -m pip install --no-cache-dir --default-timeout=120 --retries=10 \
       "cmake>=3.27,<4" \
