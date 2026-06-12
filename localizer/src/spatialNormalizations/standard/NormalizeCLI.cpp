@@ -88,6 +88,14 @@ public:
         options.useManualFOV = parser.get<bool>("--manual-fov");
         options.enableDebugOutput = parser.get<bool>("--debug");
         options.enableADNIStyle = false;
+        options.batchMode = parser.get<bool>("--batch");
+        options.bidsPattern = parser.get<std::string>("--bids");
+
+        if (options.batchMode || !options.bidsPattern.empty()) {
+            std::cerr << "[normalize] --batch and --bids are not supported by normalize. "
+                      << "Use adni-pet-core for batch normalization." << std::endl;
+            return EXIT_FAILURE;
+        }
 
         setupDebugOutput(options);
 

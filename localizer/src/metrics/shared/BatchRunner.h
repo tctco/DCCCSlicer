@@ -10,7 +10,9 @@
 #include <filesystem>
 #include <functional>
 #include <iostream>
+#include <regex>
 #include <string>
+#include <vector>
 
 namespace Pipeline::Metrics::Shared {
 
@@ -56,10 +58,19 @@ int runBatch(const Options& options,
         return EXIT_FAILURE;
     }
 
-    const auto files = Common::fs::collectNiftiFiles(inputDir);
+    const bool hasBidsPattern = !options.bidsPattern.empty();
+    std::vector<std::filesystem::path> files;
+    try {
+        files = Common::fs::collectInputNiftiFiles(inputDir, options.bidsPattern);
+    } catch (const std::regex_error& ex) {
+        std::cerr << "[" << hooks.logTag << "] Invalid --bids regex: "
+                  << ex.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     if (files.empty()) {
-        std::cout << "[" << hooks.logTag << "] No NIfTI files found in "
-                  << Common::path::toUtf8(inputDir) << std::endl;
+        std::cout << "[" << hooks.logTag << "] No "
+                  << (hasBidsPattern ? "PET-BIDS NIfTI" : "NIfTI")
+                  << " files found in " << Common::path::toUtf8(inputDir) << std::endl;
         return EXIT_SUCCESS;
     }
 

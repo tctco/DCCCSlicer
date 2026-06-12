@@ -10,6 +10,7 @@ struct BaseCommandOptions {
     bool enableDebugOutput = false;
     std::string debugOutputBasePath;
     bool batchMode = false;
+    std::string bidsPattern;
 };
 
 struct SpatialNormalizationOptions {
@@ -25,5 +26,4 @@ struct NormalizeCommandOptions : BaseCommandOptions, SpatialNormalizationOptions
 void addBaseArguments(argparse::ArgumentParser& parser);
 void addSpatialNormalizationArguments(argparse::ArgumentParser& parser);
 void setupDebugOutput(BaseCommandOptions& options);
-
 

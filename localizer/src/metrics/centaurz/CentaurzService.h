@@ -21,6 +21,7 @@ struct CentaurzCLIOptions {
     bool useManualFOV = false;
     bool enableDebugOutput = false;
     bool batchMode = false;
+    std::string bidsPattern;
     bool reportDetailedRegions = false;
     std::string debugOutputBasePath;
 };

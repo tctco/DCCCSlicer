@@ -2,6 +2,7 @@
 
 #include "PathUtils.h"
 #include <algorithm>
+#include <regex>
 
 namespace Common::fs {
 
@@ -44,6 +45,28 @@ bool isNiftiFile(const std::filesystem::path& path) {
     return false;
 }
 
+bool isBidsPetNiftiFile(const std::filesystem::path& path) {
+    if (!isNiftiFile(path)) {
+        return false;
+    }
+
+    bool inPetDirectory = false;
+    for (const auto& part : path.parent_path()) {
+        if (Common::path::toLower(Common::path::toUtf8(part)) == "pet") {
+            inPetDirectory = true;
+            break;
+        }
+    }
+    if (!inPetDirectory) {
+        return false;
+    }
+
+    const std::string baseName = baseNameFromNifti(path);
+    return baseName.rfind("sub-", 0) == 0
+        && baseName.size() >= 4
+        && baseName.rfind("_pet") == baseName.size() - 4;
+}
+
 std::string baseNameFromNifti(const std::filesystem::path& file) {
     if (file.extension() == ".gz" && file.stem().extension() == ".nii") {
         return Common::path::toUtf8(file.stem().stem());
@@ -66,6 +89,40 @@ std::vector<std::filesystem::path> collectNiftiFiles(const std::filesystem::path
     return files;
 }
 
+std::vector<std::filesystem::path> collectBidsPetNiftiFiles(const std::filesystem::path& datasetRoot,
+                                                            const std::string& pattern) {
+    std::vector<std::filesystem::path> files;
+    if (!std::filesystem::exists(datasetRoot)) {
+        return files;
+    }
+
+    const std::regex nameFilter(pattern);
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(datasetRoot)) {
+        if (!entry.is_regular_file() || !isBidsPetNiftiFile(entry.path())) {
+            continue;
+        }
+
+        const std::string relativePath =
+            Common::path::toUtf8(std::filesystem::relative(entry.path(), datasetRoot));
+        const std::string filename = Common::path::toUtf8(entry.path().filename());
+        const std::string baseName = baseNameFromNifti(entry.path());
+        if (std::regex_search(relativePath, nameFilter)
+            || std::regex_search(filename, nameFilter)
+            || std::regex_search(baseName, nameFilter)) {
+            files.push_back(entry.path());
+        }
+    }
+    std::sort(files.begin(), files.end());
+    return files;
+}
+
+std::vector<std::filesystem::path> collectInputNiftiFiles(const std::filesystem::path& directory,
+                                                          const std::string& bidsPattern) {
+    return bidsPattern.empty()
+        ? collectNiftiFiles(directory)
+        : collectBidsPetNiftiFiles(directory, bidsPattern);
+}
+
 std::string buildOutputPath(const std::filesystem::path& inputFile,
                             const std::filesystem::path& outputDir,
                             const std::string& suffix) {
@@ -74,4 +131,3 @@ std::string buildOutputPath(const std::filesystem::path& inputFile,
 }
 
 }  // namespace Common::fs
-

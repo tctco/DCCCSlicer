@@ -11,7 +11,9 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <regex>
 #include <stdexcept>
+#include <vector>
 
 namespace Pipeline::SpatialNormalization::Adni {
 
@@ -22,7 +24,7 @@ struct RunConfig {
     const char* logTag = "adni-pet-core";
 };
 
-constexpr const char* kBatchOutputSuffix = "_processed.nii";
+constexpr const char* kBatchOutputSuffix = "_ADNI_style.nii";
 
 std::string resolveDebugBasePath(const NormalizeCommandOptions& options, const std::string& outputPath) {
     if (!options.enableDebugOutput || outputPath.empty()) {
@@ -122,10 +124,19 @@ int runBatchNormalization(const NormalizeCommandOptions& options,
         return EXIT_FAILURE;
     }
 
-    const auto files = Common::fs::collectNiftiFiles(inputDir);
+    const bool hasBidsPattern = !options.bidsPattern.empty();
+    std::vector<std::filesystem::path> files;
+    try {
+        files = Common::fs::collectInputNiftiFiles(inputDir, options.bidsPattern);
+    } catch (const std::regex_error& ex) {
+        std::cerr << "[" << config.logTag << "] Invalid --bids regex: "
+                  << ex.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     if (files.empty()) {
-        std::cout << "[" << config.logTag << "] No NIfTI files found in "
-                  << Common::path::toUtf8(inputDir) << std::endl;
+        std::cout << "[" << config.logTag << "] No "
+                  << (hasBidsPattern ? "PET-BIDS NIfTI" : "NIfTI")
+                  << " files found in " << Common::path::toUtf8(inputDir) << std::endl;
         return EXIT_SUCCESS;
     }
 
@@ -180,7 +191,7 @@ int runBatchNormalization(const NormalizeCommandOptions& options,
 int runNormalization(const NormalizeCommandOptions& options,
                      const RunConfig& config,
                      const std::string& fullCommand) {
-    if (options.batchMode) {
+    if (options.batchMode || !options.bidsPattern.empty()) {
         return runBatchNormalization(options, config, fullCommand);
     }
     return runSingleNormalization(options, config, fullCommand);
@@ -215,9 +226,10 @@ public:
         options.useManualFOV = parser.get<bool>("--manual-fov");
         options.enableDebugOutput = parser.get<bool>("--debug");
         options.batchMode = parser.get<bool>("--batch");
+        options.bidsPattern = parser.get<std::string>("--bids");
         options.enableADNIStyle = true;
 
-        if (!options.batchMode) {
+        if (!options.batchMode && options.bidsPattern.empty()) {
             setupDebugOutput(options);
         }
 

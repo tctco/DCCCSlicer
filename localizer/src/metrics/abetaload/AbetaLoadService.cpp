@@ -46,7 +46,7 @@ AbetaLoadService::AbetaLoadService(ConfigurationPtr config,
 
 int AbetaLoadService::run(AbetaLoadCLIOptions options, const std::string& fullCommand) {
     Pipeline::Metrics::Shared::configureDerivedDebugBasePath(options);
-    if (options.batchMode) {
+    if (options.batchMode || !options.bidsPattern.empty()) {
         return runBatch(options, fullCommand);
     }
     return runSingle(options, fullCommand);

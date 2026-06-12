@@ -21,6 +21,9 @@ void addBaseArguments(argparse::ArgumentParser& parser) {
         .help("Enable batch processing mode")
         .default_value(false)
         .implicit_value(true);
+    parser.add_argument("--bids")
+        .help("Treat --input as a PET-BIDS dataset root and process PET files matching this regex")
+        .default_value(std::string{});
 }
 
 void addSpatialNormalizationArguments(argparse::ArgumentParser& parser) {
@@ -49,4 +52,3 @@ void setupDebugOutput(BaseCommandOptions& options) {
         options.debugOutputBasePath = baseName;
     }
 }
-

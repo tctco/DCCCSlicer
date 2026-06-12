@@ -19,6 +19,7 @@ struct AbetaLoadCLIOptions {
     bool useManualFOV = false;
     bool enableDebugOutput = false;
     bool batchMode = false;
+    std::string bidsPattern;
     std::string debugOutputBasePath;
 };
 

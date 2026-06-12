@@ -133,7 +133,8 @@ Run the ADAD decoupling-based metric:
 |--------|-------------|
 | `--config <file>` | Configuration file path (default: config.toml) |
 | `--debug` | Enable debug mode with intermediate outputs |
-| `--batch` | Enable batch processing mode. In batch mode, `--input` and `--output` are treated as directories, all `.nii` / `.nii.gz` files in the input directory are processed, and outputs are written as `<filename>_processed.nii`. Metric commands also generate `results.csv`, and batch-capable commands generate `batch_info.txt` in the output directory. Currently supported for `centiloid`, `centaur`, `centaurz`, `suvr`, `abetaindex`, `abetaload`, and `adni-pet-core`. When registration is enabled (no `--skip-normalization`), the output directory must be empty to avoid overwriting. |
+| `--batch` | Enable batch processing mode. In batch mode, `--input` and `--output` are treated as directories, all `.nii` / `.nii.gz` files in the input directory are processed, and outputs use the input basename plus each command's preset suffix. Metric commands also generate `results.csv`, and batch-capable commands generate `batch_info.txt` in the output directory. Currently supported for `centiloid`, `centaur`, `centaurz`, `suvr`, `abetaindex`, `abetaload`, `rigid`, and `adni-pet-core`. When registration is enabled (no `--skip-normalization`), the output directory must be empty to avoid overwriting. |
+| `--bids <regex>` | Treat `--input` as a PET-BIDS dataset root, recursively process PET NIfTI files under `pet/` whose BIDS relative path, filename, or basename matches `<regex>`, and write outputs to the `--output` directory using the original BIDS basename plus the command suffix, such as `sub-01_ses-01_pet_rigid_aligned.nii` or `sub-01_ses-01_pet_ADNI_style.nii`. |
 | `--iterative` | Use iterative rigid transformation |
 | `--manual-fov` | Enable manual field-of-view placement |
 | `--skip-normalization` | Skip spatial normalization step |

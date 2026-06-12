@@ -27,6 +27,9 @@ void addBaseArguments(argparse::ArgumentParser& parser) {
         .help("Enable batch processing mode")
         .default_value(false)
         .implicit_value(true);
+    parser.add_argument("--bids")
+        .help("Treat --input as a PET-BIDS dataset root and process PET files matching this regex")
+        .default_value(std::string{});
 }
 
 void addSpatialNormalizationArguments(argparse::ArgumentParser& parser) {
@@ -69,6 +72,7 @@ public:
         options.useManualFOV = parser.get<bool>("--manual-fov");
         options.enableDebugOutput = parser.get<bool>("--debug");
         options.batchMode = parser.get<bool>("--batch");
+        options.bidsPattern = parser.get<std::string>("--bids");
 
         BootstrapOptions bootstrapOptions;
         bootstrapOptions.configPath = options.configPath;

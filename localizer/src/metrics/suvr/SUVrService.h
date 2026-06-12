@@ -16,6 +16,7 @@ struct SUVrCLIOptions {
     bool enableDebugOutput = false;
     std::string debugOutputBasePath;
     bool batchMode = false;
+    std::string bidsPattern;
     bool skipRegistration = false;
     bool useIterativeRigid = false;
     bool useManualFOV = false;

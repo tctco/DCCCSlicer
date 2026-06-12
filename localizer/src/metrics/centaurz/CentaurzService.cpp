@@ -160,10 +160,10 @@ CentaurzService::CentaurzService(ConfigurationPtr config,
 }
 
 int CentaurzService::run(CentaurzCLIOptions options, const std::string& fullCommand) {
-    if (!options.batchMode) {
+    if (!options.batchMode && options.bidsPattern.empty()) {
         Pipeline::Metrics::Shared::configureDerivedDebugBasePath(options);
     }
-    if (options.batchMode) {
+    if (options.batchMode || !options.bidsPattern.empty()) {
         return runBatch(options, fullCommand);
     }
     return runSingle(options, fullCommand);
