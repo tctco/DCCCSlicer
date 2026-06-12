@@ -161,7 +161,14 @@ Build and install the C++ core:
 docker compose -f docker-compose.core.yml run --rm dccc-core /workspace/scripts/docker-build-core.sh
 ```
 
-The installed executable will be written to `localizer/src/install/bin/DCCCcore`. Conan packages and the CMake build tree are kept in Docker volumes so later builds can reuse downloaded and compiled dependencies. The script defaults to `CONAN_CPPSTD=gnu17` on Linux to reuse more Conan Center binaries; use `CONAN_CPPSTD=17` if you need a strict non-GNU C++17 profile.
+For Linux release builds that must run on older distributions without glibc 2.34, use the legacy compatibility container instead. It is based on the manylinux2014 / CentOS 7 toolchain so generated Linux binaries target glibc 2.17, which covers RHEL/CentOS 7-era images and avoids accidental `GLIBC_2.34` symbol requirements:
+
+```bash
+docker compose -f docker-compose.core.yml build dccc-core-legacy
+docker compose -f docker-compose.core.yml run --rm dccc-core-legacy /workspace/scripts/docker-build-core.sh
+```
+
+The installed executable will be written to `localizer/src/install/bin/DCCCcore`. Conan packages and the CMake build tree are kept in Docker volumes so later builds can reuse downloaded and compiled dependencies. The default development container and the legacy compatibility container use separate Conan and CMake volumes to avoid mixing dependency builds from different glibc baselines. The script defaults to `CONAN_CPPSTD=gnu17` on Linux to reuse more Conan Center binaries; use `CONAN_CPPSTD=17` if you need a strict non-GNU C++17 profile. The legacy container also sets `CONAN_BUILD_ARGS="--build=missing --build=b2/* --build=m4/* --build=autoconf/* --build=automake/* --build=libtool/* --build=pkgconf/*"` so native build tools such as Boost's `b2` and autotools packages used by libcurl are compiled inside the manylinux2014 environment instead of downloading ConanCenter binaries that may require newer glibc symbols such as `GLIBC_2.34`.
 
 The first run can still take a long time because Conan Center may not provide matching Linux binaries for heavy packages such as ITK, ONNX Runtime, Boost, HDF5, GDCM, or TBB. Let the first build finish once on a machine, then keep the Docker volumes for normal incremental development.
 
