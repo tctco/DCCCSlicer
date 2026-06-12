@@ -31,7 +31,7 @@ services:
       - dccc-cmake-build-legacy:/workspace/localizer/src/build
     environment:
       CONAN_CPPSTD: "gnu17"
-      CONAN_BUILD_ARGS: "--build=missing --build=b2/*"
+      CONAN_BUILD_ARGS: "--build=missing --build=b2/* --build=m4/* --build=autoconf/* --build=automake/* --build=libtool/* --build=pkgconf/*"
     tty: true
     stdin_open: true
 

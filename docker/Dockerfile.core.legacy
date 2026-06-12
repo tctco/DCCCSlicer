@@ -12,17 +12,28 @@ ENV TZ=Etc/UTC \
     CC=gcc \
     CXX=g++
 
-# OpenSSL's Configure uses Perl core modules such as IPC::Cmd and
-# Time::Piece. RHEL/CentOS split many core Perl modules out of the base
-# interpreter, so install the perl-core metapackage instead of chasing
-# individual missing modules during Conan source builds.
+# Conan has to build several dependencies from source in the legacy glibc
+# container. Install a small source-build baseline instead of discovering
+# missing autotools/Perl pieces one CI failure at a time. OpenSSL's Configure
+# uses Perl core modules such as IPC::Cmd and Time::Piece, and libcurl's
+# autoreconf path needs GNU autotools utilities including m4.
 RUN yum install -y \
+      autoconf \
+      automake \
+      libtool \
+      m4 \
+      make \
+      patch \
       perl-core \
+      pkgconfig \
       sudo \
+      which \
       zlib-devel \
     && yum clean all
 
-RUN perl -MIPC::Cmd -MTime::Piece -e 1
+RUN perl -MIPC::Cmd -MTime::Piece -e 1 \
+    && m4 --version \
+    && autoreconf --version
 
 RUN python -m pip install --no-cache-dir --default-timeout=120 --retries=10 \
       "cmake>=3.27,<4" \

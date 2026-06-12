@@ -138,7 +138,7 @@ jobs:
             -v "$GITHUB_WORKSPACE:/workspace" \
             -v "$legacy_conan_home:/home/dev/.conan2" \
             -e CONAN_CPPSTD=gnu17 \
-            -e CONAN_BUILD_ARGS='--build=missing --build=b2/*' \
+            -e CONAN_BUILD_ARGS='--build=missing --build=b2/* --build=m4/* --build=autoconf/* --build=automake/* --build=libtool/* --build=pkgconf/*' \
             -e BUILD_TYPE=Release \
             -e INSTALL_PREFIX=./install \
             dccc-core-dev:legacy-glibc217 \
