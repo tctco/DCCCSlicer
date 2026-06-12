@@ -25,6 +25,8 @@ https://github.com/user-attachments/assets/680490d2-ebec-4846-871c-98fdc383b513
 
 - 20260208: Our paper entitled _Decoupling Alzheimer’s Disease Pathology in PET with Improved Clinical Relevance via Interpretable Adversarial Decomposition Learning_ was accepted by _Radiology_.
 - 20260408: The paper is now published online by [Radiology](https://pubs.rsna.org/doi/10.1148/radiol.252321).
+- 20260610: Our paper entitled _Cascaded Deep Learning enables multimodal brain PET spatial normalization and quantification for Alzheimer’s disease_ was accepted by _NeuroImage_.
+- 20260613: The paper is now published online by [NeuroImage](https://www.sciencedirect.com/science/article/pii/S105381192600354X).
 
 ## Quality control
 
@@ -155,6 +157,18 @@ If you find this repository helpful for your work, please cite:
   doi = {10.1148/radiol.252321},
   note = {PMID: 41944723},
   url = {https://doi.org/10.1148/radiol.252321}
+}
+
+@article{TANG2026122039,
+title = {Cascaded Deep Learning enables multimodal brain PET spatial normalization and quantification for Alzheimer’s disease},
+journal = {NeuroImage},
+pages = {122039},
+year = {2026},
+issn = {1053-8119},
+doi = {https://doi.org/10.1016/j.neuroimage.2026.122039},
+url = {https://www.sciencedirect.com/science/article/pii/S105381192600354X},
+author = {Cheng Tang and Anqi Tang and Mengyu Wan and Chunyan Li and Weiwei Ruan and Fang Liu and Hanyi Fang and Yongkang Gai and Dawei Jiang and Wanye Zhou and Xiaoli Lan and Xun Sun},
+keywords = {Alzheimer’s Disease, Brain PET Imaging, Spatial Normalization, Deep Learning},
 }
 ```
 
