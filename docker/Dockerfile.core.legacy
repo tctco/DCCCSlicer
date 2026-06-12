@@ -12,13 +12,17 @@ ENV TZ=Etc/UTC \
     CC=gcc \
     CXX=g++
 
+# OpenSSL's Configure uses Perl core modules such as IPC::Cmd and
+# Time::Piece. RHEL/CentOS split many core Perl modules out of the base
+# interpreter, so install the perl-core metapackage instead of chasing
+# individual missing modules during Conan source builds.
 RUN yum install -y \
-      perl-IPC-Cmd \
+      perl-core \
       sudo \
       zlib-devel \
     && yum clean all
 
-RUN perl -MIPC::Cmd -e 1
+RUN perl -MIPC::Cmd -MTime::Piece -e 1
 
 RUN python -m pip install --no-cache-dir --default-timeout=120 --retries=10 \
       "cmake>=3.27,<4" \
