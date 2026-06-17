@@ -1,8 +1,9 @@
 #pragma once
 #include "../interfaces/ISpatialNormalizer.h"
 #include "../interfaces/IConfiguration.h"
-#include "RegistrationPipeline.h"  // Use new registration pipeline
-#include <unordered_map>
+#include "RigidAlignmentNormalizer.h"
+#include "VoxelMorphNormalizer.h"
+#include <memory>
 
 /**
  * @brief Spatial normalizer based on rigid registration and VoxelMorph
@@ -37,24 +38,13 @@ public:
     
 private:
     ConfigurationPtr config_;
-    std::unique_ptr<RegistrationPipeline> registrationPipeline_;
-    ImageType::Pointer paddedTemplate_;
+    std::unique_ptr<RigidAlignmentNormalizer> rigidNormalizer_;
+    std::unique_ptr<VoxelMorphNormalizer> voxelMorphNormalizer_;
     
     // Debug parameters
     bool debugMode_ = false;
     std::string debugBasePath_ = "";
 
-    struct RigidAlignmentEstimate {
-        ImageType::Pointer preprocessedImage;
-        std::unordered_map<std::string, std::vector<float>> orientation;
-    };
-    
-    void initializeModel();
-    ImageType::Pointer cropMNI(ImageType::Pointer image);
-    RigidAlignmentEstimate estimateRigidAlignment(ImageType::Pointer inputImage, bool resampleFirst = false);
-    void applyRigidAlignmentEstimate(ImageType::Pointer targetImage, const RigidAlignmentEstimate& estimate);
-    ImageType::Pointer performRigidAlignment(ImageType::Pointer inputImage, bool resampleFirst = false);
-    ImageType::Pointer performIterativeRigidAlignment(ImageType::Pointer inputImage, int maxIter, float threshold);
-    ImageType::Pointer performVoxelMorphWarping(ImageType::Pointer rigidImage);
-    void saveDebugImage(ImageType::Pointer image, const std::string& suffix);
+    RigidAlignmentNormalizer& rigidNormalizer();
+    VoxelMorphNormalizer& voxelMorphNormalizer();
 };

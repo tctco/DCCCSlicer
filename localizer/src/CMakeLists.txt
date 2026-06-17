@@ -53,8 +53,10 @@ target_sources(DCCCcore PRIVATE
 target_sources(DCCCcore PRIVATE
     core/normalizers/RigidVoxelMorphNormalizer.h
     core/normalizers/RigidVoxelMorphNormalizer.cpp
-    core/normalizers/RegistrationPipeline.h
-    core/normalizers/RegistrationPipeline.cpp
+    core/normalizers/RigidAlignmentNormalizer.h
+    core/normalizers/RigidAlignmentNormalizer.cpp
+    core/normalizers/VoxelMorphNormalizer.h
+    core/normalizers/VoxelMorphNormalizer.cpp
     core/normalizers/RigidRegistrationEngine.h
     core/normalizers/RigidRegistrationEngine.cpp
     core/normalizers/NonlinearRegistrationEngine.h

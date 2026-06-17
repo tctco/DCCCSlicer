@@ -49,6 +49,8 @@ The slow path was not caused by repeatedly reading the input file from disk. The
 Implemented changes:
 
 - Added rigid-only normalization entry points so the `rigid` command stops before VoxelMorph.
+- Split rigid alignment and VoxelMorph warping into separate lazy-loaded components, so `rigid` does not load VoxelMorph and `--manual-fov` does not load the rigid model.
+- Removed the old combined `RegistrationPipeline` from the build to avoid reintroducing a runtime path that initializes both engines together.
 - Removed the unused per-iteration `rigid_iter.nii` temporary write.
 - Replaced full percentile sorting with `std::nth_element` over a `float` voxel buffer.
 
@@ -62,7 +64,7 @@ Rejected low-resolution-cache experiment:
 - Wall time: 16.848 seconds
 - Max old/new sform absolute difference: 19.525314 mm
 
-Final result:
+Final result before component split:
 
 - Return code: 0
 - Wall time: 16.991 seconds
@@ -71,9 +73,18 @@ Final result:
 - Max old/new quaternion absolute difference: 0.0
 - Max RSS: 6,241,604 KB
 
+Final result after Rigid/VoxelMorph component split:
+
+- Return code: 0
+- Wall time: 6.270 seconds
+- Max old/new sform absolute difference: 0.0
+- Max old/new qoffset absolute difference: 0.0
+- Max old/new quaternion absolute difference: 0.0
+- Max RSS: 2,009,480 KB
+
 An earlier final timing run before the affine correction measured 16.848 seconds and max RSS 6,603,216 KB, but that variant is not valid because the affine changed.
 
-After rigid-only branching and removal of the low-resolution-cache experiment, the accepted output preserves the old affine exactly for this CT benchmark while still avoiding the discarded VoxelMorph work.
+After rigid-only branching, removal of the low-resolution-cache experiment, and component-level lazy loading, the accepted output preserves the old affine exactly for this CT benchmark while avoiding discarded VoxelMorph work and VoxelMorph model loading.
 
 Earlier intermediate result after rigid-only branching and low-resolution iterative working image, before the percentile change:
 
@@ -85,8 +96,8 @@ This intermediate low-resolution result is included only for auditability and is
 
 Compared with baseline:
 
-- Wall time improved by about 47.3%.
-- Peak RSS remained high because the original high-resolution CT image and ITK processing buffers are still held during the first rigid pass.
+- Wall time improved by about 80.5%.
+- Peak RSS improved because the `rigid` path no longer loads the VoxelMorph model or padded VoxelMorph processing buffers.
 
 ## Verification
 
@@ -95,11 +106,20 @@ Commands run:
 ```bash
 docker compose -f docker-compose.core.yml run --rm dccc-core /workspace/scripts/docker-build-core.sh
 docker compose -f docker-compose.core.yml run --rm dccc-core pytest tests/test_normalize_cli.py -q
+docker compose -f docker-compose.core.yml run --rm dccc-core pytest tests/test_acc_centiloid_centaurz_cli.py -q
 ```
 
 Test result:
 
-- `tests/test_normalize_cli.py`: 4 passed in 41.85 seconds
+- `tests/test_normalize_cli.py`: 4 passed in 32.11 seconds
+- `tests/test_acc_centiloid_centaurz_cli.py`: 30 passed in 445.83 seconds
+- `DCCCcore --version`: `4.2.3-alpha`
+
+Component split behavior check:
+
+- With a config whose `models.rigid` path points to a missing file, `normalize --manual-fov` returned 0.
+- With the same config, `rigid` returned 1 while loading the missing rigid model.
+- This confirms `--manual-fov` no longer initializes the rigid engine, while rigid paths still validate the rigid model.
 
 ## Notes
 
