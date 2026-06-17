@@ -28,7 +28,15 @@ SpatialNormalizationOutput SpatialNormalizationService::normalize(const SpatialN
             normalizer->setDebugMode(true, request.options.debugOutputBasePath);
         }
 
-        if (request.options.useManualFOV) {
+        if (request.options.rigidOnly) {
+            output.rigidAlignedImage = request.options.useIterativeRigid
+                                           ? normalizer->normalizeIterativeRigidOnly(
+                                                 inputImage,
+                                                 request.options.maxIterations,
+                                                 request.options.convergenceThreshold)
+                                           : normalizer->normalizeRigidOnly(inputImage);
+            output.spatiallyNormalizedImage = output.rigidAlignedImage;
+        } else if (request.options.useManualFOV) {
             output.rigidAlignedImage = inputImage;
             output.spatiallyNormalizedImage = normalizer->normalizeManualFOV(inputImage);
         } else if (request.options.useIterativeRigid) {
@@ -37,15 +45,11 @@ SpatialNormalizationOutput SpatialNormalizationService::normalize(const SpatialN
                 request.options.maxIterations,
                 request.options.convergenceThreshold);
             output.rigidAlignedImage = normResult.rigidAlignedImage;
-            output.spatiallyNormalizedImage = request.options.rigidOnly
-                                                 ? normResult.rigidAlignedImage
-                                                 : normResult.spatiallyNormalizedImage;
+            output.spatiallyNormalizedImage = normResult.spatiallyNormalizedImage;
         } else {
             auto normResult = normalizer->normalizeWithIntermediateResults(inputImage);
             output.rigidAlignedImage = normResult.rigidAlignedImage;
-            output.spatiallyNormalizedImage = request.options.rigidOnly
-                                                 ? normResult.rigidAlignedImage
-                                                 : normResult.spatiallyNormalizedImage;
+            output.spatiallyNormalizedImage = normResult.spatiallyNormalizedImage;
         }
     }
 

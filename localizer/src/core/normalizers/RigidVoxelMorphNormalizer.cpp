@@ -23,35 +23,20 @@ ImageType::Pointer RigidVoxelMorphNormalizer::normalize(ImageType::Pointer input
     return performVoxelMorphWarping(rigidImage);
 }
 
+ImageType::Pointer RigidVoxelMorphNormalizer::normalizeRigidOnly(ImageType::Pointer inputImage) {
+    ImageType::Pointer rigidImage = performRigidAlignment(inputImage);
+    saveDebugImage(rigidImage, "rigid");
+    return rigidImage;
+}
+
+ImageType::Pointer RigidVoxelMorphNormalizer::normalizeIterativeRigidOnly(
+    ImageType::Pointer inputImage, int maxIter, float threshold) {
+    return performIterativeRigidAlignment(inputImage, maxIter, threshold);
+}
+
 ImageType::Pointer RigidVoxelMorphNormalizer::normalizeIterative(
     ImageType::Pointer inputImage, int maxIter, float threshold) {
-    
-    ImageType::Pointer currentImage = performRigidAlignment(inputImage, false);
-    saveDebugImage(currentImage, "rigid0");
-    ImageType::PointType lastOrigin = currentImage->GetOrigin();
-    
-    for (int i = 0; i < maxIter; ++i) {
-        // Save temporary file
-        std::string tempPath = config_->getTempDirPath() + "/rigid_iter.nii";
-        Common::nifti::saveImage(currentImage, tempPath);
-        
-        // Execute next rigid registration
-        currentImage = performRigidAlignment(currentImage, true);
-        saveDebugImage(currentImage, "rigid" + std::to_string(i + 1));
-        
-        // Check convergence
-        float originShift = 0;
-        for (int j = 0; j < 3; ++j) {
-            originShift += std::pow(currentImage->GetOrigin()[j] - lastOrigin[j], 2);
-        }
-        originShift = std::sqrt(originShift);
-        
-        if (originShift < threshold) {
-            break;
-        }
-        lastOrigin = currentImage->GetOrigin();
-    }
-    
+    ImageType::Pointer currentImage = performIterativeRigidAlignment(inputImage, maxIter, threshold);
     return performVoxelMorphWarping(currentImage);
 }
 
@@ -76,39 +61,14 @@ RigidVoxelMorphNormalizer::NormalizationResult RigidVoxelMorphNormalizer::normal
 RigidVoxelMorphNormalizer::NormalizationResult RigidVoxelMorphNormalizer::normalizeIterativeWithIntermediateResults(ImageType::Pointer inputImage, int maxIter, float threshold) {
     NormalizationResult result;
     
-    ImageType::Pointer currentImage = performRigidAlignment(inputImage, false);
-    saveDebugImage(currentImage, "rigid0");
-    ImageType::PointType lastOrigin = currentImage->GetOrigin();
-    
-    for (int i = 0; i < maxIter; ++i) {
-        // Save temporary file
-        std::string tempPath = config_->getTempDirPath() + "/rigid_iter.nii";
-        Common::nifti::saveImage(currentImage, tempPath);
-        
-        // Execute next rigid registration
-        currentImage = performRigidAlignment(currentImage, true);
-        saveDebugImage(currentImage, "rigid" + std::to_string(i + 1));
-        
-        // Check convergence
-        float originShift = 0;
-        for (int j = 0; j < 3; ++j) {
-            originShift += std::pow(currentImage->GetOrigin()[j] - lastOrigin[j], 2);
-        }
-        originShift = std::sqrt(originShift);
-        
-        if (originShift < threshold) {
-            break;
-        }
-        lastOrigin = currentImage->GetOrigin();
-    }
-    
-    result.rigidAlignedImage = currentImage;
-    result.spatiallyNormalizedImage = performVoxelMorphWarping(currentImage);
+    result.rigidAlignedImage = performIterativeRigidAlignment(inputImage, maxIter, threshold);
+    result.spatiallyNormalizedImage = performVoxelMorphWarping(result.rigidAlignedImage);
     
     return result;
 }
 
-ImageType::Pointer RigidVoxelMorphNormalizer::performRigidAlignment(ImageType::Pointer inputImage, bool resampleFirst) {
+RigidVoxelMorphNormalizer::RigidAlignmentEstimate RigidVoxelMorphNormalizer::estimateRigidAlignment(
+    ImageType::Pointer inputImage, bool resampleFirst) {
     ImageType::Pointer processedImage = inputImage;
     
     if (resampleFirst) {
@@ -124,20 +84,60 @@ ImageType::Pointer RigidVoxelMorphNormalizer::performRigidAlignment(ImageType::P
     
     // Execute prediction
     auto orientation = registrationPipeline_->predict(imageData, {1, 1, 64, 64, 64});
+
+    return RigidAlignmentEstimate{processedImage, orientation};
+}
+
+void RigidVoxelMorphNormalizer::applyRigidAlignmentEstimate(
+    ImageType::Pointer targetImage, const RigidAlignmentEstimate& estimate) {
+    if (!targetImage) {
+        return;
+    }
     
     // Get new origin and direction
-    ImageType::Pointer originalImage = inputImage;  // Use original image to get new origin and direction
     auto newOriginAndDirection = registrationPipeline_->getNewOriginAndDirection(
-        processedImage, originalImage, 
-        orientation["ac"], orientation["pa"], orientation["is"]);
+        estimate.preprocessedImage, targetImage,
+        estimate.orientation.at("ac"),
+        estimate.orientation.at("pa"),
+        estimate.orientation.at("is"));
     
     ImageType::PointType newOrigin = std::get<0>(newOriginAndDirection);
     ImageType::DirectionType newDirection = std::get<1>(newOriginAndDirection);
     
-    originalImage->SetDirection(newDirection);
-    originalImage->SetOrigin(newOrigin);
+    targetImage->SetDirection(newDirection);
+    targetImage->SetOrigin(newOrigin);
+}
+
+ImageType::Pointer RigidVoxelMorphNormalizer::performRigidAlignment(ImageType::Pointer inputImage, bool resampleFirst) {
+    auto estimate = estimateRigidAlignment(inputImage, resampleFirst);
+    applyRigidAlignmentEstimate(inputImage, estimate);
     
-    return originalImage;
+    return inputImage;
+}
+
+ImageType::Pointer RigidVoxelMorphNormalizer::performIterativeRigidAlignment(
+    ImageType::Pointer inputImage, int maxIter, float threshold) {
+    ImageType::Pointer currentImage = performRigidAlignment(inputImage, false);
+    saveDebugImage(currentImage, "rigid0");
+    ImageType::PointType lastOrigin = currentImage->GetOrigin();
+
+    for (int i = 0; i < maxIter; ++i) {
+        currentImage = performRigidAlignment(currentImage, true);
+        saveDebugImage(currentImage, "rigid" + std::to_string(i + 1));
+
+        float originShift = 0;
+        for (int j = 0; j < 3; ++j) {
+            originShift += std::pow(currentImage->GetOrigin()[j] - lastOrigin[j], 2);
+        }
+        originShift = std::sqrt(originShift);
+
+        if (originShift < threshold) {
+            break;
+        }
+        lastOrigin = currentImage->GetOrigin();
+    }
+
+    return currentImage;
 }
 
 ImageType::Pointer RigidVoxelMorphNormalizer::performVoxelMorphWarping(ImageType::Pointer rigidImage) {
