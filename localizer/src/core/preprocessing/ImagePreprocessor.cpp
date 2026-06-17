@@ -24,10 +24,10 @@ ImageType::Pointer ImagePreprocessor::preprocessForVoxelMorph(ImageType::Pointer
 ImageType::Pointer ImagePreprocessor::clipIntensityPercentiles(ImageType::Pointer image,
                                                               double lowerPercentile,
                                                               double upperPercentile) {
-    auto sortedVoxelValue = getSortedPixelValues(image);
+    auto voxelValues = getPixelValues(image);
 
-    double lowerValue = getPercentileValue(sortedVoxelValue, lowerPercentile);
-    double upperValue = getPercentileValue(sortedVoxelValue, upperPercentile);
+    double lowerValue = getPercentileValue(voxelValues, lowerPercentile);
+    double upperValue = getPercentileValue(voxelValues, upperPercentile);
 
     using IntensityWindowingImageFilterType =
         itk::IntensityWindowingImageFilter<ImageType, ImageType>;
@@ -173,22 +173,27 @@ ImageType::Pointer ImagePreprocessor::resizeImage(ImageType::Pointer image,
     return resampler->GetOutput();
 }
 
-std::vector<double> ImagePreprocessor::getSortedPixelValues(ImageType::Pointer image) {
-    itk::ImageRegionIterator<ImageType> it(image, image->GetRequestedRegion());
-    std::vector<double> pixelValues;
+std::vector<float> ImagePreprocessor::getPixelValues(ImageType::Pointer image) {
+    ImageType::RegionType region = image->GetRequestedRegion();
+    itk::ImageRegionIterator<ImageType> it(image, region);
+    std::vector<float> pixelValues;
+    pixelValues.reserve(region.GetNumberOfPixels());
 
     for (it.GoToBegin(); !it.IsAtEnd(); ++it) {
         pixelValues.push_back(it.Get());
     }
 
-    std::sort(pixelValues.begin(), pixelValues.end());
     return pixelValues;
 }
 
-double ImagePreprocessor::getPercentileValue(const std::vector<double>& sortedValues,
-                                           double percentile) {
-    size_t index = static_cast<size_t>(percentile * (sortedValues.size() - 1));
-    return sortedValues[index];
-}
+double ImagePreprocessor::getPercentileValue(std::vector<float>& values,
+                                             double percentile) {
+    if (values.empty()) {
+        return 0.0;
+    }
 
+    size_t index = static_cast<size_t>(percentile * (values.size() - 1));
+    std::nth_element(values.begin(), values.begin() + index, values.end());
+    return values[index];
+}
 

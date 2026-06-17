@@ -40,8 +40,7 @@ private:
                                          const ImageType::SizeType& newSize);
     
     // Helper functions
-    static std::vector<double> getSortedPixelValues(ImageType::Pointer image);
-    static double getPercentileValue(const std::vector<double>& sortedValues, double percentile);
+    static std::vector<float> getPixelValues(ImageType::Pointer image);
+    static double getPercentileValue(std::vector<float>& values, double percentile);
 };
-
 
