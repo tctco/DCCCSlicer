@@ -1,582 +1,385 @@
-## Developer Guide: Extending the Deep Cascaded Cerebral Calculator
+# Developer Guide
 
-This document is intended for contributors and advanced users who want to extend the **Deep Cascaded Cerebral Calculator** (DCCCSlicer core) with new semi‑quantitative PET biomarkers (\"metrics\"), or understand how the existing ones (Centiloid, CenTauR/CenTauRz, Fill‑states, SUVr) are implemented.
+This guide describes the current `localizer/src` architecture after the metric refactor. The main rule is simple:
 
-It consolidates and expands the previous “Developer Guide” section from `localizer/src/README.md` and adds a concrete example based on the new `FillStates` metric.
+- `core/` provides shared capabilities
+- `metrics/` owns metric workflows
+- `spatialNormalizations/` exposes normalization-only CLIs
 
----
+There is no longer a global metric pipeline in `core`.
 
-## 1. High‑Level Architecture
+## Architecture
 
-At a high level, the system is structured as follows:
+### `core/`
 
-```mermaid
-graph TD
-  subgraph CLI
-    Main[main.cpp] --> Cmds[cli/Commands]
-    Main --> Opts[cli/Options]
-  end
+`core/` is the foundation layer. It should not know how a specific metric works.
 
-  subgraph Config
-    IConfiguration
-    Configuration
-  end
+Key areas:
 
-  subgraph Pipeline
-    ProcessingPipeline
-    BatchProcessor
-  end
+- `core/config/`
+  - TOML loading
+  - executable-relative path resolution
+  - default configuration values
+- `core/common/`
+  - NIfTI IO
+  - image operations
+  - filesystem/path helpers
+  - logging helpers
+  - normalization contracts
+- `core/services/`
+  - `SpatialNormalizationService`
+  - `FileService`
+- `core/di/`
+  - `ServiceContainer`
+  - `buildCoreContainer(...)`
+- `core/normalizers/`
+  - rigid + deformable normalization implementation details
 
-  subgraph Normalization
-    ISpatialNormalizer
-    SpatialNormalizerFactory
-    RigidVoxelMorphNormalizer
-    subgraph RegistrationPipeline
-      ImagePreprocessor
-      RigidRegistrationEngine
-      NonlinearRegistrationEngine
-    end
-  end
+`core/` should not contain:
 
-  subgraph Metrics
-    IMetricCalculator
-    MetricCalculatorFactory
-    SUVrCalculator
-    CentiloidCalculator
-    CenTauRCalculator
-    CenTauRzCalculator
-    FillStatesCalculator
-  end
+- metric registries for calculation dispatch
+- metric logic abstractions
+- metric-specific workflows
+- metric CLI abstractions
+- a global `PipelineApplication`
 
-  subgraph Decoupling
-    Decoupler
-    DecoupledResult
-  end
+### `metrics/`
 
-  Input[NIfTI PET images] -->|single file| ProcessingPipeline
-  Input -->|batch| BatchProcessor
+Each metric is a self-contained module under `localizer/src/metrics/<name>/`.
 
-  Cmds --> ProcessingPipeline
-  Cmds --> BatchProcessor
-  Opts --> Cmds
+Current examples:
 
-  Configuration --> ProcessingPipeline
-  IConfiguration --> Configuration
+- `suvr/`
+- `centiloid/`
+- `centaur/`
+- `centaurz/`
+- `fillstates/`
+- `abetaload/`
+- `abetaindex/`
+- `adad/`
 
-  ProcessingPipeline --> SpatialNormalizerFactory
-  SpatialNormalizerFactory --> RigidVoxelMorphNormalizer
-  RigidVoxelMorphNormalizer --> RegistrationPipeline
-  RigidRegistrationEngine --> ONNXRuntime[ONNX Runtime]
-  NonlinearRegistrationEngine --> ONNXRuntime
+Each metric should own its own execution path:
 
-  ProcessingPipeline --> MetricCalculatorFactory
-  MetricCalculatorFactory --> SUVrCalculator
-  MetricCalculatorFactory --> CentiloidCalculator
-  MetricCalculatorFactory --> CenTauRCalculator
-  MetricCalculatorFactory --> CenTauRzCalculator
-  MetricCalculatorFactory --> FillStatesCalculator
+- parse arguments in its CLI
+- build a core container
+- resolve shared services
+- decide whether to normalize
+- call its calculator
+- format outputs
 
-  ProcessingPipeline --> Decoupler
-  Decoupler --> ONNXRuntime
-  Decoupler --> DecoupledResult
+### `metrics/shared/`
 
-  ProcessingPipeline --> OutputSingle[Output NIfTI and Metric Results]
-  BatchProcessor --> OutputBatch[Processed NIfTI files, results.csv, batch_info.txt]
+This folder is for metric-facing shared utilities that do not belong in `core/`.
 
-  Common[utils/common.h - ITK and ONNX helpers] --> ProcessingPipeline
-  Common --> RigidVoxelMorphNormalizer
-  Common --> RigidRegistrationEngine
-  Common --> NonlinearRegistrationEngine
-  Common --> SUVrCalculator
-  TemplatesMasks[Templates and Masks via config] --> RigidVoxelMorphNormalizer
-  TemplatesMasks --> SUVrCalculator
-  TemplatesMasks --> Decoupler
+Current shared pieces:
+
+- `IMetricCLI.h`
+- `MetricRegistry.*`
+- `MetricTypes.h`
+- `MetricRunResult.h`
+- `SingleRunner.h`
+- `BatchRunner.h`
+- `BatchLogging.*`
+- `DebugPathHelpers.h`
+
+Use `metrics/shared/` for cross-metric helpers. Do not push metric workflow abstractions back into `core/`.
+
+### `spatialNormalizations/`
+
+These commands expose normalization without metric calculation:
+
+- `normalize`
+- `adni-pet-core`
+
+They directly use `ISpatialNormalizationService` and `IFileService`. They do not go through a metric pipeline.
+
+## Runtime Flow
+
+The executable entrypoint is [main.cpp](../localizer/src/main.cpp).
+
+At startup:
+
+1. `main.cpp` builds metric CLIs from `Pipeline::Metrics::buildCLIModules()`
+2. `main.cpp` builds normalization CLIs from `Pipeline::SpatialNormalization::buildCLIModules()`
+3. the selected subcommand executes its own module
+
+For a metric command, the flow is:
+
+1. CLI parses arguments into a metric-specific options struct
+2. CLI calls `buildCoreContainer(...)`
+3. metric service resolves:
+   - `IConfiguration`
+   - `ISpatialNormalizationService`
+   - `IFileService`
+4. metric service runs single-file or batch workflow
+5. calculator performs the actual metric computation
+
+In other words:
+
+- `main.cpp` dispatches commands
+- `core` provides capabilities
+- `metric service` owns workflow
+- `metric calculator` owns computation
+
+## Current Module Shape
+
+The preferred metric shape is:
+
+```text
+metrics/<name>/
+  <Name>CLI.h
+  <Name>CLI.cpp
+  <Name>Service.h
+  <Name>Service.cpp
+  <Name>Calculator.h
+  <Name>Calculator.cpp
+  <Name>Module.h
+  <Name>Module.cpp
 ```
 
-Key components:
+Responsibilities:
 
-- **Interfaces** (`interfaces/`): contracts for calculators (`IMetricCalculator`), spatial normalizers (`ISpatialNormalizer`), and configuration (`IConfiguration`).
-- **Calculators** (`calculators/`): implementations of specific metrics (e.g., `Centiloid`, `CenTauR`, `CenTauRz`, `SUVr`, `FillStates`).
-- **Factories** (`factories/`): `MetricCalculatorFactory` and `SpatialNormalizerFactory` manage construction and registration of calculators/normalizers.
-- **Pipeline** (`pipeline/`): `ProcessingPipeline` orchestrates I/O, spatial normalization, metric calculation, and decoupling.
-- **Decoupling** (`decouplers/`): deep‑learning–based AD‑related pathology extraction.
-- **Utilities** (`utils/common.*`): ITK image I/O, resampling, mean computation, path helpers, etc.
+- `CLI`
+  - declares subcommand name
+  - defines CLI arguments
+  - builds options
+  - creates the core container
+  - calls the service
+- `Service`
+  - validates metric-specific runtime requirements
+  - builds normalization requests
+  - chooses single vs batch execution
+  - saves normalized output
+  - prepares calculator inputs from config/assets
+- `Calculator`
+  - pure metric computation
+  - should not parse CLI flags
+  - should not bootstrap services
+- `Module`
+  - registers the CLI with `MetricRegistry`
 
----
+If a metric is very small, `Service` and `Calculator` may look close in size. That is acceptable. The important split is:
 
-## 2. Standard Workflow for Adding a New Metric
+- workflow in `Service`
+- numeric/image computation in `Calculator`
 
-New metrics in DCCCSlicer typically follow a standard pattern:
+## Registry and Discovery
 
-1. Define a new `IMetricCalculator` implementation under `localizer/src/calculators/`.
-2. Register it in `MetricCalculatorFactory`.
-3. Add configuration entries (masks, tracer parameters, etc.) in `assets/configs/config.toml`.
-4. Add optional command‑line support (new subcommand) via `cli/Options` and `cli/Commands`.
-5. Add tests (unit + CLI/batch integration).
+Metric discovery is handled in:
 
-Below is a generic step‑by‑step template you can follow.
+- [metrics/shared/MetricRegistry.h](../localizer/src/metrics/shared/MetricRegistry.h)
+- [metrics/ModuleCatalog.cpp](../localizer/src/metrics/ModuleCatalog.cpp)
 
-### 2.1. Implement the Calculator Interface
+This registry is for CLI/module discovery, not for a core-side metric dispatch pipeline.
 
-Create a new calculator class deriving from `IMetricCalculator`:
+To expose a new metric:
+
+1. implement `createCLI()` in the metric folder
+2. implement `registerModule(MetricRegistry&)`
+3. add the metric module to `metrics/ModuleCatalog.cpp`
+
+## Shared Execution Helpers
+
+Most metrics should reuse the shared runners:
+
+- `SingleRunner.h`
+- `BatchRunner.h`
+
+These helpers standardize:
+
+- logging
+- batch iteration
+- debug path derivation
+- `results.csv` / `batch_info.txt`
+
+Use them when the metric fits the common pattern:
+
+- normalize
+- save normalized output
+- calculate metric
+- report results
+
+If a metric has a special flow, it can still own that flow directly inside its service.
+
+## Configuration Rules
+
+Default configuration lives in:
+
+- [localizer/src/assets/configs/config.toml](../localizer/src/assets/configs/config.toml)
+- [localizer/src/assets/configs/config.fast_and_acc.toml](../localizer/src/assets/configs/config.fast_and_acc.toml)
+
+Important rules:
+
+- add metric-specific templates, masks, and coefficients to the config that actually supports that metric
+- do not silently enable a metric under an incompatible normalization strategy
+- if a metric depends on a specific normalization regime, validate that explicitly in the service
+
+Example:
+
+- `abetaindex` is intentionally enabled only in the standard `config.toml`
+- `config.fast_and_acc.toml` does not declare it
+- `AbetaIndexService` validates that the metric is enabled and that its templates exist
+
+That pattern is preferred over silently falling back to defaults.
+
+## Adding a New Metric
+
+### 1. Create the metric folder
+
+Add:
+
+- `<Name>CLI.*`
+- `<Name>Service.*`
+- `<Name>Calculator.*`
+- `<Name>Module.*`
+
+Start from one of these references:
+
+- `centiloid/` for a typical derived metric
+- `suvr/` for a simple VOI/reference metric
+- `fillstates/` for a metric with extra output files
+- `abetaindex/` for a config-gated template metric
+- `adad/` for a model-driven metric
+
+### 2. Add the CLI
+
+The CLI should:
+
+- inherit `Pipeline::Metrics::IMetricCLI`
+- define the subcommand name and description
+- configure arguments
+- map parser values into a metric-specific options struct
+- call `buildCoreContainer(...)`
+- call `createService(*container)`
+
+Look at:
+
+- [CentiloidCLI.cpp](../localizer/src/metrics/centiloid/CentiloidCLI.cpp)
+- [AbetaIndexCLI.cpp](../localizer/src/metrics/abetaindex/AbetaIndexCLI.cpp)
+
+### 3. Add the service
+
+The service should:
+
+- accept shared services through the constructor
+- validate configuration and runtime preconditions
+- build `SpatialNormalizationRequest`
+- save the normalized NIfTI via `IFileService`
+- build calculator input
+- call `runSingle(...)` or `runBatch(...)`
+
+Prefer reusing:
+
+- `Pipeline::Metrics::Shared::runSingle(...)`
+- `Pipeline::Metrics::Shared::runBatch(...)`
+
+### 4. Add the calculator
+
+The calculator should:
+
+- accept an explicit `Input` struct
+- return `Pipeline::Metrics::MetricResult`
+- throw descriptive `std::runtime_error` / `std::invalid_argument` when inputs are invalid
+
+Keep it focused on the actual metric math or image operation.
+
+### 5. Register the module
+
+Implement:
 
 ```cpp
-// localizer/src/calculators/MyNewMetricCalculator.h
-#pragma once
-#include "../interfaces/IMetricCalculator.h"
-#include "../interfaces/IConfiguration.h"
-
-class MyNewMetricCalculator : public IMarkerCalculator {
-public:
-    explicit MyNewMetricCalculator(ConfigurationPtr config);
-    ~MyNewMetricCalculator() override = default;
-
-    MetricResult calculate(ImageType::Pointer spatialNormalizedImage) override;
-    std::string getName() const override;
-    std::vector<std::string> getSupportedTracers() const override;
-
-private:
-    ConfigurationPtr config_;
-
-    struct TracerParams {
-        float slope;
-        float intercept;
-        // Add additional parameters as needed
-    };
-
-    std::map<std::string, TracerParams> getTracerParameters() const;
-};
-```
-
-In the implementation, you typically:
-
-- Load VOI and reference masks via `config_->getMaskPath(...)`.
-- Use `SUVrCalculator::calculateSUVr(...)` to compute region‑based SUVr if your metric is derived from SUVr.
-- Compute your metric per tracer and populate `MetricResult`.
-
-```cpp
-// localizer/src/calculators/MyNewMetricCalculator.cpp
-#include "MyNewMetricCalculator.h"
-#include "SUVrCalculator.h"
-#include "../utils/common.h"
-
-MyNewMetricCalculator::MyNewMetricCalculator(ConfigurationPtr config)
-    : config_(config) {}
-
-MetricResult MyNewMetricCalculator::calculate(ImageType::Pointer spatialNormalizedImage) {
-    std::string voiMaskPath = config_->getMaskPath("my_metric_voi");
-    std::string refMaskPath = config_->getMaskPath("my_metric_ref");
-
-    double suvr = SUVrCalculator::calculateSUVr(spatialNormalizedImage, voiMaskPath, refMaskPath);
-
-    MetricResult result;
-    result.metricName = "MyNewMetric";
-    result.suvr = suvr;
-
-    auto tracerParams = getTracerParameters();
-    for (const auto& [tracerName, params] : tracerParams) {
-        float value = suvr * params.slope + params.intercept;
-        result.tracerValues[tracerName] = value;
-    }
-
-    return result;
-}
-
-std::string MyNewMetricCalculator::getName() const {
-    return "MyNewMetric";
-}
-
-std::vector<std::string> MyNewMetricCalculator::getSupportedTracers() const {
-    return {"TRACER1", "TRACER2"};
-}
-
-std::map<std::string, MyNewMetricCalculator::TracerParams>
-MyNewMetricCalculator::getTracerParameters() const {
-    std::map<std::string, TracerParams> params;
-    for (const auto& tracer : getSupportedTracers()) {
-        std::string key = Common::toLower(tracer);
-        TracerParams tp;
-        tp.slope     = config_->getFloat("mynewmetric.tracers." + key + ".slope");
-        tp.intercept = config_->getFloat("mynewmetric.tracers." + key + ".intercept");
-        params[tracer] = tp;
-    }
-    return params;
+void registerModule(MetricRegistry& registry) {
+    registry.registerModule({"my_metric", true, &createCLI});
 }
 ```
 
-### 2.2. Register the Calculator in `MetricCalculatorFactory`
-
-Add a new enumerator and registration branch:
-
-```cpp
-// localizer/src/factories/MetricCalculatorFactory.h
-enum class CalculatorType {
-    CENTILOID,
-    CENTAUR,
-    CENTAURZ,
-    SUVR,
-    FILL_STATES,
-    MY_NEW_METRIC,  // <- your new type
-};
-```
-
-```cpp
-// localizer/src/factories/MetricCalculatorFactory.cpp
-#include "../calculators/MyNewMetricCalculator.h"
-
-MetricCalculatorPtr MetricCalculatorFactory::create(CalculatorType type, ConfigurationPtr config) {
-    switch (type) {
-        case CalculatorType::CENTILOID:
-            return std::make_shared<CentiloidCalculator>(config);
-        case : // other existing types ...
-        case CalculatorType::MY_NEW_METRIC:
-            return std::make_shared<MyNewMetricCalculator>(config);
-        default:
-            throw std::invalid_argument("Unknown metric calculator type");
-    }
-}
-
-MetricCalculatorFactory::CalculatorType
-MetricCalculatorFactory::stringToType(const std::string& typeName) {
-    std::string lowerName = typeName;
-    std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
-
-    if (lowerName == "suvr") {
-        return CalculatorType::SUVR;
-    } else if (lowerName == "centiloid") {
-        return CalculatorType::CENTILOID;
-    } else if (lowerName == "centaur") {
-        return CalculatorType::CENTAUR;
-    } else if (lowerName == "centaurz") {
-        return CalculatorType::CENTAURZ;
-    } else if (lowerName == "fillstates") {
-        return CalculatorType::FILL_STATES;
-    } else if (lowerName == "mynewmetric") {
-        return CalculatorType::MY_NEW_METRIC;
-    }
-
-    throw std::invalid_argument("Unsupported metric calculator type: " + typeName);
-}
-
-std::vector<std::string> MetricCalculatorFactory::getAvailableTypes() {
-    return {"suvr", "centiloid", "centaur", "centaurz", "fillstates", "mynewmetric"};
-}
-```
-
-### 2.3. Wire into the Processing Pipeline
-
-By default, the `ProcessingPipeline` uses `MetricCalculatorFactory::createSelected(selectedMetric, config_)` to construct the requested metric(s) and then calls `calculate`:
-
-```cpp
-// localizer/src/pipeline/ProcessingPipeline.h
-struct ProcessingOptions {
-    bool   skipRegistration = false;
-    bool   useIterativeRigid = false;
-    bool   useManualFOV = false;
-    bool   enableADNIStyle = false;
-    std::string decoupleModality = "";  // "abeta", "tau" or empty
-    int    maxIterations = 5;
-    float  convergenceThreshold = 2.0f;
-    bool   enableDebugOutput = false;
-    std::string debugOutputBasePath = "";
-    std::string selected output image path
-    std::string selectedMetric = "";       // "suvr", "centiloid", "centaur", "centaurz", "fillstates", ...
-    std::string selectedMetricTracer = ""; // for tracer-dependent metrics (e.g. fill-states)
-};
-
-std::vector<MetricResult> calculateMetrics(
-    ImageType::Pointer spatiallyNormalizedImage,
-    const ProcessingOptions& options);
-```
-
-If your metric is not tracer‑dependent (like Centiloid or CenTauR), you typically do **not** use `selectedMetricTracer`; you just set `options.selectedMetric` in `cli/Commands.cpp` and leave `selectedMetricTracer` empty.
-
-If your metric *is* tracer‑dependent (e.g., Fill‑states), you can use `selectedMetricTracer` inside your calculator wiring to pass the user‑specified tracer choice. For example:
-
-```cpp
-// localizer/src/pipeline/ProcessingPipeline.cpp
-std::vector<MetricResult> ProcessingPipeline::calculateMetrics(
-    ImageType::Pointer spatiallyNormalizedImage,
-    const ProcessingOptions& options) {
-    std::vector<MetricResult> results;
-
-    auto calculators = MetricCalculatorFactory::createSelected(options.selectedMetric, config_);
-
-    for (auto& calculator : calculators) {
-        // Example: inject tracer information for a custom metric
-        if (Common::toLower(options.selectedMetric) == "mynewmetric") {
-            if (!options.selectedMetricTrayyour_metric = dynamic_ca    my_metric->setTracer(options.selectedMetricTracer);
-            }
-        }
-
-        MetricResult r = calculator-> calculate(spatialNormalizedImage);
-        results.push_back(r);
-    }
-
-    return results;
-}
-```
-
-### 2.4. Update Configuration (`assets/configs/config*.toml`)
-
-Typical configuration entries for a new SUVr‑derived metric:
-
-```toml
-[masks]
-my_metric_voi = "assets/nii/my_metric_voi.nii"
-my_metric_ref = "assets/nii/my_metric_ref.nii"
-
-[mynewmetric.tracers.tracer1]
-slope = 1.0
-intercept = 0.0
-
-[mynewmetric.tracers.tracer2]
-slope = 1.2
-intercept = -0.5
-
-[suvr.regions.mynewmetric]
-voi_mask = "my_metric_voi"
-ref_mask = "my_metric_ref"
-```
-
-The existing metrics use similar sections:
+Then add it to [metrics/ModuleCatalog.cpp](../localizer/src/metrics/ModuleCatalog.cpp).
 
-- `centiloid.tracers.*` – linear transformation parameters for each amyloid tracer.
-- `centaur.tracers.*` – percentile mapping parameters.
-- `centaurz.tracers.*` – z‑score transformations.
-- `fillstates.tracers.*` – per‑tracer mean/std/ROI paths for z‑score maps.
+### 6. Add config and assets
 
-### 2.5. CLI Integration (Optional)
+Typical things you may need:
 
-To expose your metric as a top‑level subcommand (like `centiloid`, `centaur`, `centaurz`, `fillstates`), update `cli/Options` and `cli/Commands`.
+- mask paths
+- template paths
+- tracer parameters
+- model paths
+- feature flags such as `enabled = true`
 
-1. **Add a subcommand parser in `main.cpp`:**
+If a metric should only work with one config profile, encode that intentionally and validate it in the service.
 
-```cpp
-// main.cpp
-argparse::ArgumentParser mymetric_cmd("mymetric");
-mymetric_cmd.add_description("Calculate MyNewMetric");
-addSUVrDerivedMetricArguments(mymetric_cmd); // or a custom addMyMetricArguments(...)
+### 7. Add tests
 
-program.add_subparser(mymetric_cmd);
+At minimum:
 
-if (program.is_subcommand_used("mymetric")) {
-    return executeMyMetricCommand(mymetric_cmd, fullCommand);
-}
-```
-
-2. **Add a new command options struct (if needed) and execution function in `cli/Commands.*`:**
-
-```cpp
-// cli/Commands.h
-int executeMyMetricCommand(const argparse::ArgumentParser& parser,
-                           const std::string& fullCommand);
-```
-
-```cpp
-// cli/Commands.cpp
-int executeMyMetricCommand(const argparse::ArgumentParser& parser,
-                           const std::string& fullCommand) {
-    SUVrDerivedMetricOptions options =
-        parseSUVrDerivedMetricOptions(parser, "mynewmetric");
-    auto config = loadConfigurationWithLogging(options.configPath, options.enableDebugOutput);
-
-    ProcessingOptions procOptions;
-    procOptions.skipRegistration = options.skipRegistration;
-    procOptions.useIterativeRigid = options.useIterativeRigid;
-    procOptions.useManualFOV = options.useManualFOV;
-    procOptions.enableDebugOutput = options.enableDebugOutput;
-    procOptions.debugOutputBasePath = options.debugOutputBasePath;
-    procOptions.selectedMetric = options.metricType; // "mynewmetric"
-
-    // For tracer-dependent metrics, also set procOptions.selectedMetricTracer
-
-    if (options.batchMode) {
-        auto processor = [config, procOptions](const std::string& inputPath,
-                                               const std::string& outputPath) -> ProcessingResult {
-            ProcessingPipeline pipeline(config);
-            return pipeline.process(inputPath, outputPath, procOptions);
-        };
-
-        std::cout << "Starting " << options.metricType << " batch processing..." << std::endl;
-        return BatchProcessor::runBatch(...);
-    }
-
-    ProcessingPipeline pipeline(config);
-    std::cout << "Starting " << options.metricType << " calculation: " << options.inputPath << std::endl;
-    ProcessingResult result = pipeline.process(options.inputPath, options.outputPath, procOptions);
-
-    std::cout << "\n=== " << options.metricType << " Results ===" << std::endl;
-    for (const auto& mr : result.metricResults) {
-        std::cout << "Metric: " << mr.metricName << std::endl;
-        for (const auto& [tracer, value] : mr.tracerValues) {
-            std::cout << tracer << ": " << value << std::endl;
-        }
-        if (options.includeSUVr) {
-            std::cout << "SUVr: " << mr.suvr << std::endl;
-        }
-    }
-
-    std::cout << "Processing completed successfully!" << std::endl;
-    return EXIT_SUCCESS;
-}
-```
-
-If your metric is tracer‑dependent (like `fillstates`), define a dedicated `*CommandOptions` (e.g., `FillStatesCommandOptions`) that adds a `--tracer` argument and maps it into `ProcessingOptions::selectedMetricTracer`.
-
----
-
-## 3. Example: The `FillStates` Metric
-
-The `FillStates` metric is a concrete example of a **tracer‑dependent, voxelwise z‑score–based** metric, implemented in:
-
-- `localizer/src/calculers/FillStatesCalculator.{h,cpp}`
-- `localizer/src/factories/MetricCalculatorFactory.*`
-- `localizer/src/pipeline/ProcessingPipeline.*`
-- `localizer/src/cli/Options.*`
-- `localizer/src/cli/Commands.*`
-
-### 3.1. Concept
-
-`FillStates` quantifies the proportion of voxels within a predefined meta‑ROI that show abnormal signal (e.g., elevated tau or reduced FDG uptake), expressed as a fraction of the ROI’s voxel count:
-
-- **FBP / FTP (amyloid/tau)**: voxels with **z‑score > 1.65** are considered “filled”.
-- **FDG (neurodegeneration)**: voxels with **z‑score < −1.65** are considered “filled” (hypometabolism).
-
-The output is:
-
-- `FillStates` metric value per tracer: \( \text{fraction} = \frac{N_{\text{above/below threshold in ROI}}}{N_{\text{voxels in ROI}}} \)
-- A binary **fill_states_map** NIfTI image (0/1 mask) aligned to the normalized PET image, written next to the main normalized output as `<output>_fill_states_map.nii`.
-
-### 3.2. Calculator Implementation
-
-The core implementation lives in `FillStatesCalculator`:
-
-- Constructor stores `ConfigurationPtr config_`.
-- `setTracer(const std::string& tracer)` sets the active tracer (\"fbp\", \"fdg\", or \"ftp\").
-- `calculate(ImageType::Pointer spatialNormalizedImage)`:
-  - Validates that `spatialNormalizedImage` is non‑null and that `tracer_` has been set.
-  - Uses `IConfiguration` to look up per‑tracer config under `fillstates.tracers.<tracer>`:
-    - `fillstates.tracers.<tracer>.mean`
-    - `fillstates.tracers.<tracer>.std`
-    - `fillstates.tracers.<tracer>.roi`
-  - Loads mean, std, and ROI templates with `Common::LoadNii` and resamples them to match the spatially normalized PET (`Common::ResampleToMatch`).
-  - Loads the appropriate reference region mask from config:
-    - FBP/FDG: `masks.whole_cerebral`
-    - FTP: `masks.centaur_ref`
-  - Computes the mean value within the reference mask (`Common::CalculateMeanInMask`) and divides the PET by this mean to perform intensity normalization.
-  - For each voxel inside the ROI (mask > 0):
-    - Computes \( z = \frac{I(x) - \mu(x)}{\sigma(x)} \) (skipping voxels where `σ ≤ 0`).
-    - Marks voxels as \"filled\" if `z > 1.65` (FBP/FTP) or `z < −1.65` (FDG).
-  - Populates a new `lastMaskImage_` (0/1 float) of the same size/spacing/origin/direction as the normalized PET.
-  - Computes the fill fraction and stores it in `MetricResult.tracerValues`, using tracer labels `FBP` / `FDG` / `FTP`. `MetricResult.metricName` is `"FillStates"`, and `suvr` is currently set to `0.0` (reserved for potential future use).
-
-If any required configuration key is missing, or if the reference region mean is non‑positive, the calculator throws a `std::runtime_error` with a descriptive message (for example, *\"Missing fillstates configuration for tracer 'fdg'. Please set fillstates.tracers.fdg.mean/std/roi in config.\"*). These exceptions are propagated up by the pipeline so that the CLI exits with a non‑zero status instead of reporting success.
-
-### 3.3. Factory and Pipeline Wiring
-
-- `MetricCalculatorFactory` has a new `CalculatorType::FILL_STATES` and a corresponding `create` branch:
-
-```startLine:endLine:localizer/src/factories/MetricCalculatorFactory.cpp
-MetricCalculatorPtr MetricCalculatorFactory::create(CalculatorType type, ConfigurationPtr config) {
-    switch (type) {
-        case CalculatorType::CENTILOID:
-            return std::make_shared<CentiloidCalculator>(config);
-        case CalculatorType::CENTAUR:
-            return std::make_shared<CenTauRCalculator>(config);
-        case CaseType::CENTAURZ:
-            return std::make_shared<CenTauRzCalculator>(config);
-        case CaseType::SUVR:
-            return std::make_shared<SUVrCalculator>(config);
-        case CaseType::FILL_STATES:
-            return std::make_shared<FillStatesCalculator>(config);
-        default:
-            throw std::invalid_argument("Unknown metric calculator type");
-    }
-}
-```
-
-- `MetricCalculatorFactory::stringToType` maps `"fillstates"` to `CalculatorType::FILL_STATES`.
-- `ProcessingPipeline::calculateMetrics(...)`:
-  - Creates the calculator via `MetricCalculatorFactory::createSelected(options.selectedMetric, config_)`.
-  - If `options.selectedMetric == "fillstates"` and `options.selectedMetricTracer` is non‑empty, it calls `fsCalc->setTracer(options.selectedMetricTracer)` before invoking `calculate`.
-  - After `calculate` returns, it reads `fsCalc->getLastMaskImage()` into `ProcessingResult.fillStatesMaskImage` and later writes it to `<output>_fill_states_map.nii`.
-  - If a `FillStatesCalculator` throws an exception (e.g. due to missing configuration), the pipeline logs the error and rethrows for `fillstates` so that the CLI exits with an error.
-
-### 3.4. CLI and Options for Fill‑states
-
-- `main.cpp` defines a dedicated `fillstates` subcommand:
-
-```startLine:endLine:localizer/src/main.cpp
-// Fill-states subcommand
-argparse::ArgumentParser fillstates_cmd("fillstates");
-fillstates_cmd.add_description("Calculate fill-states metric for PET images");
-addFillStatesArguments(fillstates_cmd);
-...
-program.add_subparser(fillstates_cmd);
-...
-} else if (program.is_subcommand_used("fillstates")) {
-    return executeFillStatesCommand(fillstates_cmd, fullCommand);
-}
-```
-
-- `cli/Options` defines a `FillStatesCommandOptions` struct and `addFillStatesArguments`, which extends the common SUVr‑derived options with a required `--tracer` argument (`fbp`, `fdg`, `ftp`).
-- `cli/Commands::executeFillStatesCommand`:
-  - Parses `FillStatesCommandOptions` (including `--tracer`).
-  - Populates `ProcessingOptions` with:
-    - `selectedMetric = "fillstates"`
-    - `selectedMetricTracer = options.tracer`
-  - Runs `ProcessingPipeline::process(...)`.
-  - Prints the resulting `FillStates` values and (optionally) the underlying SUVr if `--suvr` is set.
-
-### 3.5. Configuration for Fill‑states
-
-The `fillstates` metric is configured via new sections in `assets/configs/config.toml`:
-
-```toml
-[fillstates.tracers.fbp]
-mean = "assets/nii/fill_states/fs_FBP_mean.nii.gz"
-std  = "assets/nii/fill_states/fs_FBP_std.nii.gz"
-roi  = "assets/nii/fill_states/fs_FBP_meta_roi.nii"
-
-[fillstates.tracers.fdg]
-mean = "assets/nii/fill_states/fs_FDG_mean.nii.gz"
-std  = "assets/nii/fill_states/fs_FDG_std.nii.gz"
-roi  = "assets/nii/fill_states/fs_FDG_meta_roi.nii"
-
-[fillstates.tracers.ftp]
-mean = "assets/nii/fill_states/fs_FTP_mean.nii.gz"
-std  = "assets/nii/fill_states/fs_FTP_std.nii.gz"
-roi  = "assets/nii/CenTauR.nii"
-```
-
-These keys are resolved relative to the executable directory (via `Common::getExecutablePath()`), so they should point to valid NIfTI files installed under `assets/nii/`.
-
-If any of `mean`, `std`, or `roi` is missing for the requested tracer, `FillStatesCalculator::getTracerResources()` throws a `std::runtime_error`, which ultimately causes the CLI command to exit with a non‑zero return code and an error message.
-
-### 3.6. Testing and Examples
-
-The repository includes several tests you can use as references when adding new metrics:
-
-- **Centiloid / CenTauR / CenTauRz CLI tests:**
-  - `localizer/src/tests/test_acc_centiloid_centaurz_cli.py`
-- **Fill‑states CLI & accuracy tests:**
-  - `localizer/src/tests/test_fillstates_cli.py` – basic `fillstates` command behavior and CLI wiring.
-  - `localizer/src/tests/test_acc_fill_states_cli.py` – end‑to‑end evaluation of FillStates vs. ground truth (`tests/test_acc_fill_states/gt.csv`).
-- **Other utilities:**
-  - `tests/calibrate_metrics.py` and `tests/calibrate_tracer/*` – scripts and data for tracer calibration.
-  - `tests/test_nii_gz_cli.py` – example of NIfTI I/O and CLI usage.
-
-When implementing a new metric, you can:
-
-1. **Clone** the `FillStates` pattern for tracer‑dependent metrics (if applicable).
-2. **Add a dedicated `test_*.py`** for CLI behavior (single‑case sanity check).
-3. **Add an accuracy test** under `tests/` with small NIfTI volumes and known ground truth, similar to `test_acc_fill_states_cli.py`.
-
-This approach ensures your new metric is:
-
-- Properly integrated into the factory and pipeline.
-- Accessible via a clear CLI interface.
-- Covered by automated tests for regression protection.
+- add `--help` and basic invocation coverage to [test_quick_cli.py](../localizer/src/tests/test_quick_cli.py)
+- add a metric-specific CLI test under `localizer/src/tests/`
 
+Examples:
 
+- [test_abetaload_cli.py](../localizer/src/tests/test_abetaload_cli.py)
+- [test_abetaindex_cli.py](../localizer/src/tests/test_abetaindex_cli.py)
+- [test_fillstates_cli.py](../localizer/src/tests/test_fillstates_cli.py)
+- [test_adad_cli.py](../localizer/src/tests/test_adad_cli.py)
+
+If the metric has known reference values, add a dedicated accuracy test.
+
+### 8. Update documentation
+
+Update:
+
+- [localizer/src/README.md](../localizer/src/README.md) for CLI behavior
+- root [README.md](../README.md) if the metric is user-facing at the product level
+- metric reproduction docs under `docs/` if applicable
+
+## Design Rules
+
+When extending the project, prefer these rules:
+
+- keep `core` ignorant of metric business logic
+- keep metric workflow inside the metric service
+- keep computation inside the calculator
+- put cross-metric workflow helpers in `metrics/shared/`, not `core`
+- avoid adding vague abstractions like `Logic`, `Handler`, or a global metric pipeline unless there is a strong, proven need
+- validate configuration compatibility explicitly
+
+## Notes on Existing Metrics
+
+- `centiloid`, `centaur`, `centaurz`
+  - normalization + metric conversion workflows
+- `suvr`
+  - custom VOI/reference masks supplied through CLI
+- `fillstates`
+  - writes an extra mask output
+- `abetaload`
+  - template decomposition metric
+- `abetaindex`
+  - AV45-only template metric with config gating
+- `adad`
+  - decoupler-based metric, single-file only
+
+## What Not to Reintroduce
+
+Do not add back:
+
+- `IMetricLogic`
+- `IMetricService` as a core dispatch abstraction
+- `IMetricModuleRegistry` in `core`
+- `PipelineApplication`
+- `NullMetric`
+- a core-owned global metric orchestration layer
+
+Those abstractions were removed on purpose because they blurred the boundary between shared infrastructure and metric business logic.
+
+## Practical References
+
+Useful files when working on new modules:
+
+- [localizer/src/core/README.md](../localizer/src/core/README.md)
+- [localizer/src/core/di/Bootstrap.cpp](../localizer/src/core/di/Bootstrap.cpp)
+- [localizer/src/core/common/NormalizationContracts.h](../localizer/src/core/common/NormalizationContracts.h)
+- [localizer/src/metrics/shared/SingleRunner.h](../localizer/src/metrics/shared/SingleRunner.h)
+- [localizer/src/metrics/shared/BatchRunner.h](../localizer/src/metrics/shared/BatchRunner.h)
+- [localizer/src/metrics/shared/BatchLogging.cpp](../localizer/src/metrics/shared/BatchLogging.cpp)
+- [localizer/src/metrics/ModuleCatalog.cpp](../localizer/src/metrics/ModuleCatalog.cpp)
+
+If a new feature does not clearly fit the current boundaries, fix the boundary first in your head before writing code. Most architecture drift in this codebase comes from letting `core` absorb metric-specific workflow.

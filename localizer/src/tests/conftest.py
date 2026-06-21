@@ -13,11 +13,11 @@ TEST_DIR = Path(__file__).parent.resolve()
 @pytest.fixture(scope="session")
 def exe_path():
     """
-    Fixture to locate the CentiloidCalculator executable.
+    Fixture to locate the DCCCcore executable.
     """
-    # User suggested: exe_path = TEST_DIR / '../install/bin/CentiloidCalculator'
+    # User suggested: exe_path = TEST_DIR / '../install/bin/DCCCcore'
     # We handle Windows extension automatically
-    base_path = TEST_DIR / '../install/bin/CentiloidCalculator'
+    base_path = TEST_DIR / '../install/bin/DCCCcore'
     
     if sys.platform == 'win32':
         exe = base_path.with_suffix('.exe')
