@@ -1,6 +1,6 @@
 # DCCCSlicer
 
-📢📢📢To use DCCCSlicer, you need to download from our [Release Page](https://github.com/tctco/DCCCSlicer/releases).
+📢📢📢To use DCCCSlicer, download the packaged binaries from our [Release Page](https://github.com/tctco/DCCCSlicer/releases).
 
 <p align="center">
 <img src="./DCCCSlicer.png" style="width:20%" alt="logo">
@@ -10,6 +10,8 @@
 An open-source, super-simple, ultra-fast, fully-automated, fairly-accurate and PET-only solution to conduct spatial normalization and semi-quantification for almost any brain PET modalities.
 
 > Abeta, tau, FDG, DAT, MET, synaptic density... you name it!
+
+> DCCCSlicer is currently only available on Windows. To use it on other platforms, you may need to recompile it from the [source](https://github.com/tctco/Beyond-Centiloid-code).
 
 Use DCCC to calculate Centiloid and CenTauRz.
 
@@ -21,8 +23,10 @@ https://github.com/user-attachments/assets/680490d2-ebec-4846-871c-98fdc383b513
 
 ## News 🎉🎉🎉
 
-- 20260208: Our paper entitled _Decoupling Alzheimer’s Disease Pathology in PET with Improved Clinical Relevance via Interpretable Adversarial Decomposition Learning_ has just been accepted by _Radiology_! You can try out the `ADAD` score in our 3DSlicer plugin!
-- 20260408: Our paper is published online by [Radiolody](https://pubs.rsna.org/doi/10.1148/radiol.252321)! 
+- 20260208: Our paper entitled _Decoupling Alzheimer’s Disease Pathology in PET with Improved Clinical Relevance via Interpretable Adversarial Decomposition Learning_ was accepted by _Radiology_.
+- 20260408: The paper is now published online by [Radiology](https://pubs.rsna.org/doi/10.1148/radiol.252321).
+- 20260610: Our paper entitled _Cascaded Deep Learning enables multimodal brain PET spatial normalization and quantification for Alzheimer’s disease_ was accepted by _NeuroImage_.
+- 20260613: The paper is now published online by [NeuroImage](https://www.sciencedirect.com/science/article/pii/S105381192600354X).
 
 ## Quality control
 
@@ -39,7 +43,7 @@ It’s always a good idea to manually verify that DCCC has performed spatial nor
 
 ## Metrics
 
-Relative SUV (ratio) error and time consumption on the Centiloid/CenTauRz projects.
+Relative SUVr error and time consumption on the Centiloid/CenTauRz projects.
 
 $$
 \Delta \mathrm{SUVr} \ \\% = \frac{|\mathrm{SUVr_{GT} - \mathrm{SUVr_{Method}}|}}{\mathrm{SUVr_{GT}}}\times 100\\%
@@ -72,15 +76,11 @@ Metrics:
 - `CenTauR`: Leuzy A, Raket LL, Villemagne VL, Klein G, Tonietto M, Olafson E, et al. Harmonizing tau positron emission tomography in Alzheimer’s disease: The CenTauR scale and the joint propagation model. Alzheimer’s & Dementia. 2024;20(9):5833–48.
 - `CenTauRz`: Villemagne VL, Leuzy A, Bohorquez SS, Bullich S, Shimada H, Rowe CC, et al. CenTauR: Toward a universal scale and masks for standardizing tau imaging studies. Alzheimer’s & Dementia: Diagnosis, Assessment & Disease Monitoring. 2023;15(3):e12454.
 - `Fill States`: Doering E, Hoenig MC, Giehl K, et al. “Fill States”: PET-derived Markers of the Spatial Extent of Alzheimer Disease Pathology. Radiology. 2025;314(3):e241482. doi:10.1148/radiol.241482
-        
-        
-        
-            
-- [ ] `Abeta load / AmyloidIQ` (working on 🚧, the following publications used the same algorithm) :
+- `Abeta load / AmyloidIQ`:
   - Whittington A, Sharp DJ, Gunn RN. Spatiotemporal Distribution of β-Amyloid in Alzheimer Disease Is the Result of Heterogeneous Regional Carrying Capacities. Journal of Nuclear Medicine. 2018 May 1;59(5):822–7.
-  - Whittington A, Gunn RN. Amyloid Load: A More Sensitive Biomarker for Amyloid Imaging. Journal of Nuclear Medicine. 2019 Apr 1;60(4):536–40. 
-  - Rizzo G, Whittington A, Hesterman J, Gunn RN. AmyloidIQ: An advanced analytical algorithm to quantify amyloid-PET [18F]NAV4694 scans. Alzheimer’s & Dementia. 2020 Dec;16(S4):e043823. 
-- [ ] `Abeta index` (working on 🚧, the following publications used the same algorithm) :
+  - Whittington A, Gunn RN. Amyloid Load: A More Sensitive Biomarker for Amyloid Imaging. Journal of Nuclear Medicine. 2019 Apr 1;60(4):536–40.
+  - Rizzo G, Whittington A, Hesterman J, Gunn RN. AmyloidIQ: An advanced analytical algorithm to quantify amyloid-PET [18F]NAV4694 scans. Alzheimer’s & Dementia. 2020 Dec;16(S4):e043823.
+- `Abeta index`:
   - Lilja J, Leuzy A, Chiotis K, Savitcheva I, Sörensen J, Nordberg A. Spatial normalization of 18F-flutemetamol PET images using an adaptive principal-component template. Journal of Nuclear Medicine. 2019;60(2):285–291.
   - Leuzy A, Lilja J, Buckley CJ, Ossenkoppele R, Palmqvist S, Battle M, et al. Derivation and utility of an Aβ-PET pathology accumulation index to estimate Aβ load. Neurology. 2020;95(21):e2834–e2844.
 - `ADAD`: not published yet
@@ -97,7 +97,7 @@ Spatial normalization algorithms:
 
 ## Command-line interface
 
-For users who prefer running the core calculator from the command line (including batch processing and advanced options), please refer to the standalone [CLI documentation](./localizer/src/README.md). Release assets now publish the headless package separately as `DCCCcore-<version>-<platform>.zip`, alongside the full `DCCCSlicer` extension package.
+For users who prefer running the core calculator from the command line (including batch processing and advanced options), please refer to the standalone [CLI documentation](./localizer/src/README.md). Release assets also publish the headless package separately as `DCCCcore-<version>-<platform>.zip`, alongside the full `DCCCSlicer` extension package.
 
 ## TODO
 
@@ -108,7 +108,7 @@ For users who prefer running the core calculator from the command line (includin
   - [x] Added support for Fast and Accurate Amyloid Brain PET Quantification Without MRI Using Deep Neural Networks
 - [ ] Improve the UI.
 
-> Check our reproduction reports on [fill states](./docs/Fill-states.md), [Abeta load](./docs/Abeta-load.md) and [Abeta index](./docs/Abeta-index.md)!
+> Check our reproduction reports on [Fill States](./docs/Fill-states.md), [Abeta load](./docs/Abeta-load.md), and [Abeta index](./docs/Abeta-index.md).
 
 ## Acknowledgements
 
@@ -143,22 +143,32 @@ We sincerely thank the passionate and outstanding users and contributors of DCCC
 
 ## Citation
 
-If you find this repo helpful for your work, please cite
+If you find this repository helpful for your work, please cite:
 
-```bib
+```bibtex
 @article{doi:10.1148/radiol.252321,
-author = {Tang, Cheng and Sun, Xun and Tang, Anqi and Ruan, Weiwei and Liu, Fang and Fang, Hanyi and Gai, Yongkang and Liang, Zhihou and Su, Ying and Wang, Xinggang and Lan, Xiaoli},
-title = {Decoupling Alzheimer Disease Pathologic Abnormalities at PET with Improved Clinical Relevance by Interpretable Adversarial Decomposition Learning},
-journal = {Radiology},
-volume = {319},
-number = {1},
-pages = {e252321},
+  author = {Tang, Cheng and Sun, Xun and Tang, Anqi and Ruan, Weiwei and Liu, Fang and Fang, Hanyi and Gai, Yongkang and Liang, Zhihou and Su, Ying and Wang, Xinggang and Lan, Xiaoli},
+  title = {Decoupling Alzheimer Disease Pathologic Abnormalities at PET with Improved Clinical Relevance by Interpretable Adversarial Decomposition Learning},
+  journal = {Radiology},
+  volume = {319},
+  number = {1},
+  pages = {e252321},
+  year = {2026},
+  doi = {10.1148/radiol.252321},
+  note = {PMID: 41944723},
+  url = {https://doi.org/10.1148/radiol.252321}
+}
+
+@article{TANG2026122039,
+title = {Cascaded Deep Learning enables multimodal brain PET spatial normalization and quantification for Alzheimer’s disease},
+journal = {NeuroImage},
+pages = {122039},
 year = {2026},
-doi = {10.1148/radiol.252321},
-note ={PMID: 41944723},
-URL = {https://doi.org/10.1148/radiol.252321},
-eprint = { https://doi.org/10.1148/radiol.252321},
-abstract = { Background Template-based PET metrics quantify Alzheimer disease (AD) amyloid-β (Aβ) and tau burden but compress whole-brain data into a single scalar, overlooking disease heterogeneity and sometimes causing imaging-clinical discordance. Artificial intelligence (AI) approaches capture richer patterns but often lack biologic interpretability. Purpose To develop and validate an interpretable deep-learning framework that separates AD-specific abnormalities from physiologic uptake using pathophysiologic constraints, generating a clinically meaningful AI biomarker. Materials and Methods In this retrospective study, Aβ and tau PET scans from the Alzheimer’s Disease Neuroimaging Initiative, Australian Imaging Biomarkers and Lifestyle study, Global Alzheimer’s Association Interactive Network, and the authors’ center were analyzed. An adversarial decomposition learning (ADL) network generated voxel-level pathologic maps and an AD adversarial decomposition (ADAD) score. Discriminatory performance for clinical AD versus cognitively normal individuals was evaluated using the area under the curve (AUC). Clinical relevance was assessed with cognitive, hippocampal volume, cerebrospinal fluid (CSF), and neuropathologic measures using longitudinal mixed-effects models and Spearman correlations. Results The study included 7457 Aβ PET scans from 3595 patients (median age, 71.4 years; IQR, 65.7–77.0 years; 1637 female patients) and 1894 tau PET scans from 1127 patients (median age, 72.0 years; IQR, 66.9–78.5 years; 545 female patients). External testing AUCs were 0.94 (95\% CI: 0.89, 0.98) for Aβ and 0.98 (95\% CI: 0.95, 1.00) for tau. ADL generated interpretable pathologic attribution maps that correlated with expert rankings (Aβ and tau, Spearman ρ = 0.79 and 0.63, respectively). Although Centiloid and CenTauRz showed numerically higher correlations with postmortem neuropathologic structure and stronger associations with CSF biomarkers, the ADAD score demonstrated independent baseline and longitudinal associations with cognitive outcomes and hippocampal atrophy after adjustment. Conclusion Pathophysiologic-constrained ADL provided interpretable, personalized pathologic maps and an AI-derived ADAD score that more closely linked PET pathologic abnormalities with multimodal clinical measures. © RSNA, 2026 Supplemental material is available for this article. }
+issn = {1053-8119},
+doi = {https://doi.org/10.1016/j.neuroimage.2026.122039},
+url = {https://www.sciencedirect.com/science/article/pii/S105381192600354X},
+author = {Cheng Tang and Anqi Tang and Mengyu Wan and Chunyan Li and Weiwei Ruan and Fang Liu and Hanyi Fang and Yongkang Gai and Dawei Jiang and Wanye Zhou and Xiaoli Lan and Xun Sun},
+keywords = {Alzheimer’s Disease, Brain PET Imaging, Spatial Normalization, Deep Learning},
 }
 ```
 

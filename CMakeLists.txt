@@ -4,10 +4,10 @@ project(DCCCSlicer)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
-set(EXTENSION_HOMEPAGE "https://www.slicer.org/wiki/Documentation/Nightly/Extensions/ACPCLocalizer")
+set(EXTENSION_HOMEPAGE "https://github.com/tctco/DCCCSlicer")
 set(EXTENSION_CATEGORY "Examples")
 set(EXTENSION_CONTRIBUTORS "Cheng Tang")
-set(EXTENSION_DESCRIPTION "This is an example of a simple extension")
+set(EXTENSION_DESCRIPTION "An open-source, super-simple, ultra-fast, fully-automated, fairly-accurate and PET-only solution to conduct spatial normalization and semi-quantification for almost any brain PET modalities.")
 set(EXTENSION_ICONURL "https://www.example.com/Slicer/Extensions/ACPCLocalizer.png")
 set(EXTENSION_SCREENSHOTURLS "https://www.example.com/Slicer/Extensions/ACPCLocalizer/Screenshots/1.png")
 set(EXTENSION_DEPENDS "NA") # Specified as a list or "NA" if no dependencies

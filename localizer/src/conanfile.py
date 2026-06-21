@@ -3,8 +3,8 @@ from conan import ConanFile
 
 
 class AppConan(ConanFile):
-    name = "centiloidcalculator"
-    version = "3.2.0"
+    name = "DCCCcore"
+    version = "4.2.3-alpha"
     settings = "os", "arch", "compiler", "build_type"
     generators = "CMakeDeps", "CMakeToolchain"
 
@@ -15,13 +15,13 @@ class AppConan(ConanFile):
         self.requires("onnxruntime/1.18.1")
         self.requires("tomlplusplus/3.4.0")
         self.requires("rapidcsv/8.84")
-
         # ---- conflict resolution: choose one Eigen for the whole graph ----
         # If the graph shows ORT wants 3.4.0, prefer:
         self.requires("eigen/3.4.0")
         # If you decide to *force* a direct one instead (when you also require eigen directly):
         # self.requires("eigen/3.4.0", force=True)
-    
+
     def configure(self):
-        # https://github.com/conan-io/conan-center-index/issues/29427?utm_source=chatgpt.com
+        # https://github.com/conan-io/conan-center-index/issues/29427
+        # Avoid the current Conan/onetbb hwloc linkage issue seen on master.
         self.options["hwloc"].shared = True

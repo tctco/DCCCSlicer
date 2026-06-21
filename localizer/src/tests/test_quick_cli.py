@@ -1,125 +1,79 @@
+from pathlib import Path
 from typing import Any, Dict, List, cast
 
 import pytest
 
 
 TEST_CASES: List[Dict[str, Any]] = [
+    {"id": "help_message", "args": ["--help"], "expected_failure": False},
+    {"id": "version_information", "args": ["--version"], "expected_failure": False},
+    {"id": "metrics_listing", "args": ["metrics", "--help"], "expected_failure": False},
+    {"id": "no_subcommand", "args": [], "expected_failure": True},
+    {"id": "refactor_centiloid_help", "args": ["centiloid", "--help"], "expected_failure": False},
+    {"id": "refactor_centaur_help", "args": ["centaur", "--help"], "expected_failure": False},
+    {"id": "refactor_centaurz_help", "args": ["centaurz", "--help"], "expected_failure": False},
+    {"id": "refactor_suvr_help", "args": ["suvr", "--help"], "expected_failure": False},
+    {"id": "refactor_fillstates_help", "args": ["fillstates", "--help"], "expected_failure": False},
+    {"id": "refactor_abetaindex_help", "args": ["abetaindex", "--help"], "expected_failure": False},
+    {"id": "refactor_abetaload_help", "args": ["abetaload", "--help"], "expected_failure": False},
+    {"id": "refactor_adad_help", "args": ["adad", "--help"], "expected_failure": False},
+    {"id": "normalize_help", "args": ["normalize", "--help"], "expected_failure": False},
+    {"id": "adni_pet_core_help", "args": ["adni-pet-core", "--help"], "expected_failure": False},
+    {"id": "rigid_help", "args": ["rigid", "--help"], "expected_failure": False},
     {
-        "id": "help_message",
-        "args": ["--help"],
+        "id": "refactor_centiloid_basic",
+        "args": ["centiloid", "--input", "{input}", "--output", "{output}"],
         "expected_failure": False,
     },
     {
-        "id": "version_information",
-        "args": ["--version"],
+        "id": "refactor_centiloid_with_suvr",
+        "args": ["centiloid", "--input", "{input}", "--output", "{output}", "--suvr"],
         "expected_failure": False,
     },
     {
-        "id": "no_subcommand",
-        "args": [],
-        "expected_failure": True,
-    },
-    {
-        "id": "centiloid_help",
-        "args": ["centiloid", "--help"],
+        "id": "refactor_centiloid_skip_normalization",
+        "args": ["centiloid", "--input", "{input}", "--output", "{output}", "--skip-normalization"],
         "expected_failure": False,
     },
     {
-        "id": "centaur_help",
-        "args": ["centaur", "--help"],
+        "id": "refactor_centiloid_iterative",
+        "args": ["centiloid", "--input", "{input}", "--output", "{output}", "--iterative"],
         "expected_failure": False,
     },
     {
-        "id": "centaurz_help",
-        "args": ["centaurz", "--help"],
+        "id": "refactor_centaur_basic",
+        "args": ["centaur", "--input", "{input}", "--output", "{output}"],
         "expected_failure": False,
     },
     {
-        "id": "suvr_help",
-        "args": ["suvr", "--help"],
+        "id": "refactor_centaurz_basic",
+        "args": ["centaurz", "--input", "{input}", "--output", "{output}"],
         "expected_failure": False,
     },
     {
-        "id": "normalize_help",
-        "args": ["normalize", "--help"],
-        "expected_failure": False,
-    },
-    {
-        "id": "decouple_help",
-        "args": ["decouple", "--help"],
-        "expected_failure": False,
-    },
-    {
-        "id": "centiloid_basic",
-        "args": [
-            "centiloid",
-            "--input",
-            "{input}",
-            "--output",
-            "{output}",
-        ],
-        "expected_failure": False,
-    },
-    {
-        "id": "centiloid_with_suvr",
-        "args": [
-            "centiloid",
-            "--input",
-            "{input}",
-            "--output",
-            "{output}",
-            "--suvr",
-        ],
-        "expected_failure": False,
-    },
-    {
-        "id": "centiloid_skip_normalization",
-        "args": [
-            "centiloid",
-            "--input",
-            "{input}",
-            "--output",
-            "{output}",
-            "--skip-normalization",
-        ],
-        "expected_failure": False,
-    },
-    {
-        "id": "centiloid_iterative",
-        "args": [
-            "centiloid",
-            "--input",
-            "{input}",
-            "--output",
-            "{output}",
-            "--iterative",
-        ],
-        "expected_failure": False,
-    },
-    {
-        "id": "centaur_basic",
-        "args": [
-            "centaur",
-            "--input",
-            "{input}",
-            "--output",
-            "{output}",
-        ],
-        "expected_failure": False,
-    },
-    {
-        "id": "centaurz_basic",
+        "id": "refactor_centaurz_detailed_regions",
         "args": [
             "centaurz",
             "--input",
             "{input}",
             "--output",
             "{output}",
+            "--report-detailed-regions",
         ],
         "expected_failure": False,
     },
     {
-        "id": "suvr_custom",
+        "id": "refactor_abetaindex_basic",
+        "args": ["abetaindex", "--input", "{input}", "--output", "{output}"],
+        "expected_failure": False,
+    },
+    {
+        "id": "refactor_abetaload_basic",
+        "args": ["abetaload", "--input", "{input}", "--output", "{output}"],
+        "expected_failure": False,
+    },
+    {
+        "id": "refactor_suvr_custom",
         "args": [
             "suvr",
             "--input",
@@ -134,95 +88,25 @@ TEST_CASES: List[Dict[str, Any]] = [
         "expected_failure": False,
     },
     {
-        "id": "normalize_basic",
-        "args": ["normalize", "--input", "{input}", "--output", "{output}"],
+        "id": "refactor_fillstates_basic",
+        "args": ["fillstates", "--input", "{input}", "--output", "{output}", "--tracer", "fbp"],
         "expected_failure": False,
     },
+    {"id": "normalize_basic", "args": ["normalize", "--input", "{input}", "--output", "{output}"], "expected_failure": False},
     {
-        "id": "normalize_adni_style",
-        "args": [
-            "normalize",
-            "--input",
-            "{input}",
-            "--output",
-            "{output}",
-            "--ADNI-PET-core",
-        ],
+        "id": "adni_pet_core_basic",
+        "args": ["adni-pet-core", "--input", "{input}", "--output", "{output}"],
         "expected_failure": False,
     },
+    {"id": "missing_input_error", "args": ["centiloid", "--output", "{output}"], "expected_failure": True},
     {
-        "id": "decouple_abeta",
-        "args": [
-            "decouple",
-            "--input",
-            "{input}",
-            "--output",
-            "{output}",
-            "--modality",
-            "abeta",
-        ],
-        "expected_failure": False,
-    },
-    {
-        "id": "decouple_tau",
-        "args": [
-            "decouple",
-            "--input",
-            "{input}",
-            "--output",
-            "{output}",
-            "--modality",
-            "tau",
-        ],
-        "expected_failure": False,
-    },
-    {
-        "id": "missing_input_error",
-        "args": ["centiloid", "--output", "{output}"],
+        "id": "refactor_suvr_missing_voi_mask",
+        "args": ["suvr", "--input", "{input}", "--output", "{output}", "--ref-mask", "{ref_mask}"],
         "expected_failure": True,
     },
     {
-        "id": "suvr_missing_voi_mask",
-        "args": [
-            "suvr",
-            "--input",
-            "{input}",
-            "--output",
-            "{output}",
-            "--ref-mask",
-            "{ref_mask}",
-        ],
-        "expected_failure": True,
-    },
-    {
-        "id": "suvr_missing_ref_mask",
-        "args": [
-            "suvr",
-            "--input",
-            "{input}",
-            "--output",
-            "{output}",
-            "--voi-mask",
-            "{voi_mask}",
-        ],
-        "expected_failure": True,
-    },
-    {
-        "id": "decouple_missing_modality",
-        "args": ["decouple", "--input", "{input}", "--output", "{output}"],
-        "expected_failure": True,
-    },
-    {
-        "id": "decouple_invalid_modality",
-        "args": [
-            "decouple",
-            "--input",
-            "{input}",
-            "--output",
-            "{output}",
-            "--modality",
-            "invalid",
-        ],
+        "id": "refactor_suvr_missing_ref_mask",
+        "args": ["suvr", "--input", "{input}", "--output", "{output}", "--voi-mask", "{voi_mask}"],
         "expected_failure": True,
     },
 ]
@@ -264,4 +148,3 @@ class TestQuickCommandSuite:
         for token in args_template:
             resolved_args.append(str(placeholder_map.get(token, token)))
         return resolved_args
-

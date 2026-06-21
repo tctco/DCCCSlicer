@@ -1,4 +1,4 @@
-# CentiloidCalculator configuration file (TOML format) - Fast and accurate version
+# DCCCcore configuration file (TOML format) - Fast and accurate version
 # This file contains all configurable parameters
 
 # Model file paths (relative to executable directory)
@@ -128,3 +128,6 @@ ref_mask = "whole_cerebral"
 [suvr.regions.centaur]
 voi_mask = "centaur_voi"
 ref_mask = "centaur_ref"
+
+# AbetaIndex is intentionally not configured in fast_and_acc.
+# It depends on the standard spatial-normalization strategy used by config.toml.
