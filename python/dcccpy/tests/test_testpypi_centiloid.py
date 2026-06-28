@@ -5,6 +5,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import venv
 from pathlib import Path
 
@@ -61,6 +62,37 @@ def _run(command: list[str], *, env: dict[str, str] | None = None, timeout: int 
     return completed
 
 
+def _run_with_retries(
+    command: list[str],
+    *,
+    attempts: int = 3,
+    delay_seconds: int = 20,
+    timeout: int = 300,
+) -> subprocess.CompletedProcess[str]:
+    last: subprocess.CompletedProcess[str] | None = None
+    for attempt in range(attempts):
+        completed = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+        )
+        if completed.returncode == 0:
+            return completed
+        last = completed
+        if attempt + 1 < attempts:
+            time.sleep(delay_seconds)
+
+    assert last is not None
+    assert last.returncode == 0, (
+        f"Command failed after {attempts} attempts: {' '.join(command)}\n"
+        f"STDOUT:\n{last.stdout}\n"
+        f"STDERR:\n{last.stderr}"
+    )
+    return last
+
+
 def _create_seeded_venv(venv_dir: Path) -> None:
     uv = shutil.which("uv")
     if uv:
@@ -81,24 +113,30 @@ def test_testpypi_install_can_run_centiloid(tmp_path: Path) -> None:
 
     version = os.environ.get(VERSION_ENV, _project_version())
     venv_dir = tmp_path / "venv"
-    output_path = tmp_path / "centiloid-output.nii"
+    work_dir = tmp_path / "work"
+    output_path = work_dir / "out" / "centiloid-output.nii"
     cache_dir = tmp_path / "dcccpy-cache"
+    work_dir.mkdir()
+    shutil.copy(input_path, work_dir / "input.nii")
 
     _create_seeded_venv(venv_dir)
     python = _venv_python(venv_dir)
 
-    _run(
+    _run_with_retries(
         [
             os.fspath(python),
             "-m",
             "pip",
             "install",
+            "--no-cache-dir",
             "--index-url",
             TESTPYPI_INDEX,
             "--extra-index-url",
             PYPI_INDEX,
             f"dcccpy=={version}",
         ],
+        attempts=6,
+        delay_seconds=20,
         timeout=300,
     )
 
@@ -106,8 +144,7 @@ def test_testpypi_install_can_run_centiloid(tmp_path: Path) -> None:
         **os.environ,
         "DCCCPY_AUTO_DOWNLOAD": "1",
         "DCCCPY_CACHE_DIR": os.fspath(cache_dir),
-        "DCCCPY_TEST_INPUT": os.fspath(input_path),
-        "DCCCPY_TEST_OUTPUT": os.fspath(output_path),
+        "DCCCPY_TEST_WORK_DIR": os.fspath(work_dir),
     }
     script = """
 from importlib.metadata import metadata, version
@@ -120,11 +157,15 @@ import nibabel
 requires = metadata("dcccpy").get_all("Requires-Dist") or []
 assert any(req.startswith("nibabel") for req in requires), requires
 
-input_path = Path(os.environ["DCCCPY_TEST_INPUT"])
-output_path = Path(os.environ["DCCCPY_TEST_OUTPUT"])
+work_dir = Path(os.environ["DCCCPY_TEST_WORK_DIR"])
+os.chdir(work_dir)
 
-result = dcccpy.centiloid(input_path, output_path)
+result = dcccpy.centiloid("./input.nii", "./out/centiloid-output.nii")
 assert result.returncode == 0, result.stderr
+assert Path(result.args[2]).is_absolute(), result.args
+assert Path(result.args[4]).is_absolute(), result.args
+
+output_path = work_dir / "out" / "centiloid-output.nii"
 assert output_path.exists(), output_path
 assert output_path.stat().st_size > 0, output_path
 

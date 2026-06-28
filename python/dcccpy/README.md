@@ -35,6 +35,8 @@ print(result.output)
 
 The `output` argument is optional for single-image Python calls. When omitted,
 `dcccpy` creates a temporary output NIfTI path and returns it in the result.
+Relative input and output paths are resolved from the current Python working
+directory before `DCCCcore` is invoked.
 
 ```python
 result = dcccpy.centiloid("amyloid_pet.nii")

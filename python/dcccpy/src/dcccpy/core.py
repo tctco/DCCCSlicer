@@ -115,9 +115,13 @@ def _create_temp_dir(existing: Path | None = None) -> Path:
     return existing or Path(tempfile.mkdtemp(prefix="dcccpy-"))
 
 
+def _resolve_user_path(path: str | os.PathLike[str]) -> Path:
+    return Path(path).expanduser().resolve(strict=False)
+
+
 def _prepare_input(input: object, temp_dir: Path | None) -> tuple[str, Path | None]:
     if isinstance(input, (str, os.PathLike)):
-        return os.fspath(input), temp_dir
+        return os.fspath(_resolve_user_path(input)), temp_dir
 
     to_filename = getattr(input, "to_filename", None)
     if callable(to_filename):
@@ -136,7 +140,7 @@ def _prepare_io(input: object, output: str | os.PathLike[str] | None) -> tuple[s
     if output is None:
         actual_output, temp_dir = _temp_output()
     else:
-        actual_output = Path(output)
+        actual_output = _resolve_user_path(output)
 
     input_path, temp_dir = _prepare_input(input, temp_dir)
     return input_path, actual_output, temp_dir

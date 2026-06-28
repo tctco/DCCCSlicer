@@ -53,8 +53,45 @@ def test_centiloid_omits_output_by_creating_temp_path(tmp_path: Path, monkeypatc
     assert result.metrics["fbp"] == 12.5
 
     args = fake_args.read_text().splitlines()
-    assert args[:5] == ["centiloid", "--input", "input.nii", "--output", str(result.output)]
+    assert args[:5] == [
+        "centiloid",
+        "--input",
+        str(Path("input.nii").resolve()),
+        "--output",
+        str(result.output),
+    ]
     assert "--skip-normalization" in args
+
+
+def test_metric_helpers_resolve_relative_input_and_output_paths(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    work_dir = tmp_path / "work"
+    work_dir.mkdir()
+    (work_dir / "input.nii").write_text("fake input")
+
+    fake_args = tmp_path / "args.txt"
+    fake_exe = make_fake_dccccore(tmp_path)
+    monkeypatch.chdir(work_dir)
+    monkeypatch.setenv("DCCCPY_DCCCCORE", str(fake_exe))
+    monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(fake_args))
+
+    result = dcccpy.centiloid("./input.nii", "./out/result.nii")
+
+    expected_input = (work_dir / "input.nii").resolve()
+    expected_output = (work_dir / "out" / "result.nii").resolve()
+    assert result.output == expected_output
+    assert expected_output.exists()
+
+    args = fake_args.read_text().splitlines()
+    assert args[:5] == [
+        "centiloid",
+        "--input",
+        str(expected_input),
+        "--output",
+        str(expected_output),
+    ]
 
 
 def test_nibabel_like_input_is_saved_to_temp_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
