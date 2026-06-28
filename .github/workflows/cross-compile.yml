@@ -443,16 +443,17 @@ jobs:
         id: r2-endpoint
         shell: bash
         env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID || secrets.R2_ACCOUND_ID }}
           R2_TOKEN_VALUE: ${{ secrets.R2_TOKEN_VALUE }}
         run: |
           set -euo pipefail
 
-          if [[ -z "${R2_TOKEN_VALUE}" ]]; then
-            echo "R2_TOKEN_VALUE is required. Set it to a full R2 endpoint, a Cloudflare account ID, or an API token that can list accounts." >&2
+          if [[ -n "${R2_ACCOUNT_ID}" ]]; then
+            endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          elif [[ -z "${R2_TOKEN_VALUE}" ]]; then
+            echo "Set R2_ACCOUNT_ID, R2_ACCOUND_ID, or R2_TOKEN_VALUE to resolve the R2 endpoint." >&2
             exit 1
-          fi
-
-          if [[ "${R2_TOKEN_VALUE}" == http://* || "${R2_TOKEN_VALUE}" == https://* ]]; then
+          elif [[ "${R2_TOKEN_VALUE}" == http://* || "${R2_TOKEN_VALUE}" == https://* ]]; then
             endpoint="${R2_TOKEN_VALUE%/}"
           elif [[ "${R2_TOKEN_VALUE}" =~ ^[A-Fa-f0-9]{32}$ ]]; then
             endpoint="https://${R2_TOKEN_VALUE}.r2.cloudflarestorage.com"
