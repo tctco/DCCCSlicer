@@ -52,7 +52,7 @@ class DCCCResult:
         try:
             import nibabel as nib
         except ImportError as exc:
-            raise ImportError("Install dcccpy[nibabel] or nibabel to load output images.") from exc
+            raise ImportError("nibabel is required to load output images.") from exc
         return nib.load(os.fspath(self.output))
 
 

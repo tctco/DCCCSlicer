@@ -13,25 +13,14 @@ pip install dcccpy
 ```
 
 The first call downloads the matching `DCCCcore` release package into the local
-user cache if no native runtime is otherwise available.
+user cache if no native runtime is otherwise available. The slim package also
+installs `nibabel` for image loading and nibabel-style image inputs.
 
 For Linux users who prefer `pip install` to include the native runtime and avoid
 first-run download:
 
 ```bash
 pip install "dcccpy[linux-runtime]"
-```
-
-For nibabel convenience helpers:
-
-```bash
-pip install "dcccpy[nibabel]"
-```
-
-Both extras can be combined:
-
-```bash
-pip install "dcccpy[linux-runtime,nibabel]"
 ```
 
 ## Python API
@@ -124,7 +113,7 @@ contains large ONNX model and NIfTI runtime assets.
 
 The preferred distribution layout is:
 
-- `dcccpy`: slim Python package; downloads runtime on first use.
+- `dcccpy`: slim Python package with nibabel; downloads runtime on first use.
 - `dcccpy-linux-runtime`: optional Linux runtime wheel.
 - `dcccpy[linux-runtime]`: installs both packages.
 

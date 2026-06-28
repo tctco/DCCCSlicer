@@ -4,13 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dcccpy"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python wrapper for the DCCCcore PET biomarker command-line tool"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "CC-BY-NC-ND-4.0"
 authors = [
   { name = "DCCCSlicer contributors" }
+]
+dependencies = [
+  "nibabel>=5",
 ]
 keywords = ["PET", "neuroimaging", "centiloid", "DCCC", "DCCCSlicer"]
 classifiers = [
@@ -27,7 +30,6 @@ Repository = "https://github.com/tctco/DCCCSlicer"
 Issues = "https://github.com/tctco/DCCCSlicer/issues"
 
 [project.optional-dependencies]
-nibabel = ["nibabel>=5"]
 linux-runtime = ["dcccpy-linux-runtime==0.1.0"]
 
 [project.scripts]
