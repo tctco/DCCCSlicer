@@ -23,9 +23,7 @@ https://github.com/user-attachments/assets/680490d2-ebec-4846-871c-98fdc383b513
 ## News 🎉🎉🎉
 
 - 20260208: Our paper entitled _Decoupling Alzheimer’s Disease Pathology in PET with Improved Clinical Relevance via Interpretable Adversarial Decomposition Learning_ was accepted by _Radiology_.
-- 20260408: The paper is now published online by [Radiology](https://pubs.rsna.org/doi/10.1148/radiol.252321
-        
-        ).
+- 20260408: The paper is now published online by [Radiology](https://pubs.rsna.org/doi/10.1148/radiol.252321).
 - 20260610: Our paper entitled _Cascaded Deep Learning enables multimodal brain PET spatial normalization and quantification for Alzheimer’s disease_ was accepted by _NeuroImage_.
 - 20260613: The paper is now published online by [NeuroImage](https://www.sciencedirect.com/science/article/pii/S105381192600354X).
 
