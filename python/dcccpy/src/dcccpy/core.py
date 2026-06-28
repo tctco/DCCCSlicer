@@ -1,19 +1,14 @@
 from __future__ import annotations
 
 import os
-import platform
 import re
-import shutil
 import subprocess
-import sys
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping, Sequence
 
-
-class DCCCcoreNotFoundError(FileNotFoundError):
-    """Raised when dcccpy cannot locate a DCCCcore executable."""
+from .runtime import DCCCcoreNotFoundError, dccccore_path
 
 
 _NUMBER_RE = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
@@ -49,6 +44,17 @@ class DCCCResult:
             )
         return self
 
+    def load_output(self):
+        """Load the output image with nibabel."""
+
+        if self.output is None:
+            raise ValueError("This DCCCResult does not have an output path.")
+        try:
+            import nibabel as nib
+        except ImportError as exc:
+            raise ImportError("Install dcccpy[nibabel] or nibabel to load output images.") from exc
+        return nib.load(os.fspath(self.output))
+
 
 def parse_metrics(text: str) -> dict[str, float]:
     """Parse numeric metric lines from DCCCcore stdout."""
@@ -61,67 +67,6 @@ def parse_metrics(text: str) -> dict[str, float]:
         label = " ".join(match.group(1).strip().split())
         metrics[label] = float(match.group(2))
     return metrics
-
-
-def _platform_key() -> str:
-    machine = platform.machine().lower()
-    if machine in {"x86_64", "amd64"}:
-        arch = "x86_64"
-    elif machine in {"aarch64", "arm64"}:
-        arch = "arm64"
-    else:
-        arch = machine
-
-    if sys.platform.startswith("linux"):
-        return f"linux-{arch}"
-    if sys.platform == "darwin":
-        return f"macos-{arch}"
-    if sys.platform.startswith("win"):
-        return f"windows-{arch}"
-    return f"{sys.platform}-{arch}"
-
-
-def _candidate_names() -> tuple[str, ...]:
-    return ("DCCCcore.exe", "DCCCcore") if os.name == "nt" else ("DCCCcore",)
-
-
-def _package_root() -> Path:
-    return Path(__file__).resolve().parent
-
-
-def _vendored_candidates() -> list[Path]:
-    vendor_root = _package_root() / "vendor" / "dccccore"
-    platform_dir = vendor_root / _platform_key()
-    candidates: list[Path] = []
-
-    for base in (platform_dir, vendor_root):
-        for name in _candidate_names():
-            candidates.append(base / name)
-    return candidates
-
-
-def dccccore_path(executable: str | os.PathLike[str] | None = None) -> Path:
-    """Return the native DCCCcore executable path."""
-
-    explicit = executable or os.environ.get("DCCCPY_DCCCCORE")
-    if explicit:
-        path = Path(explicit).expanduser()
-        if path.exists():
-            return path
-        raise DCCCcoreNotFoundError(f"DCCCcore executable does not exist: {path}")
-
-    for candidate in _vendored_candidates():
-        if candidate.exists():
-            return candidate
-
-    found = shutil.which("DCCCcore")
-    if found:
-        return Path(found)
-
-    raise DCCCcoreNotFoundError(
-        "Could not find DCCCcore. Install a dcccpy wheel with vendored DCCCcore, "
-        "set DCCCPY_DCCCCORE, or put DCCCcore on PATH."
-    )
 
 
 def _as_args(args: Sequence[object]) -> list[str]:
@@ -166,6 +111,37 @@ def _temp_output(suffix: str = ".nii") -> tuple[Path, Path]:
     return temp_dir / f"output{suffix}", temp_dir
 
 
+def _create_temp_dir(existing: Path | None = None) -> Path:
+    return existing or Path(tempfile.mkdtemp(prefix="dcccpy-"))
+
+
+def _prepare_input(input: object, temp_dir: Path | None) -> tuple[str, Path | None]:
+    if isinstance(input, (str, os.PathLike)):
+        return os.fspath(input), temp_dir
+
+    to_filename = getattr(input, "to_filename", None)
+    if callable(to_filename):
+        temp_dir = _create_temp_dir(temp_dir)
+        input_path = temp_dir / "input.nii.gz"
+        to_filename(os.fspath(input_path))
+        return os.fspath(input_path), temp_dir
+
+    raise TypeError(
+        "input must be a filesystem path or a nibabel-like image object with to_filename()."
+    )
+
+
+def _prepare_io(input: object, output: str | os.PathLike[str] | None) -> tuple[str, Path, Path | None]:
+    temp_dir: Path | None = None
+    if output is None:
+        actual_output, temp_dir = _temp_output()
+    else:
+        actual_output = Path(output)
+
+    input_path, temp_dir = _prepare_input(input, temp_dir)
+    return input_path, actual_output, temp_dir
+
+
 def _append_flag(args: list[str], flag: str, enabled: bool) -> None:
     if enabled:
         args.append(flag)
@@ -173,7 +149,7 @@ def _append_flag(args: list[str], flag: str, enabled: bool) -> None:
 
 def _metric_command(
     subcommand: str,
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None,
     *,
     batch: bool = False,
@@ -186,15 +162,9 @@ def _metric_command(
     check: bool = True,
     executable: str | os.PathLike[str] | None = None,
 ) -> DCCCResult:
-    temp_dir: Path | None = None
-    actual_output: Path
+    input_path, actual_output, temp_dir = _prepare_io(input, output)
 
-    if output is None:
-        actual_output, temp_dir = _temp_output()
-    else:
-        actual_output = Path(output)
-
-    args = [subcommand, "--input", os.fspath(input), "--output", os.fspath(actual_output)]
+    args = [subcommand, "--input", input_path, "--output", os.fspath(actual_output)]
     _append_flag(args, "--batch", batch)
     _append_flag(args, "--skip-normalization", skip_normalization)
     _append_flag(args, "--suvr", suvr_values)
@@ -230,7 +200,7 @@ def _coerce_metric_kwargs(kwargs: dict[str, object], *, suvr: bool = False) -> d
 
 
 def centiloid(
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     *,
     suvr: bool = False,
@@ -242,7 +212,7 @@ def centiloid(
 
 
 def centaur(
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     *,
     suvr: bool = False,
@@ -252,7 +222,7 @@ def centaur(
 
 
 def centaurz(
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     *,
     suvr: bool = False,
@@ -267,7 +237,7 @@ def centaurz(
 
 
 def abetaindex(
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     **kwargs: object,
 ) -> DCCCResult:
@@ -275,7 +245,7 @@ def abetaindex(
 
 
 def abetaload(
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     **kwargs: object,
 ) -> DCCCResult:
@@ -283,7 +253,7 @@ def abetaload(
 
 
 def fillstates(
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     *,
     tracer: str,
@@ -297,7 +267,7 @@ def fillstates(
 
 
 def suvr(
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     *,
     voi_mask: str | os.PathLike[str],
@@ -311,7 +281,7 @@ def suvr(
 
 
 def adad(
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     *,
     modality: str | None = None,
@@ -329,7 +299,7 @@ def adad(
 
 def _spatial_command(
     subcommand: str,
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     *,
     iterative: bool = False,
@@ -340,13 +310,9 @@ def _spatial_command(
     check: bool = True,
     executable: str | os.PathLike[str] | None = None,
 ) -> DCCCResult:
-    temp_dir: Path | None = None
-    if output is None:
-        actual_output, temp_dir = _temp_output()
-    else:
-        actual_output = Path(output)
+    input_path, actual_output, temp_dir = _prepare_io(input, output)
 
-    args = [subcommand, "--input", os.fspath(input), "--output", os.fspath(actual_output)]
+    args = [subcommand, "--input", input_path, "--output", os.fspath(actual_output)]
     _append_flag(args, "--iterative", iterative)
     _append_flag(args, "--manual-fov", manual_fov)
     _append_flag(args, "--batch", batch)
@@ -368,7 +334,7 @@ def _spatial_command(
 
 
 def normalize(
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     **kwargs: object,
 ) -> DCCCResult:
@@ -376,7 +342,7 @@ def normalize(
 
 
 def adni_pet_core(
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     **kwargs: object,
 ) -> DCCCResult:
@@ -384,7 +350,7 @@ def adni_pet_core(
 
 
 def rigid(
-    input: str | os.PathLike[str],
+    input: object,
     output: str | os.PathLike[str] | None = None,
     **kwargs: object,
 ) -> DCCCResult:

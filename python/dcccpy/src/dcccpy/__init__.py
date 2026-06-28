@@ -2,7 +2,6 @@
 
 from .core import (
     DCCCResult,
-    DCCCcoreNotFoundError,
     adad,
     abetaindex,
     abetaload,
@@ -18,9 +17,12 @@ from .core import (
     run,
     suvr,
 )
+from .runtime import DCCCCORE_VERSION, DCCCcoreDownloadError, DCCCcoreNotFoundError, download_dccccore
 
 __all__ = [
     "DCCCResult",
+    "DCCCCORE_VERSION",
+    "DCCCcoreDownloadError",
     "DCCCcoreNotFoundError",
     "adad",
     "abetaindex",
@@ -30,6 +32,7 @@ __all__ = [
     "centaurz",
     "centiloid",
     "dccccore_path",
+    "download_dccccore",
     "fillstates",
     "normalize",
     "parse_metrics",

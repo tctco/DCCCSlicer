@@ -5,19 +5,17 @@ from setuptools import setup
 
 try:
     from wheel.bdist_wheel import bdist_wheel
-except Exception:  # pragma: no cover - wheel is provided by build-system.requires
+except Exception:  # pragma: no cover
     bdist_wheel = None
 
 
 if bdist_wheel is not None:
     def has_vendored_runtime() -> bool:
-        vendor_root = Path(__file__).resolve().parent / "src" / "dcccpy" / "vendor" / "dccccore"
+        vendor_root = Path(__file__).resolve().parent / "src" / "dcccpy_linux_runtime" / "vendor" / "dccccore"
         return vendor_root.exists() and any(vendor_root.rglob("DCCCcore*"))
 
 
     class BinaryWheel(bdist_wheel):
-        """Mark wheels as platform-specific when vendored DCCCcore is present."""
-
         def finalize_options(self):
             super().finalize_options()
             if has_vendored_runtime():

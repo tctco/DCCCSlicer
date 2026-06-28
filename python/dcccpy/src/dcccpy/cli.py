@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import sys
 
-from .core import DCCCcoreNotFoundError, run
+from .core import run
+from .runtime import DCCCcoreDownloadError, DCCCcoreNotFoundError
 
 
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     try:
         result = run(args, check=False)
-    except DCCCcoreNotFoundError as exc:
+    except (DCCCcoreDownloadError, DCCCcoreNotFoundError) as exc:
         print(str(exc), file=sys.stderr)
         return 127
 
