@@ -1,4 +1,4 @@
-# DCCCSlicer
+# DCCCSlicer: Centiloid / CenTauR Calculator for MRI-Free Brain PET Quantification
 
 📢📢📢To use DCCCSlicer, download the packaged binaries from our [Release Page](https://github.com/tctco/DCCCSlicer/releases).
 
