@@ -7,11 +7,10 @@
 </p>
 3DSlicer plugin for Deep Cascaded Cerebral Calculator (formerly known as Deep Cascaded Centiloid Calculator).
 
-An open-source, super-simple, ultra-fast, fully-automated, fairly-accurate and PET-only solution to conduct spatial normalization and semi-quantification for almost any brain PET modalities.
+An open-source, super-simple, ultra-fast, fully-automated, fairly-accurate and PET-only solution to conduct spatial normalization and semi-quantification for almost any brain PET modalities and many imaging biomarkers.
 
-> Abeta, tau, FDG, DAT, MET, synaptic density... you name it!
+> Abeta, tau, FDG, DAT, MET, synaptic density... with Centiloid, CenTauR(z), Fill states, ADAD scores... you name it!
 
-> DCCCSlicer is currently only available on Windows. To use it on other platforms, you may need to recompile it from the [source](https://github.com/tctco/Beyond-Centiloid-code).
 
 Use DCCC to calculate Centiloid and CenTauRz.
 
@@ -24,7 +23,9 @@ https://github.com/user-attachments/assets/680490d2-ebec-4846-871c-98fdc383b513
 ## News 🎉🎉🎉
 
 - 20260208: Our paper entitled _Decoupling Alzheimer’s Disease Pathology in PET with Improved Clinical Relevance via Interpretable Adversarial Decomposition Learning_ was accepted by _Radiology_.
-- 20260408: The paper is now published online by [Radiology](https://pubs.rsna.org/doi/10.1148/radiol.252321).
+- 20260408: The paper is now published online by [Radiology](https://pubs.rsna.org/doi/10.1148/radiol.252321
+        
+        ).
 - 20260610: Our paper entitled _Cascaded Deep Learning enables multimodal brain PET spatial normalization and quantification for Alzheimer’s disease_ was accepted by _NeuroImage_.
 - 20260613: The paper is now published online by [NeuroImage](https://www.sciencedirect.com/science/article/pii/S105381192600354X).
 
