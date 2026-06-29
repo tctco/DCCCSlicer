@@ -11,7 +11,7 @@ except Exception:  # pragma: no cover
 
 if bdist_wheel is not None:
     def has_vendored_runtime() -> bool:
-        vendor_root = Path(__file__).resolve().parent / "src" / "dcccpy_linux_runtime" / "vendor" / "dccccore"
+        vendor_root = Path(__file__).resolve().parent / "src" / "dcccpy_windows_runtime" / "vendor" / "dccccore"
         return vendor_root.exists() and any(vendor_root.rglob("DCCCcore*"))
 
 
@@ -24,7 +24,7 @@ if bdist_wheel is not None:
         def get_tag(self):
             if not has_vendored_runtime():
                 return super().get_tag()
-            return "py3", "none", "manylinux2014_x86_64"
+            return "py3", "none", "win_amd64"
 
     setup(cmdclass={"bdist_wheel": BinaryWheel})
 else:

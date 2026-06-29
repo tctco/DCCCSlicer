@@ -99,13 +99,22 @@ def _main_package_vendor_dirs() -> list[Path]:
 
 
 def _runtime_package_dirs() -> list[Path]:
+    roots: list[Path] = []
     try:
         import dcccpy_linux_runtime
     except Exception:
-        return []
+        pass
+    else:
+        roots.append(Path(dcccpy_linux_runtime.dccccore_root()))
 
-    root = dcccpy_linux_runtime.dccccore_root()
-    return [Path(root)]
+    try:
+        import dcccpy_windows_runtime
+    except Exception:
+        pass
+    else:
+        roots.append(Path(dcccpy_windows_runtime.dccccore_root()))
+
+    return roots
 
 
 def _cached_dirs(version: str = DCCCCORE_VERSION) -> list[Path]:
@@ -232,6 +241,6 @@ def dccccore_path(
         return download_dccccore(version=version)
 
     raise DCCCcoreNotFoundError(
-        "Could not find DCCCcore. Install dcccpy[linux-runtime], set DCCCPY_DCCCCORE, "
+        "Could not find DCCCcore. Install dcccpy[runtime], set DCCCPY_DCCCCORE, "
         "put DCCCcore on PATH, or enable automatic download with DCCCPY_AUTO_DOWNLOAD=1."
     )

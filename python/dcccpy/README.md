@@ -16,12 +16,26 @@ The first call downloads the matching `DCCCcore` release package into the local
 user cache if no native runtime is otherwise available. The slim package also
 installs `nibabel` for image loading and nibabel-style image inputs.
 
-For Linux users who prefer `pip install` to include the native runtime and avoid
-first-run download:
+The downloaded GitHub release is the full `DCCCcore` runtime. The optional PyPI
+runtime wheels are smaller and omit the `fast_and_acc` registration model/config
+and ADAD decoupler ONNX ensemble.
+
+Users who prefer `pip install` to include the native runtime and avoid first-run
+download can use the platform-selecting runtime extra:
+
+```bash
+pip install "dcccpy[runtime]"
+```
+
+Platform-specific runtime extras are also available:
 
 ```bash
 pip install "dcccpy[linux-runtime]"
+pip install "dcccpy[windows-runtime]"
 ```
+
+The platform-specific extras are guarded by environment markers, so they only
+install a runtime wheel on the matching platform.
 
 ## Python API
 
@@ -88,7 +102,8 @@ At runtime, `dcccpy` looks for `DCCCcore` in this order:
 
 1. `DCCCPY_DCCCCORE` environment variable.
 2. A vendored binary inside the installed `dcccpy` wheel.
-3. A binary from `dcccpy-linux-runtime`, installed by `dcccpy[linux-runtime]`.
+3. A binary from `dcccpy-linux-runtime` or `dcccpy-windows-runtime`, installed by
+   `dcccpy[runtime]` or the platform-specific runtime extras.
 4. The local dcccpy cache populated by automatic download.
 5. `DCCCcore` on `PATH`.
 6. Automatic download from GitHub releases, unless disabled.
@@ -117,15 +132,16 @@ The preferred distribution layout is:
 
 - `dcccpy`: slim Python package with nibabel; downloads runtime on first use.
 - `dcccpy-linux-runtime`: optional Linux runtime wheel.
-- `dcccpy[linux-runtime]`: installs both packages.
+- `dcccpy-windows-runtime`: optional Windows runtime wheel.
+- `dcccpy[runtime]`: installs the matching runtime package on supported platforms.
 
 ## Packaging note
 
-The Linux `DCCCcore-4.2.3-ubuntu-latest-x64.zip` release asset contains the
-native executable, `libtbb`, ONNX registration/decoupling models, configuration
-files, and NIfTI template/mask assets. That full runtime is the correct unit to
-vendor for a wheel that works immediately after `pip install dcccpy`.
+The runtime wheels use a PyPI-size profile for version 4.2.3. They omit the
+`fast_and_acc` registration model/config and the ADAD decoupler ONNX ensemble,
+while keeping the default spatial normalization model and assets needed by
+common Centiloid/CenTauR/CenTauRz workflows.
 
-The full Linux runtime wheel is about 167 MB for version 4.2.3, so a public
-PyPI upload may require a file size limit increase unless a future release
-splits a smaller runtime profile from the full `DCCCcore` package.
+The plain `dcccpy` package remains slim and downloads the full matching
+`DCCCcore` release package from GitHub on first use when no installed runtime is
+available.

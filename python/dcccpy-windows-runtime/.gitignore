@@ -1,0 +1,7 @@
+/src/dcccpy_windows_runtime/vendor/dccccore/
+/build/
+/dist/
+/*.egg-info/
+/.pytest_cache/
+/.venv/
+__pycache__/

@@ -3,24 +3,21 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dcccpy"
-version = "0.1.3"
-description = "Python wrapper for the DCCCcore PET biomarker command-line tool"
+name = "dcccpy-windows-runtime"
+version = "0.1.0"
+description = "Windows DCCCcore runtime package for dcccpy"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "CC-BY-NC-ND-4.0"
 authors = [
   { name = "DCCCSlicer contributors" }
 ]
-dependencies = [
-  "nibabel>=5",
-]
-keywords = ["PET", "neuroimaging", "centiloid", "DCCC", "DCCCSlicer"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
+  "Operating System :: Microsoft :: Windows",
   "Topic :: Scientific/Engineering :: Medical Science Apps.",
 ]
 
@@ -28,17 +25,6 @@ classifiers = [
 Homepage = "https://github.com/tctco/DCCCSlicer"
 Repository = "https://github.com/tctco/DCCCSlicer"
 Issues = "https://github.com/tctco/DCCCSlicer/issues"
-
-[project.optional-dependencies]
-linux-runtime = ["dcccpy-linux-runtime==0.1.0; sys_platform == 'linux' and platform_machine == 'x86_64'"]
-windows-runtime = ["dcccpy-windows-runtime==0.1.0; sys_platform == 'win32' and platform_machine == 'AMD64'"]
-runtime = [
-  "dcccpy-linux-runtime==0.1.0; sys_platform == 'linux' and platform_machine == 'x86_64'",
-  "dcccpy-windows-runtime==0.1.0; sys_platform == 'win32' and platform_machine == 'AMD64'",
-]
-
-[project.scripts]
-dcccpy = "dcccpy.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -48,7 +34,4 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-dcccpy = ["py.typed", "vendor/**/*"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+dcccpy_windows_runtime = ["py.typed", "vendor/**/*"]
