@@ -37,11 +37,13 @@ RUN perl -MIPC::Cmd -MTime::Piece -e 1 \
     && autoreconf --version
 
 RUN python -m pip install --no-cache-dir --default-timeout=120 --retries=10 \
-      "cmake>=3.27,<4" \
+      "cmake==3.31.10" \
       "conan>=2.0,<3" \
       ninja \
       pandas \
-      pytest
+      pytest \
+    && cmake --version \
+    && cmake -E capabilities >/dev/null
 
 RUN groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} -s /bin/bash \
