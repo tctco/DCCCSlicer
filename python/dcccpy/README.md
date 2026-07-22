@@ -32,10 +32,13 @@ Platform-specific runtime extras are also available:
 ```bash
 pip install "dcccpy[linux-runtime]"
 pip install "dcccpy[windows-runtime]"
+pip install "dcccpy[macos-runtime]"
 ```
 
 The platform-specific extras are guarded by environment markers, so they only
-install a runtime wheel on the matching platform.
+install a runtime wheel on the matching platform. Linux x86_64 uses
+`dcccpy-linux-runtime`; Linux aarch64 (including NVIDIA DGX Spark) uses
+`dcccpy-linux-arm64-runtime`.
 
 ## Python API
 
@@ -102,7 +105,8 @@ At runtime, `dcccpy` looks for `DCCCcore` in this order:
 
 1. `DCCCPY_DCCCCORE` environment variable.
 2. A vendored binary inside the installed `dcccpy` wheel.
-3. A binary from `dcccpy-linux-runtime` or `dcccpy-windows-runtime`, installed by
+3. A binary from `dcccpy-linux-runtime`, `dcccpy-linux-arm64-runtime`,
+   `dcccpy-windows-runtime`, or `dcccpy-macos-runtime`, installed by
    `dcccpy[runtime]` or the platform-specific runtime extras.
 4. The local dcccpy cache populated by automatic download.
 5. `DCCCcore` on `PATH`.
@@ -116,12 +120,37 @@ Useful environment variables:
 - `DCCCPY_RELEASE_REPO`: override the GitHub release repository.
 - `DCCCPY_DCCCCORE_URL`: override the release asset URL.
 
+## macOS Gatekeeper
+
+On macOS, downloaded command-line executables may be blocked by Gatekeeper until
+the user explicitly allows them. If `DCCCcore` fails to start with an error such
+as "Operation not permitted" or "developer cannot be verified", `dcccpy` prints
+a hint with the exact runtime path.
+
+You can allow the runtime from System Settings > Privacy & Security, or remove
+the quarantine flag in Terminal:
+
+```bash
+xattr -dr com.apple.quarantine /path/to/DCCCcore
+```
+
+Run the same command for the path shown in the `dcccpy` error message, then run
+the calculation again.
+
 ## Runtime Packaging
 
 Release wheels should vendor the matching `DCCCcore` runtime tree before build:
 
 ```bash
 python scripts/vendor_dccccore.py --version 4.2.3 --release-platform ubuntu-latest-x64
+python -m build --wheel
+```
+
+The Linux ARM64 runtime package uses the corresponding release asset:
+
+```bash
+cd python/dcccpy-linux-arm64-runtime
+python scripts/vendor_dccccore.py --version 4.2.3 --release-platform ubuntu-latest-arm64
 python -m build --wheel
 ```
 
@@ -132,7 +161,9 @@ The preferred distribution layout is:
 
 - `dcccpy`: slim Python package with nibabel; downloads runtime on first use.
 - `dcccpy-linux-runtime`: optional Linux runtime wheel.
+- `dcccpy-linux-arm64-runtime`: optional Linux aarch64 runtime wheel.
 - `dcccpy-windows-runtime`: optional Windows runtime wheel.
+- `dcccpy-macos-runtime`: optional macOS arm64 runtime wheel.
 - `dcccpy[runtime]`: installs the matching runtime package on supported platforms.
 
 ## Packaging note

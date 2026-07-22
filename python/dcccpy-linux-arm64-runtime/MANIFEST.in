@@ -1,0 +1,2 @@
+include README.md
+recursive-include src/dcccpy_linux_arm64_runtime/vendor *

@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dcccpy-macos-runtime"
+version = "0.1.0"
+description = "macOS arm64 DCCCcore runtime package for dcccpy"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "CC-BY-NC-ND-4.0"
+authors = [
+  { name = "DCCCSlicer contributors" }
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Operating System :: MacOS",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+
+[project.urls]
+Homepage = "https://github.com/tctco/DCCCSlicer"
+Repository = "https://github.com/tctco/DCCCSlicer"
+Issues = "https://github.com/tctco/DCCCSlicer/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+dcccpy_macos_runtime = ["py.typed", "vendor/**/*"]

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dcccpy"
-version = "0.1.3"
+version = "0.1.6"
 description = "Python wrapper for the DCCCcore PET biomarker command-line tool"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -30,11 +30,17 @@ Repository = "https://github.com/tctco/DCCCSlicer"
 Issues = "https://github.com/tctco/DCCCSlicer/issues"
 
 [project.optional-dependencies]
-linux-runtime = ["dcccpy-linux-runtime==0.1.0; sys_platform == 'linux' and platform_machine == 'x86_64'"]
+linux-runtime = [
+  "dcccpy-linux-runtime==0.1.0; sys_platform == 'linux' and platform_machine == 'x86_64'",
+  "dcccpy-linux-arm64-runtime==0.1.0; sys_platform == 'linux' and platform_machine == 'aarch64'",
+]
 windows-runtime = ["dcccpy-windows-runtime==0.1.0; sys_platform == 'win32' and platform_machine == 'AMD64'"]
+macos-runtime = ["dcccpy-macos-runtime==0.1.0; sys_platform == 'darwin' and platform_machine == 'arm64'"]
 runtime = [
   "dcccpy-linux-runtime==0.1.0; sys_platform == 'linux' and platform_machine == 'x86_64'",
+  "dcccpy-linux-arm64-runtime==0.1.0; sys_platform == 'linux' and platform_machine == 'aarch64'",
   "dcccpy-windows-runtime==0.1.0; sys_platform == 'win32' and platform_machine == 'AMD64'",
+  "dcccpy-macos-runtime==0.1.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
 ]
 
 [project.scripts]

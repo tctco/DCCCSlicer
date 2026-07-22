@@ -12,6 +12,11 @@ from pathlib import Path
 import qt
 import slicer
 
+try:
+    from .macos_security import append_macos_security_hint
+except ImportError:
+    from macos_security import append_macos_security_hint
+
 
 class MetricCalculatorLogic:
     """Logic class for PET metric calculations"""
@@ -294,6 +299,11 @@ class MetricCalculatorLogic:
             result_text = self._polish_output(stdout)
             self._finalize_async_callback(True, result_text, "")
         else:
+            stderr = append_macos_security_hint(
+                stderr,
+                self.executable_path,
+                returncode=exit_code,
+            )
             error_msg = failure_message
             if stderr.strip():
                 error_msg += f"\nError: {stderr.strip()}"
@@ -319,6 +329,11 @@ class MetricCalculatorLogic:
         stderr = "".join(self._process_stderr).strip()
         if stderr:
             specific_message += f"\nError: {stderr}"
+        specific_message = append_macos_security_hint(
+            specific_message,
+            self.executable_path,
+            force=process_error == qt.QProcess.FailedToStart,
+        )
 
         self._finalize_async_callback(False, "", f"{failure_message}\n{specific_message}")
 
@@ -371,11 +386,20 @@ class MetricCalculatorLogic:
             
             result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.plugin_path)
             success = result.returncode == 0
+            stderr = append_macos_security_hint(
+                result.stderr,
+                self.executable_path,
+                returncode=result.returncode,
+            )
             
-            return success, result.stdout, result.stderr
+            return success, result.stdout, stderr
             
         except Exception as e:
-            return False, "", str(e)
+            return False, "", append_macos_security_hint(
+                str(e),
+                self.executable_path,
+                force=True,
+            )
     
     def _polish_output(self, output):
         """Polish output text with tracer name expansions and filter unwanted log lines
@@ -637,4 +661,3 @@ class MetricCalculatorLogic:
             cmd.append("--skip-normalization")
             
         return cmd
-

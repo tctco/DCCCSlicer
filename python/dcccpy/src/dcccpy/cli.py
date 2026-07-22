@@ -13,6 +13,9 @@ def main(argv: list[str] | None = None) -> int:
     except (DCCCcoreDownloadError, DCCCcoreNotFoundError) as exc:
         print(str(exc), file=sys.stderr)
         return 127
+    except OSError as exc:
+        print(str(exc), file=sys.stderr)
+        return 126
 
     if result.stdout:
         print(result.stdout, end="")

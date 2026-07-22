@@ -46,6 +46,7 @@ def release_platform(key: str | None = None) -> str:
     key = key or platform_key()
     mapping = {
         "linux-x86_64": "ubuntu-latest-x64",
+        "linux-arm64": "ubuntu-latest-arm64",
         "windows-x86_64": "windows-latest-x64",
         "macos-arm64": "macos-latest-arm64",
     }
@@ -108,11 +109,25 @@ def _runtime_package_dirs() -> list[Path]:
         roots.append(Path(dcccpy_linux_runtime.dccccore_root()))
 
     try:
+        import dcccpy_linux_arm64_runtime
+    except Exception:
+        pass
+    else:
+        roots.append(Path(dcccpy_linux_arm64_runtime.dccccore_root()))
+
+    try:
         import dcccpy_windows_runtime
     except Exception:
         pass
     else:
         roots.append(Path(dcccpy_windows_runtime.dccccore_root()))
+
+    try:
+        import dcccpy_macos_runtime
+    except Exception:
+        pass
+    else:
+        roots.append(Path(dcccpy_macos_runtime.dccccore_root()))
 
     return roots
 

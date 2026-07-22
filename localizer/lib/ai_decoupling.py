@@ -9,6 +9,11 @@ import subprocess
 from pathlib import Path
 import slicer
 
+try:
+    from .macos_security import append_macos_security_hint
+except ImportError:
+    from macos_security import append_macos_security_hint
+
 
 class AIDecouplingLogic:
     """Logic class for AI-based PET image decoupling"""
@@ -65,12 +70,26 @@ class AIDecouplingLogic:
             ]
                 
             print(f"Running decouple command: {' '.join(cmd)}")
-            result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.plugin_path)
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.plugin_path)
+            except Exception as e:
+                error = append_macos_security_hint(
+                    str(e),
+                    self.executable_path,
+                    force=True,
+                )
+                return False, "", f"Error during {modality} decoupling: {error}", None, None, None
+
+            stderr = append_macos_security_hint(
+                result.stderr,
+                self.executable_path,
+                returncode=result.returncode,
+            )
             
             if result.returncode != 0:
                 error_msg = f"Failed to decouple {modality} signal"
-                if result.stderr:
-                    error_msg += f"\nError: {result.stderr}"
+                if stderr:
+                    error_msg += f"\nError: {stderr}"
                 if result.stdout:
                     error_msg += f"\nOutput: {result.stdout}"
                 return False, "", error_msg, None, None, None

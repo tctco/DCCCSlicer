@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import errno
 import os
 import re
+import shlex
 import subprocess
+import sys
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -13,6 +16,18 @@ from .runtime import DCCCcoreNotFoundError, dccccore_path
 
 _NUMBER_RE = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
 _METRIC_RE = re.compile(rf"^\s*([A-Za-z][A-Za-z0-9_. /()-]*):\s*({_NUMBER_RE})\s*(?:%.*)?$")
+_MACOS_SECURITY_MARKERS = (
+    "cannot be opened because the developer cannot be verified",
+    "developer cannot be verified",
+    "operation not permitted",
+    "permission denied",
+    "damaged and can't be opened",
+    "damaged and cannot be opened",
+    "malware",
+    "code signature",
+    "not signed",
+    "quarantine",
+)
 
 
 @dataclass(frozen=True)
@@ -73,6 +88,47 @@ def _as_args(args: Sequence[object]) -> list[str]:
     return [os.fspath(arg) if isinstance(arg, os.PathLike) else str(arg) for arg in args]
 
 
+def _macos_security_hint(executable: Path) -> str:
+    quoted_path = shlex.quote(os.fspath(executable))
+    return (
+        "macOS may have blocked DCCCcore because it was downloaded from the internet.\n"
+        "Open System Settings > Privacy & Security and allow DCCCcore, or run this "
+        "Terminal command once:\n"
+        f"  xattr -dr com.apple.quarantine {quoted_path}\n"
+        "Then run the dcccpy command again."
+    )
+
+
+def _looks_like_macos_security_block(returncode: int | None, stderr: str) -> bool:
+    if sys.platform != "darwin":
+        return False
+
+    text = stderr.lower()
+    if any(marker in text for marker in _MACOS_SECURITY_MARKERS):
+        return True
+
+    return returncode in {126, -9}
+
+
+def _append_macos_security_hint(stderr: str, executable: Path, returncode: int | None) -> str:
+    if not _looks_like_macos_security_block(returncode, stderr):
+        return stderr
+    hint = _macos_security_hint(executable)
+    if "com.apple.quarantine" in stderr:
+        return stderr
+    return f"{stderr.rstrip()}\n\n{hint}\n" if stderr.strip() else f"{hint}\n"
+
+
+def _raise_with_macos_security_hint(exc: OSError, executable: Path) -> None:
+    if sys.platform != "darwin" or exc.errno not in {errno.EACCES, errno.EPERM, errno.ENOEXEC}:
+        raise exc
+
+    message = f"{exc.strerror or str(exc)}\n\n{_macos_security_hint(executable)}"
+    if exc.errno is None:
+        raise OSError(message) from exc
+    raise type(exc)(exc.errno, message, getattr(exc, "filename", None)) from exc
+
+
 def run(
     args: Sequence[object],
     *,
@@ -86,19 +142,24 @@ def run(
 
     exe = dccccore_path(executable)
     str_args = _as_args(args)
-    completed = subprocess.run(
-        [str(exe), *str_args],
-        cwd=os.fspath(cwd) if cwd is not None else None,
-        env={**os.environ, **dict(env or {})},
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    try:
+        completed = subprocess.run(
+            [str(exe), *str_args],
+            cwd=os.fspath(cwd) if cwd is not None else None,
+            env={**os.environ, **dict(env or {})},
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    except OSError as exc:
+        _raise_with_macos_security_hint(exc, exe)
+
+    stderr = _append_macos_security_hint(completed.stderr, exe, completed.returncode)
     result = DCCCResult(
         args=tuple(str_args),
         returncode=completed.returncode,
         stdout=completed.stdout,
-        stderr=completed.stderr,
+        stderr=stderr,
         output=Path(output) if output is not None else None,
         executable=exe,
         metrics=parse_metrics(completed.stdout),

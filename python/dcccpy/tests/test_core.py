@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
+import types
 import zipfile
 
 import pytest
 
 import dcccpy
-from dcccpy.runtime import DCCCcoreNotFoundError, dccccore_path
+from dcccpy.runtime import DCCCcoreNotFoundError, dccccore_path, find_existing_dccccore, release_platform
 
 
 def make_fake_dccccore(tmp_path: Path) -> Path:
@@ -156,6 +158,44 @@ def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pyte
     assert str(tmp_path / "cache") in str(resolved)
 
 
+def test_find_existing_dccccore_checks_macos_runtime_package(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path / "macos-runtime"
+    root.mkdir()
+    exe = root / "DCCCcore"
+    exe.write_text("#!/usr/bin/env sh\n")
+    exe.chmod(0o755)
+
+    module = types.SimpleNamespace(dccccore_root=lambda: root)
+    monkeypatch.setitem(sys.modules, "dcccpy_macos_runtime", module)
+    monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
+
+    assert find_existing_dccccore() == exe
+
+
+def test_linux_arm64_release_platform() -> None:
+    assert release_platform("linux-arm64") == "ubuntu-latest-arm64"
+
+
+def test_find_existing_dccccore_checks_linux_arm64_runtime_package(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path / "linux-arm64-runtime"
+    root.mkdir()
+    exe = root / "DCCCcore"
+    exe.write_text("#!/usr/bin/env sh\n")
+    exe.chmod(0o755)
+
+    module = types.SimpleNamespace(dccccore_root=lambda: root)
+    monkeypatch.setitem(sys.modules, "dcccpy_linux_arm64_runtime", module)
+    monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
+
+    assert find_existing_dccccore() == exe
+
+
 def test_cli_forwards_raw_args(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     fake_args = tmp_path / "args.txt"
     fake_exe = make_fake_dccccore(tmp_path)
@@ -169,3 +209,25 @@ def test_cli_forwards_raw_args(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, 
     assert code == 0
     assert fake_args.read_text().splitlines() == ["--help"]
     assert "Metric: Centiloid" in capsys.readouterr().out
+
+
+def test_run_adds_macos_security_hint_for_blocked_runtime(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    exe = tmp_path / "DCCCcore"
+    exe.write_text(
+        "#!/usr/bin/env sh\n"
+        "printf 'Operation not permitted\\n' >&2\n"
+        "exit 126\n"
+    )
+    exe.chmod(0o755)
+    monkeypatch.setenv("DCCCPY_DCCCCORE", str(exe))
+    monkeypatch.setattr("dcccpy.core.sys.platform", "darwin")
+
+    result = dcccpy.run(["--help"], check=False)
+
+    assert result.returncode == 126
+    assert "macOS may have blocked DCCCcore" in result.stderr
+    assert "xattr -dr com.apple.quarantine" in result.stderr
+    assert str(exe) in result.stderr
