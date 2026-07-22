@@ -1,0 +1,4 @@
+build/
+dist/
+*.egg-info/
+src/dcccpy_macos_runtime/vendor/

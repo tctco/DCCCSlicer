@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(startsWith(github.ref, 'refs/tags/') && '["ubuntu-latest","windows-latest","macos-latest","macos-14"]' || '["ubuntu-latest","windows-latest"]') }}
+        os: ${{ fromJSON(startsWith(github.ref, 'refs/tags/') && '["ubuntu-latest","ubuntu-24.04-arm","windows-latest","macos-latest","macos-14"]' || '["ubuntu-latest","ubuntu-24.04-arm","windows-latest"]') }}
 
     steps:
       - name: Checkout (with Git LFS)
@@ -53,11 +53,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/dccc-conan2-legacy
-          key: ${{ runner.os }}-legacy-glibc217-conan-${{ hashFiles('localizer/src/conanfile.py', 'docker/Dockerfile.core.legacy', 'scripts/docker-build-core.sh', '.github/workflows/cross-compile.yml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-legacy-glibc217-conan-${{ hashFiles('localizer/src/conanfile.py', 'docker/Dockerfile.core.legacy', 'scripts/docker-build-core.sh', '.github/workflows/cross-compile.yml') }}
           restore-keys: |
-            ${{ runner.os }}-legacy-glibc217-conan-
+            ${{ runner.os }}-${{ runner.arch }}-legacy-glibc217-conan-
 
       - name: Setup Ninja
+        if: runner.os != 'Linux'
         uses: seanmiddleditch/gha-setup-ninja@v4
 
       - name: Install GCC-12 (Ubuntu)
@@ -122,7 +123,13 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
+          case "$RUNNER_ARCH" in
+            X64) manylinux_arch="x86_64" ;;
+            ARM64) manylinux_arch="aarch64" ;;
+            *) echo "Unsupported Linux runner architecture: $RUNNER_ARCH" >&2; exit 1 ;;
+          esac
           docker build \
+            --build-arg MANYLINUX_IMAGE="quay.io/pypa/manylinux2014_${manylinux_arch}" \
             --build-arg USER_UID="$(id -u)" \
             --build-arg USER_GID="$(id -g)" \
             -f docker/Dockerfile.core.legacy \
@@ -161,6 +168,24 @@ jobs:
             exit 1
           fi
 
+      - name: Verify Linux executable architecture
+        if: runner.os == 'Linux'
+        working-directory: localizer/src
+        shell: bash
+        run: |
+          set -euo pipefail
+          description="$(file install/bin/DCCCcore)"
+          echo "$description"
+          case "$RUNNER_ARCH" in
+            X64) expected="x86-64" ;;
+            ARM64) expected="ARM aarch64" ;;
+            *) echo "Unsupported Linux runner architecture: $RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          if [[ "$description" != *"$expected"* ]]; then
+            echo "DCCCcore has the wrong architecture; expected $expected." >&2
+            exit 1
+          fi
+
       - name: Run PR smoke tests on installed binary (Linux)
         if: github.event_name == 'pull_request' && runner.os == 'Linux'
         working-directory: localizer/src/tests
@@ -187,11 +212,13 @@ jobs:
 
       - name: Setup CMake
         id: setup-cmake
+        if: runner.os != 'Linux'
         uses: lukka/get-cmake@latest
         with:
           cmakeVersion: '3.27.9'
 
       - name: Verify CMake version
+        if: runner.os != 'Linux'
         run: cmake --version
           
       - name: Conan install (Windows)
@@ -274,6 +301,9 @@ jobs:
           set -euo pipefail
 
           case "${MATRIX_OS:-$RUNNER_OS}" in
+            ubuntu-24.04-arm)
+              platform="ubuntu-latest-arm64"
+              ;;
             macos-*)
               platform="${MATRIX_OS:-macos}-arm64"
               ;;
@@ -422,6 +452,14 @@ jobs:
     needs: build
     if: startsWith(github.ref, 'refs/tags/')
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -429,12 +467,38 @@ jobs:
           merge-multiple: true
           path: dist
 
+      - name: Build Linux ARM64 runtime wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          archive="$GITHUB_WORKSPACE/dist/DCCCcore-${version}-ubuntu-latest-arm64.zip"
+          python -m pip install --upgrade build
+          python python/dcccpy-linux-arm64-runtime/scripts/vendor_dccccore.py \
+            --version "$version" \
+            --archive "$archive" \
+            --profile pypi-slim
+          python -m build --wheel \
+            --outdir "$GITHUB_WORKSPACE/dist" \
+            python/dcccpy-linux-arm64-runtime
+
+      - name: Build dcccpy distribution
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m build \
+            --outdir "$GITHUB_WORKSPACE/dist" \
+            python/dcccpy
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/DCCCSlicer-*.zip
             dist/DCCCcore-*.zip
+            dist/dcccpy-*.whl
+            dist/dcccpy-*.tar.gz
+            dist/dcccpy_linux_arm64_runtime-*.whl
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

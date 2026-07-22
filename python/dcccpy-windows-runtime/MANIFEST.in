@@ -1,0 +1,2 @@
+include README.md
+recursive-include src/dcccpy_windows_runtime/vendor *

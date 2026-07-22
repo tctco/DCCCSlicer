@@ -1,0 +1,6 @@
+/src/dcccpy_linux_runtime/vendor/dccccore/
+/build/
+/dist/
+/*.egg-info/
+/.pytest_cache/
+/.venv/

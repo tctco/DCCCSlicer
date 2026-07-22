@@ -83,3 +83,19 @@ def test_build_suvr_command_does_not_reference_legacy_flag():
     assert cmd[:2] == [str(logic.executable_path), "suvr"]
     assert "--manual-fov" in cmd
     assert "--skip-normalization" in cmd
+
+
+def test_macos_security_hint_mentions_quarantine_command(monkeypatch):
+    from macos_security import append_macos_security_hint
+
+    monkeypatch.setattr(sys, "platform", "darwin")
+
+    message = append_macos_security_hint(
+        "Operation not permitted",
+        "/tmp/plugin/cpp/CentiloidCalculator",
+        returncode=126,
+    )
+
+    assert "macOS may have blocked DCCCcore" in message
+    assert "xattr -dr com.apple.quarantine" in message
+    assert "/tmp/plugin/cpp/CentiloidCalculator" in message
