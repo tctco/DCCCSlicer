@@ -1,4 +1,5 @@
 #include "SpatialNormalizationService.h"
+#include "../common/DebugReporter.h"
 #include "../common/NiftiIO.h"
 #include "../common/ImageOps.h"
 #include "../normalizers/RigidVoxelMorphNormalizer.h"
@@ -17,18 +18,26 @@ SpatialNormalizationService::SpatialNormalizationService(ConfigurationPtr config
 
 SpatialNormalizationOutput SpatialNormalizationService::normalize(const SpatialNormalizationRequest& request) {
     SpatialNormalizationOutput output;
-    ImageType::Pointer inputImage = loadInput(request.inputPath);
+    const auto& debugReporter = request.options.debugReporter;
+    ImageType::Pointer inputImage;
+    {
+        auto scope = debugReporter ? debugReporter->scope("load_input", request.inputPath)
+                                   : Common::debug::ScopedStage{};
+        inputImage = loadInput(request.inputPath);
+    }
 
     if (request.skip) {
         output.rigidAlignedImage = inputImage;
         output.spatiallyNormalizedImage = inputImage;
     } else {
-        auto normalizer = std::make_shared<RigidVoxelMorphNormalizer>(config_);
+        auto normalizer = std::make_shared<RigidVoxelMorphNormalizer>(config_, debugReporter);
         if (request.options.enableDebugOutput) {
             normalizer->setDebugMode(true, request.options.debugOutputBasePath);
         }
 
         if (request.options.rigidOnly) {
+            auto scope = debugReporter ? debugReporter->scope("normalize.rigid_only")
+                                       : Common::debug::ScopedStage{};
             output.rigidAlignedImage = request.options.useIterativeRigid
                                            ? normalizer->normalizeIterativeRigidOnly(
                                                  inputImage,

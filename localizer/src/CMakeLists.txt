@@ -1,8 +1,8 @@
 # CMakeList.txt: DCCCcore Refactored Version
 cmake_minimum_required(VERSION 3.21)
 
-project(DCCCcore VERSION 4.2.3)
-set(DCCCCORE_VERSION_SUFFIX "-alpha")
+project(DCCCcore VERSION 4.2.4)
+set(DCCCCORE_VERSION_SUFFIX "")
 set(DCCCCORE_SOFTWARE_VERSION "${PROJECT_VERSION}${DCCCCORE_VERSION_SUFFIX}")
 
 # Set C++ standard
@@ -72,6 +72,8 @@ target_sources(DCCCcore PRIVATE
 # Add utility sources
 target_sources(DCCCcore PRIVATE
     core/common/Common.h
+    core/common/DebugReporter.h
+    core/common/DebugReporter.cpp
     core/common/ImageTypes.h
     core/common/NiftiTypes.h
     core/common/NiftiIO.h

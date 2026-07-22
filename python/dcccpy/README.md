@@ -142,7 +142,7 @@ the calculation again.
 Release wheels should vendor the matching `DCCCcore` runtime tree before build:
 
 ```bash
-python scripts/vendor_dccccore.py --version 4.2.3 --release-platform ubuntu-latest-x64
+python scripts/vendor_dccccore.py --version 4.2.4 --release-platform ubuntu-latest-x64
 python -m build --wheel
 ```
 
@@ -150,7 +150,7 @@ The Linux ARM64 runtime package uses the corresponding release asset:
 
 ```bash
 cd python/dcccpy-linux-arm64-runtime
-python scripts/vendor_dccccore.py --version 4.2.3 --release-platform ubuntu-latest-arm64
+python scripts/vendor_dccccore.py --version 4.2.4 --release-platform ubuntu-latest-arm64
 python -m build --wheel
 ```
 

@@ -2,18 +2,43 @@
 #include "itkAffineTransform.h"
 #include <algorithm>
 
-ImageType::Pointer ImagePreprocessor::preprocessForRigid(ImageType::Pointer image) {
+ImageType::Pointer ImagePreprocessor::preprocessForRigid(
+    ImageType::Pointer image,
+    Common::debug::DebugReporter* debugReporter,
+    const std::string& debugLabelPrefix) {
+    auto scope = debugReporter ? debugReporter->scope(debugLabelPrefix)
+                               : Common::debug::ScopedStage{};
     itk::Vector<double, 3> spacing;
     spacing.Fill(3.0);
 
-    image = clipIntensityPercentiles(image, 0.01, 0.99);
-    image = gaussianSmooth(image, 1);
-    image = resampleImage(image, spacing);
-    image = cropForeground(image, 0.35);
+    {
+        auto stage = debugReporter ? debugReporter->scope(debugLabelPrefix + ".clip_intensity")
+                                   : Common::debug::ScopedStage{};
+        image = clipIntensityPercentiles(image, 0.01, 0.99);
+    }
+    {
+        auto stage = debugReporter ? debugReporter->scope(debugLabelPrefix + ".gaussian_smooth")
+                                   : Common::debug::ScopedStage{};
+        image = gaussianSmooth(image, 1);
+    }
+    {
+        auto stage = debugReporter ? debugReporter->scope(debugLabelPrefix + ".resample_3mm")
+                                   : Common::debug::ScopedStage{};
+        image = resampleImage(image, spacing);
+    }
+    {
+        auto stage = debugReporter ? debugReporter->scope(debugLabelPrefix + ".crop_foreground")
+                                   : Common::debug::ScopedStage{};
+        image = cropForeground(image, 0.35);
+    }
 
     itk::Size<3> outputSize;
     outputSize.Fill(64);
-    image = resizeImage(image, outputSize);
+    {
+        auto stage = debugReporter ? debugReporter->scope(debugLabelPrefix + ".resize_64")
+                                   : Common::debug::ScopedStage{};
+        image = resizeImage(image, outputSize);
+    }
     return image;
 }
 
@@ -196,4 +221,3 @@ double ImagePreprocessor::getPercentileValue(std::vector<float>& values,
     std::nth_element(values.begin(), values.begin() + index, values.end());
     return values[index];
 }
-
