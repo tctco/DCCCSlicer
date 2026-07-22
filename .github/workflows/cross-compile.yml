@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(startsWith(github.ref, 'refs/tags/') && '["ubuntu-latest","ubuntu-24.04-arm","windows-latest","macos-latest","macos-14"]' || '["ubuntu-latest","windows-latest"]') }}
+        os: ${{ fromJSON(startsWith(github.ref, 'refs/tags/') && '["ubuntu-latest","ubuntu-24.04-arm","windows-latest","macos-latest","macos-14"]' || '["ubuntu-latest","ubuntu-24.04-arm","windows-latest"]') }}
 
     steps:
       - name: Checkout (with Git LFS)
