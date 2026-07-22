@@ -1,4 +1,5 @@
 #pragma once
+#include "../common/DebugReporter.h"
 #include "../common/ImageTypes.h"
 #include "onnxruntime_cxx_api.h"
 #include <string>
@@ -12,6 +13,8 @@
 class RigidRegistrationEngine {
 public:
     explicit RigidRegistrationEngine(const std::string& modelPath);
+    RigidRegistrationEngine(const std::string& modelPath,
+                            Common::debug::DebugReporterPtr debugReporter);
     ~RigidRegistrationEngine();
     
     /**
@@ -35,4 +38,5 @@ public:
 private:
     Ort::Env env_;
     Ort::Session* session_;
+    Common::debug::DebugReporterPtr debugReporter_;
 };

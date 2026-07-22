@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DebugReporter.h"
 #include "ImageTypes.h"
 #include <string>
 
@@ -14,6 +15,7 @@ struct SpatialNormalizationOptions {
     bool enableAdniPetCore = false;
     int maxIterations = 5;
     float convergenceThreshold = 2.0f;
+    Common::debug::DebugReporterPtr debugReporter;
 };
 
 struct SpatialNormalizationRequest {

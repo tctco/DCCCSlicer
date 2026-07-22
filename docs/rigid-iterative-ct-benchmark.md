@@ -124,3 +124,23 @@ Component split behavior check:
 ## Notes
 
 Further speed or memory reductions would require changing the iterative model input or the first rigid preprocessing pass so that very high-resolution images are downsampled before percentile clipping and smoothing. The low-resolution-cache experiment shows that this is a behavioral change and must be validated against affine accuracy before acceptance.
+
+## Follow-up: Large CTA Output Compression
+
+Date: 2026-07-02
+
+Later field testing found another major source of apparent rigid slowness:
+large CTA inputs can produce very large output images, and writing the output
+as `.nii.gz` can spend substantial wall time in gzip compression. In that
+case the slow part is not rigid alignment itself, but compressed NIfTI output
+I/O.
+
+When benchmarking rigid performance on high-resolution CT/CTA cases:
+
+- Use an uncompressed `.nii` output path to isolate rigid compute time.
+- Measure `.nii.gz` output separately if compressed-output wall time matters
+  for deployment.
+- Treat output extension as part of the benchmark configuration, because
+  `.nii` and `.nii.gz` can differ significantly for large volumes.
+- Be careful with `--debug`: debug mode writes multiple intermediate NIfTI
+  files, so output I/O can dominate the timing on large CTA cases.

@@ -1,9 +1,14 @@
 #include "RigidVoxelMorphNormalizer.h"
 
 #include <stdexcept>
+#include <utility>
 
 RigidVoxelMorphNormalizer::RigidVoxelMorphNormalizer(ConfigurationPtr config)
-    : config_(config) {
+    : RigidVoxelMorphNormalizer(config, nullptr) {}
+
+RigidVoxelMorphNormalizer::RigidVoxelMorphNormalizer(
+    ConfigurationPtr config, Common::debug::DebugReporterPtr debugReporter)
+    : config_(config), debugReporter_(std::move(debugReporter)) {
     if (!config_) {
         throw std::invalid_argument("RigidVoxelMorphNormalizer requires configuration");
     }
@@ -68,6 +73,9 @@ void RigidVoxelMorphNormalizer::setDebugMode(bool enable,
                                              const std::string& basePath) {
     debugMode_ = enable;
     debugBasePath_ = basePath;
+    if (enable && !debugReporter_) {
+        debugReporter_ = std::make_shared<Common::debug::DebugReporter>("rigid");
+    }
     if (rigidNormalizer_) {
         rigidNormalizer_->setDebugMode(enable, basePath);
     }
@@ -78,7 +86,10 @@ void RigidVoxelMorphNormalizer::setDebugMode(bool enable,
 
 RigidAlignmentNormalizer& RigidVoxelMorphNormalizer::rigidNormalizer() {
     if (!rigidNormalizer_) {
-        rigidNormalizer_ = std::make_unique<RigidAlignmentNormalizer>(config_);
+        auto scope = debugReporter_ ? debugReporter_->scope("create_rigid_normalizer")
+                                    : Common::debug::ScopedStage{};
+        rigidNormalizer_ =
+            std::make_unique<RigidAlignmentNormalizer>(config_, debugReporter_);
         rigidNormalizer_->setDebugMode(debugMode_, debugBasePath_);
     }
     return *rigidNormalizer_;

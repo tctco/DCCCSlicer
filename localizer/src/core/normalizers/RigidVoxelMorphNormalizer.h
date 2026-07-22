@@ -1,4 +1,5 @@
 #pragma once
+#include "../common/DebugReporter.h"
 #include "../interfaces/ISpatialNormalizer.h"
 #include "../interfaces/IConfiguration.h"
 #include "RigidAlignmentNormalizer.h"
@@ -11,6 +12,8 @@
 class RigidVoxelMorphNormalizer : public ISpatialNormalizer {
 public:
     explicit RigidVoxelMorphNormalizer(ConfigurationPtr config);
+    RigidVoxelMorphNormalizer(ConfigurationPtr config,
+                              Common::debug::DebugReporterPtr debugReporter);
     virtual ~RigidVoxelMorphNormalizer() = default;
     
     ImageType::Pointer normalize(ImageType::Pointer inputImage) override;
@@ -44,6 +47,7 @@ private:
     // Debug parameters
     bool debugMode_ = false;
     std::string debugBasePath_ = "";
+    Common::debug::DebugReporterPtr debugReporter_;
 
     RigidAlignmentNormalizer& rigidNormalizer();
     VoxelMorphNormalizer& voxelMorphNormalizer();

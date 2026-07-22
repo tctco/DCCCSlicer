@@ -1,4 +1,5 @@
 #pragma once
+#include "../common/DebugReporter.h"
 #include "../common/ImageTypes.h"
 #include "itkDiscreteGaussianImageFilter.h"
 #include "itkIntensityWindowingImageFilter.h"
@@ -7,6 +8,7 @@
 #include "itkRegionOfInterestImageFilter.h"
 #include "itkConstantBoundaryCondition.h"
 #include "itkLinearInterpolateImageFunction.h"
+#include <string>
 #include <vector>
 
 /**
@@ -20,7 +22,10 @@ public:
     /**
      * @brief Preprocess image for rigid registration
      */
-    static ImageType::Pointer preprocessForRigid(ImageType::Pointer image);
+    static ImageType::Pointer preprocessForRigid(
+        ImageType::Pointer image,
+        Common::debug::DebugReporter* debugReporter = nullptr,
+        const std::string& debugLabelPrefix = "rigid.preprocess");
     
     /**
      * @brief Preprocess image for VoxelMorph registration
@@ -43,4 +48,3 @@ private:
     static std::vector<float> getPixelValues(ImageType::Pointer image);
     static double getPercentileValue(std::vector<float>& values, double percentile);
 };
-

@@ -1,5 +1,6 @@
 #include "RigidCLI.h"
 #include "../CLIOptions.h"
+#include "../../core/common/DebugReporter.h"
 #include "../../core/common/Filesystem.h"
 #include "../../core/common/PathUtils.h"
 #include "../../core/config/Version.h"
@@ -32,13 +33,29 @@ int processSingleImage(const NormalizeCommandOptions& options,
                        const std::string& inputPath,
                        const std::string& outputPath,
                        const std::string& debugOutputBasePath,
+                       const std::string& fullCommand,
                        bool logCompletion) {
+    Common::debug::DebugReporterPtr debugReporter;
+    if (options.enableDebugOutput) {
+        debugReporter = std::make_shared<Common::debug::DebugReporter>("rigid");
+        debugReporter->event("command_start",
+                             "input=" + inputPath +
+                                 " output=" + outputPath +
+                                 " iterative=" +
+                                 (options.useIterativeRigid ? "true" : "false"));
+        debugReporter->event("command_line", fullCommand);
+    }
+
     BootstrapOptions bootstrapOptions;
     bootstrapOptions.configPath = options.configPath;
     bootstrapOptions.enableConfigDebug = options.enableDebugOutput;
     bootstrapOptions.logTag = "rigid";
 
-    auto container = Pipeline::buildCoreContainer(bootstrapOptions);
+    std::shared_ptr<Pipeline::ServiceContainer> container;
+    {
+        auto scope = debugReporter ? debugReporter->scope("bootstrap") : Common::debug::ScopedStage{};
+        container = Pipeline::buildCoreContainer(bootstrapOptions);
+    }
     auto spatialService = container->resolve<ISpatialNormalizationService>();
     auto fileService = container->resolve<IFileService>();
 
@@ -49,10 +66,19 @@ int processSingleImage(const NormalizeCommandOptions& options,
     request.options.useIterativeRigid = options.useIterativeRigid;
     request.options.enableDebugOutput = options.enableDebugOutput;
     request.options.debugOutputBasePath = debugOutputBasePath;
+    request.options.debugReporter = debugReporter;
 
     try {
-        auto output = spatialService->normalize(request);
-        fileService->saveNormalizedImage({output.spatiallyNormalizedImage, outputPath});
+        SpatialNormalizationOutput output;
+        {
+            auto scope = debugReporter ? debugReporter->scope("normalize") : Common::debug::ScopedStage{};
+            output = spatialService->normalize(request);
+        }
+        {
+            auto scope = debugReporter ? debugReporter->scope("save_output", outputPath)
+                                       : Common::debug::ScopedStage{};
+            fileService->saveNormalizedImage({output.spatiallyNormalizedImage, outputPath});
+        }
         if (logCompletion) {
             std::cout << "[rigid] Rigid alignment complete. Output saved to "
                       << outputPath << std::endl;
@@ -78,6 +104,7 @@ int runSingleRigid(const NormalizeCommandOptions& options, const std::string& fu
         options.inputPath,
         options.outputPath,
         options.debugOutputBasePath,
+        fullCommand,
         true);
 }
 
@@ -131,7 +158,8 @@ int runBatchRigid(const NormalizeCommandOptions& options, const std::string& ful
         const std::string debugBase = resolveDebugBasePath(options, outputPath);
 
         try {
-            const int result = processSingleImage(options, inputPath, outputPath, debugBase, false);
+            const int result =
+                processSingleImage(options, inputPath, outputPath, debugBase, fullCommand, false);
             if (result != EXIT_SUCCESS) {
                 throw std::runtime_error("Rigid alignment failed.");
             }

@@ -1,6 +1,7 @@
 #include "RigidRegistrationEngine.h"
 #include <vnl/vnl_vector.h>
 #include <iostream>
+#include <utility>
 #include "itkCrossHelper.h"
 #include "../common/OnnxPath.h"
 
@@ -40,12 +41,20 @@ namespace {
 }
 
 RigidRegistrationEngine::RigidRegistrationEngine(const std::string& modelPath)
-    : env_(ORT_LOGGING_LEVEL_WARNING, "RigidRegistration"), session_(nullptr) {
+    : RigidRegistrationEngine(modelPath, nullptr) {}
+
+RigidRegistrationEngine::RigidRegistrationEngine(
+    const std::string& modelPath, Common::debug::DebugReporterPtr debugReporter)
+    : env_(ORT_LOGGING_LEVEL_WARNING, "RigidRegistration"),
+      session_(nullptr),
+      debugReporter_(std::move(debugReporter)) {
     Ort::SessionOptions sessionOptions;
     sessionOptions.SetIntraOpNumThreads(1);
     auto ortModelPath = Common::onnx::makeOrtPath(modelPath);
 
     try {
+        auto scope = debugReporter_ ? debugReporter_->scope("onnx.create_session", modelPath)
+                                    : Common::debug::ScopedStage{};
         session_ = new Ort::Session(env_, ortModelPath.c_str(), sessionOptions);
     } catch (const Ort::Exception& e) {
         std::cerr << "Error loading rigid registration model: " << e.what() << std::endl;
@@ -59,20 +68,29 @@ RigidRegistrationEngine::~RigidRegistrationEngine() {
 
 std::unordered_map<std::string, std::vector<float>> RigidRegistrationEngine::predict(
     const std::vector<float>& inputTensor, const std::vector<int64_t>& inputShape) {
+    auto scope = debugReporter_ ? debugReporter_->scope("onnx.predict")
+                                : Common::debug::ScopedStage{};
     Ort::AllocatorWithDefaultOptions allocator;
     
     // Prepare input tensor
     auto input_name_allocated = session_->GetInputNameAllocated(0, allocator);
     const char* input_name = input_name_allocated.get();
-    
     std::vector<int64_t> input_shape = inputShape.empty()
                                            ? std::vector<int64_t>{1, 1, 64, 64, 64}
                                            : inputShape;
     Ort::MemoryInfo memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-    Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, const_cast<float*>(inputTensor.data()), inputTensor.size(), 
-        input_shape.data(), input_shape.size());
+    Ort::Value input_tensor(nullptr);
+    {
+        auto prepareScope = debugReporter_
+                                ? debugReporter_->scope("onnx.prepare_input_tensor",
+                                                        "elements=" +
+                                                            std::to_string(inputTensor.size()))
+                                : Common::debug::ScopedStage{};
+        input_tensor = Ort::Value::CreateTensor<float>(
+            memory_info, const_cast<float*>(inputTensor.data()), inputTensor.size(),
+            input_shape.data(), input_shape.size());
+    }
     
     // Define output names
     const char* output_names[] = {"ac", "pa", "is"};
@@ -82,25 +100,39 @@ std::unordered_map<std::string, std::vector<float>> RigidRegistrationEngine::pre
     std::vector<Ort::Value> output_tensors;
     std::vector<std::vector<float>> output_buffers(num_outputs,
                                                    std::vector<float>(3));
-    for (size_t i = 0; i < num_outputs; ++i) {
-        Ort::Value output_tensor = Ort::Value::CreateTensor<float>(
-            memory_info, output_buffers[i].data(), output_buffers[i].size(),
-            std::vector<int64_t>{1, 3}.data(), 2);
-        output_tensors.push_back(std::move(output_tensor));
+    {
+        auto prepareScope = debugReporter_
+                                ? debugReporter_->scope("onnx.prepare_output_tensors")
+                                : Common::debug::ScopedStage{};
+        for (size_t i = 0; i < num_outputs; ++i) {
+            std::vector<int64_t> outputShape{1, 3};
+            Ort::Value output_tensor = Ort::Value::CreateTensor<float>(
+                memory_info, output_buffers[i].data(), output_buffers[i].size(),
+                outputShape.data(), outputShape.size());
+            output_tensors.push_back(std::move(output_tensor));
+        }
     }
 
-    session_->Run(Ort::RunOptions{nullptr}, &input_name, &input_tensor, 1,
-                  output_names, output_tensors.data(), 3);
+    {
+        auto inferenceScope = debugReporter_ ? debugReporter_->scope("onnx.run_inference")
+                                             : Common::debug::ScopedStage{};
+        session_->Run(Ort::RunOptions{nullptr}, &input_name, &input_tensor, 1,
+                      output_names, output_tensors.data(), 3);
+    }
 
     std::unordered_map<std::string, std::vector<float>> output;
-    for (size_t i = 0; i < output_tensors.size(); i++) {
-        Ort::TensorTypeAndShapeInfo output_info =
-            output_tensors[i].GetTensorTypeAndShapeInfo();
+    {
+        auto readScope = debugReporter_ ? debugReporter_->scope("onnx.read_outputs")
+                                        : Common::debug::ScopedStage{};
+        for (size_t i = 0; i < output_tensors.size(); i++) {
+            Ort::TensorTypeAndShapeInfo output_info =
+                output_tensors[i].GetTensorTypeAndShapeInfo();
 
-        float* output_data = output_tensors[i].GetTensorMutableData<float>();
-        std::vector<float> output_vector(
-            output_data, output_data + output_info.GetElementCount());
-        output[output_names[i]] = output_vector;
+            float* output_data = output_tensors[i].GetTensorMutableData<float>();
+            std::vector<float> output_vector(
+                output_data, output_data + output_info.GetElementCount());
+            output[output_names[i]] = output_vector;
+        }
     }
 
     return output;

@@ -7,7 +7,7 @@ including NVIDIA DGX Spark.
 Before building this package, vendor the release asset:
 
 ```bash
-python scripts/vendor_dccccore.py --version 4.2.3 --release-platform ubuntu-latest-arm64
+python scripts/vendor_dccccore.py --version 4.2.4 --release-platform ubuntu-latest-arm64
 python -m build --wheel
 ```
 
