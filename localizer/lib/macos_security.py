@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 import shlex
 import sys
-from pathlib import Path
 
 
 _SECURITY_MARKERS = (
@@ -27,8 +26,8 @@ def is_macos() -> bool:
 
 
 def macos_security_hint(executable_path: str | os.PathLike[str]) -> str:
-    path = Path(executable_path).expanduser()
-    quoted_path = shlex.quote(os.fspath(path))
+    path = os.path.expanduser(os.fspath(executable_path))
+    quoted_path = shlex.quote(path)
     return (
         "macOS may have blocked DCCCcore because it was downloaded from the internet.\n"
         "Open System Settings > Privacy & Security and allow DCCCcore, or run this "

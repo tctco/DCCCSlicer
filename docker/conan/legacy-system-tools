@@ -1,0 +1,10 @@
+include(default)
+
+# Conan Center recipes request several CMake versions as transitive build
+# requirements. Use the manylinux2014-compatible CMake already installed in
+# the container instead of upstream binaries that require a newer glibc.
+[replace_tool_requires]
+cmake/*: cmake/3.31.10
+
+[platform_tool_requires]
+cmake/3.31.10
