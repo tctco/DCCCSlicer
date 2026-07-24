@@ -467,38 +467,12 @@ jobs:
           merge-multiple: true
           path: dist
 
-      - name: Build Linux ARM64 runtime wheel
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="${GITHUB_REF_NAME#v}"
-          archive="$GITHUB_WORKSPACE/dist/DCCCcore-${version}-ubuntu-latest-arm64.zip"
-          python -m pip install --upgrade build
-          python python/dcccpy-linux-arm64-runtime/scripts/vendor_dccccore.py \
-            --version "$version" \
-            --archive "$archive" \
-            --profile pypi-slim
-          python -m build --wheel \
-            --outdir "$GITHUB_WORKSPACE/dist" \
-            python/dcccpy-linux-arm64-runtime
-
-      - name: Build dcccpy distribution
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m build \
-            --outdir "$GITHUB_WORKSPACE/dist" \
-            python/dcccpy
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/DCCCSlicer-*.zip
             dist/DCCCcore-*.zip
-            dist/dcccpy-*.whl
-            dist/dcccpy-*.tar.gz
-            dist/dcccpy_linux_arm64_runtime-*.whl
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
