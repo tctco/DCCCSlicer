@@ -20,6 +20,7 @@ from lib.image_alignment import ImageAlignmentLogic
 from lib.metric_calculator import MetricCalculatorLogic
 from lib.ai_decoupling import AIDecouplingLogic
 from lib.atlas_manager import AtlasManager
+from lib.core_executable import dccccore_executable_path
 from lib.ui_components import TimeConsumingMessageBox, MarkupManager
 
 
@@ -92,7 +93,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     
     def _setPaths(self):
         self.PLUGIN_PATH = Path(os.path.dirname(__file__))
-        self.EXECUTABLE_PATH = self.PLUGIN_PATH / "cpp" / "CentiloidCalculator"
+        self.EXECUTABLE_PATH = dccccore_executable_path(self.PLUGIN_PATH)
         self.EXECUTABLE_DIR = self.PLUGIN_PATH / "cpp"
     
     def _setNodes(self):

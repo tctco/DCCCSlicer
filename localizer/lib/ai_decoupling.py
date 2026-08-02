@@ -11,8 +11,10 @@ import slicer
 
 try:
     from .macos_security import append_macos_security_hint
+    from .core_executable import dccccore_executable_path
 except ImportError:
     from macos_security import append_macos_security_hint
+    from core_executable import dccccore_executable_path
 
 
 class AIDecouplingLogic:
@@ -31,7 +33,7 @@ class AIDecouplingLogic:
             plugin_path: Plugin directory path
         """
         self.plugin_path = Path(plugin_path)
-        self.executable_path = self.plugin_path / "cpp" / "CentiloidCalculator"
+        self.executable_path = dccccore_executable_path(self.plugin_path)
         self.executable_dir = self.plugin_path / "cpp"
         self.last_volume_name = None
     
@@ -138,7 +140,7 @@ class AIDecouplingLogic:
         Returns:
             tuple: (foreground_node, background_node, stripped_node)
         """
-        # Expected output file patterns (may vary based on CentiloidCalculator version)
+        # Expected output file patterns (may vary based on DCCCcore version)
         potential_files = {
             "foreground": "Normalized_AD_prob_map.nii",
             "background": "Normalized.nii",

@@ -2,7 +2,7 @@
 Metric calculation module for PET semi-quantitative analysis
 
 Contains functionality for Centiloid, CenTauR, and CenTauRz calculations
-using the new subcommand-based CentiloidCalculator executable
+using the subcommand-based DCCCcore executable
 """
 
 import os
@@ -14,8 +14,10 @@ import slicer
 
 try:
     from .macos_security import append_macos_security_hint
+    from .core_executable import dccccore_executable_path
 except ImportError:
     from macos_security import append_macos_security_hint
+    from core_executable import dccccore_executable_path
 
 
 class MetricCalculatorLogic:
@@ -42,7 +44,7 @@ class MetricCalculatorLogic:
             plugin_path: Plugin directory path
         """
         self.plugin_path = Path(plugin_path)
-        self.executable_path = self.plugin_path / "cpp" / "CentiloidCalculator"
+        self.executable_path = dccccore_executable_path(self.plugin_path)
         self.last_volume_name = None
         self._current_process = None
         self._process_stdout = []
