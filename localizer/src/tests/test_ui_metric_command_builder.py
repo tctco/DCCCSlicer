@@ -26,6 +26,21 @@ def _load_metric_calculator_logic():
 MetricCalculatorLogic = _load_metric_calculator_logic()
 
 
+def test_bundled_core_executable_matches_packaged_name():
+    logic = MetricCalculatorLogic("/tmp/plugin")
+    executable_name = "DCCCcore.exe" if sys.platform == "win32" else "DCCCcore"
+
+    assert logic.executable_path == Path("/tmp/plugin/cpp") / executable_name
+
+
+def test_bundled_core_executable_uses_exe_suffix_on_windows():
+    from core_executable import dccccore_executable_path
+
+    assert dccccore_executable_path(
+        "/tmp/plugin", platform="win32"
+    ) == Path("/tmp/plugin/cpp/DCCCcore.exe")
+
+
 def test_build_command_uses_subcommand_cli_for_centaur():
     logic = MetricCalculatorLogic("/tmp/plugin")
 
@@ -92,10 +107,10 @@ def test_macos_security_hint_mentions_quarantine_command(monkeypatch):
 
     message = append_macos_security_hint(
         "Operation not permitted",
-        "/tmp/plugin/cpp/CentiloidCalculator",
+        "/tmp/plugin/cpp/DCCCcore",
         returncode=126,
     )
 
     assert "macOS may have blocked DCCCcore" in message
     assert "xattr -dr com.apple.quarantine" in message
-    assert "/tmp/plugin/cpp/CentiloidCalculator" in message
+    assert "/tmp/plugin/cpp/DCCCcore" in message

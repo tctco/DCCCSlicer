@@ -1,7 +1,7 @@
 # CMakeList.txt: DCCCcore Refactored Version
 cmake_minimum_required(VERSION 3.21)
 
-project(DCCCcore VERSION 4.2.4)
+project(DCCCcore VERSION 4.2.5)
 set(DCCCCORE_VERSION_SUFFIX "")
 set(DCCCCORE_SOFTWARE_VERSION "${PROJECT_VERSION}${DCCCCORE_VERSION_SUFFIX}")
 
