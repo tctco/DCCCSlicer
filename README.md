@@ -129,13 +129,13 @@ We sincerely thank the passionate and outstanding users and contributors of DCCC
     </tr>
     <tr>
       <th width="33%">Fanglan Li, MD, PhD @ West China Hospital, Chengdu, CHINA<br><sup>For reporting rigid registration failures</sup></th>
+      <th width="33%">Zhiqiang Tan, MD @ The First Affiliated Hospital of Guangzhou Medical University, Guangzhou, CHINA<br><sup>For reporting bugs in v4.2.4</sup> </th>
       <th width="33%">And more...</th>
-      <th width="33%"></th>
     </tr>
     <tr>
       <th width="33%"><img src="https://media.licdn.com/dms/image/v2/C560BAQH784Gt17OeVg/company-logo_200_200/company-logo_200_200/0/1643080250401?e=2147483647&v=beta&t=egCFbtkNMfczQq8w1PE77L8Ha2h-9MgEBw_-V2Zg0rg" width="190" /></th>
+      <th width="33%"><img width="490" height="220" alt="image" src="https://github.com/user-attachments/assets/f78ca608-39dc-47a2-80f2-dd04472388de" /></th>
       <th width="33%">Feel free to get in touch if you'd like to contribute, report a bug, share a poorly spatially normalized PET image, or suggest support for a new brain PET metric - we'll be sure to credit you!</th>
-      <th width="33%"></th>
     </tr>
   </tbody>
 </table>
