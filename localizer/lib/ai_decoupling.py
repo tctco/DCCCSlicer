@@ -62,16 +62,16 @@ class AIDecouplingLogic:
             tmp_path = str(self.plugin_path / "tmp.nii")
             slicer.util.saveNode(input_node, tmp_path)
             
-            # Build command using new subcommand format
+            # Build command using the current ADAD subcommand.
             cmd = [
                 str(self.executable_path),
-                "decouple",
+                "adad",
                 "--input", tmp_path,
                 "--output", str(self.plugin_path / "Normalized.nii"),
                 "--modality", normalized_modality
             ]
                 
-            print(f"Running decouple command: {' '.join(cmd)}")
+            print(f"Running ADAD command: {' '.join(cmd)}")
             try:
                 result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.plugin_path)
             except Exception as e:
