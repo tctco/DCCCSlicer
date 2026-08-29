@@ -5,9 +5,12 @@
 #include "../../core/common/PathUtils.h"
 #include "../../core/config/Version.h"
 #include "../../core/di/Bootstrap.h"
+#include "../../core/preprocessing/PetMotionCorrector.h"
 #include "../../core/services/IFileService.h"
 #include "../../core/services/ISpatialNormalizationService.h"
 #include "../../metrics/shared/BatchLogging.h"
+#include <atomic>
+#include <chrono>
 #include <exception>
 #include <filesystem>
 #include <iostream>
@@ -25,6 +28,32 @@ struct RunConfig {
 };
 
 constexpr const char* kBatchOutputSuffix = "_ADNI_style.nii";
+
+class TemporaryNiftiFile {
+public:
+    TemporaryNiftiFile() = default;
+    TemporaryNiftiFile(const TemporaryNiftiFile&) = delete;
+    TemporaryNiftiFile& operator=(const TemporaryNiftiFile&) = delete;
+
+    ~TemporaryNiftiFile() {
+        if (!path_.empty()) {
+            std::error_code ec;
+            std::filesystem::remove(path_, ec);
+        }
+    }
+
+    std::string create() {
+        static std::atomic<unsigned long> sequence{0};
+        const auto timestamp = std::chrono::steady_clock::now().time_since_epoch().count();
+        path_ = std::filesystem::temp_directory_path() /
+                ("dccc_adni_pet_motion_" + std::to_string(timestamp) + "_" +
+                 std::to_string(sequence.fetch_add(1)) + ".nii.gz");
+        return Common::path::toUtf8(path_);
+    }
+
+private:
+    std::filesystem::path path_;
+};
 
 std::string resolveDebugBasePath(const NormalizeCommandOptions& options, const std::string& outputPath) {
     if (!options.enableDebugOutput || outputPath.empty()) {
@@ -61,6 +90,24 @@ int processSingleImage(const NormalizeCommandOptions& options,
     auto fileService = container->resolve<IFileService>();
 
     try {
+        TemporaryNiftiFile averagedDynamicInput;
+        const unsigned int inputDimension =
+            Pipeline::Preprocessing::PetMotionCorrector::inspectImageDimension(inputPath);
+        if (inputDimension == 4) {
+            std::cout << "[" << config.logTag
+                      << "] 4D PET detected; motion-correcting each frame to frame 0 before ADNI processing."
+                      << std::endl;
+            Pipeline::Preprocessing::PetMotionCorrector corrector;
+            auto motionResult = corrector.correct(inputPath);
+            request.inputPath = averagedDynamicInput.create();
+            Pipeline::Preprocessing::PetMotionCorrector::saveAveragedImage(
+                motionResult, request.inputPath);
+        } else if (inputDimension != 3) {
+            throw std::invalid_argument(
+                "adni-pet-core requires a 3D or 4D PET input; received a " +
+                std::to_string(inputDimension) + "D image.");
+        }
+
         auto output = spatialService->normalize(request);
         fileService->saveNormalizedImage({output.spatiallyNormalizedImage, outputPath});
         if (logCompletion) {

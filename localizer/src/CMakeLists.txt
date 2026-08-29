@@ -1,7 +1,7 @@
 # CMakeList.txt: DCCCcore Refactored Version
 cmake_minimum_required(VERSION 3.21)
 
-project(DCCCcore VERSION 4.2.6)
+project(DCCCcore VERSION 4.3.0)
 set(DCCCCORE_VERSION_SUFFIX "")
 set(DCCCCORE_SOFTWARE_VERSION "${PROJECT_VERSION}${DCCCCORE_VERSION_SUFFIX}")
 
@@ -20,6 +20,7 @@ find_package(onnxruntime CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
 find_package(rapidcsv CONFIG REQUIRED)
+find_package(ZLIB REQUIRED)
 
 # Include directories
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -67,6 +68,8 @@ target_sources(DCCCcore PRIVATE
 target_sources(DCCCcore PRIVATE
     core/preprocessing/ImagePreprocessor.h
     core/preprocessing/ImagePreprocessor.cpp
+    core/preprocessing/PetMotionCorrector.h
+    core/preprocessing/PetMotionCorrector.cpp
 )
 
 # Add utility sources
@@ -186,6 +189,8 @@ target_sources(DCCCcore PRIVATE
     spatialNormalizations/adni/AdniPetCoreCLI.cpp
     spatialNormalizations/rigid/RigidCLI.h
     spatialNormalizations/rigid/RigidCLI.cpp
+    spatialNormalizations/pet/PetMotionCorrectionCLI.h
+    spatialNormalizations/pet/PetMotionCorrectionCLI.cpp
 )
 
 # Link libraries
@@ -196,6 +201,7 @@ target_link_libraries(DCCCcore PRIVATE
     tomlplusplus::tomlplusplus
     Eigen3::Eigen
     rapidcsv::rapidcsv
+    ZLIB::ZLIB
 )
 
 # Compile options

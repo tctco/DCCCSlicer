@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN python3 -m pip install --no-cache-dir --default-timeout=120 --retries=10 \
       "conan>=2.0,<3" \
+      numpy \
       pandas \
       pytest
 
