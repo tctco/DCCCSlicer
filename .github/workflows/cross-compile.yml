@@ -83,6 +83,41 @@ jobs:
         run: |
           conan profile detect --force
 
+      # ConanCenter currently lists only tukaani.org for xz_utils/5.8.3. That
+      # host is intermittently unreachable from GitHub's Windows runners, while
+      # the upstream project publishes the identical, checksummed archive on
+      # GitHub. Seed Conan's official source-backup cache with that asset so the
+      # recipe remains unchanged and Conan still verifies the expected SHA-256.
+      - name: Seed XZ source cache (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $sha256 = "fff1ffcf2b0da84d308a14de513a1aa23d4e9aa3464d17e64b9714bfdd0bbfb6"
+          $sourceCache = (Join-Path $env:RUNNER_TEMP "conan-source-cache").Replace('\', '/')
+          $sourceDirectory = Join-Path $sourceCache "s"
+          $sourceArchive = Join-Path $sourceDirectory $sha256
+          New-Item -ItemType Directory -Force -Path $sourceDirectory | Out-Null
+
+          & curl.exe `
+            --fail `
+            --location `
+            --retry 5 `
+            --retry-all-errors `
+            --connect-timeout 30 `
+            --output $sourceArchive `
+            "https://github.com/tukaani-project/xz/releases/download/v5.8.3/xz-5.8.3.tar.xz"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to download the XZ 5.8.3 source archive from GitHub"
+          }
+
+          $actualSha256 = (Get-FileHash -Algorithm SHA256 $sourceArchive).Hash.ToLowerInvariant()
+          if ($actualSha256 -ne $sha256) {
+            throw "XZ 5.8.3 source checksum mismatch: expected $sha256, got $actualSha256"
+          }
+
+          "CONAN_SOURCE_DOWNLOAD_CACHE=$sourceCache" | Out-File `
+            -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Conan install (macOS)
         if: runner.os == 'macOS'
         working-directory: localizer/src
@@ -226,12 +261,31 @@ jobs:
         working-directory: localizer/src
         shell: pwsh
         run: |
-          conan install . --output-folder=build --build=missing `
-            -s build_type=Release `
-            -s compiler.cppstd=17 `
-            -c tools.cmake.cmaketoolchain:generator=Ninja `
-            -o onetbb/*:tbbmalloc=False `
-            -o onetbb/*:tbbproxy=False
+          $conanArguments = @(
+            "install", ".",
+            "--output-folder=build",
+            "--build=missing",
+            "-s", "build_type=Release",
+            "-s", "compiler.cppstd=17",
+            "-c", "tools.cmake.cmaketoolchain:generator=Ninja",
+            "-cc", "core.sources:download_cache=$env:CONAN_SOURCE_DOWNLOAD_CACHE",
+            "-o", "onetbb/*:tbbmalloc=False",
+            "-o", "onetbb/*:tbbproxy=False"
+          )
+
+          $maximumAttempts = 3
+          for ($attempt = 1; $attempt -le $maximumAttempts; $attempt++) {
+            & conan @conanArguments
+            $conanExitCode = $LASTEXITCODE
+            if ($conanExitCode -eq 0) {
+              break
+            }
+            if ($attempt -eq $maximumAttempts) {
+              exit $conanExitCode
+            }
+            Write-Warning "Conan install attempt $attempt failed; retrying in 15 seconds"
+            Start-Sleep -Seconds 15
+          }
 
       - name: Configure with CMake (Windows)
         if: runner.os == 'Windows'
