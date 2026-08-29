@@ -420,3 +420,42 @@ def rigid(
     **kwargs: object,
 ) -> DCCCResult:
     return _spatial_command("rigid", input, output, **kwargs)
+
+
+def pet_motion_correct(
+    input: object,
+    output: str | os.PathLike[str] | None = None,
+    *,
+    save_corrected_dynamic: str | os.PathLike[str] | None = None,
+    motion_output: str | os.PathLike[str] | None = None,
+    check: bool = True,
+    executable: str | os.PathLike[str] | None = None,
+) -> DCCCResult:
+    """Rigidly align a multi-frame PET image and return its averaged 3D output."""
+
+    input_path, actual_output, temp_dir = _prepare_io(input, output)
+    args = [
+        "pet-motion-correct",
+        "--input",
+        input_path,
+        "--output",
+        os.fspath(actual_output),
+    ]
+    if save_corrected_dynamic is not None:
+        corrected_path = _resolve_user_path(save_corrected_dynamic)
+        args.extend(["--save-corrected-dynamic", os.fspath(corrected_path)])
+    if motion_output is not None:
+        motion_path = _resolve_user_path(motion_output)
+        args.extend(["--motion-output", os.fspath(motion_path)])
+
+    result = run(args, check=check, executable=executable, output=actual_output)
+    return DCCCResult(
+        args=result.args,
+        returncode=result.returncode,
+        stdout=result.stdout,
+        stderr=result.stderr,
+        output=actual_output,
+        temp_dir=temp_dir,
+        executable=result.executable,
+        metrics=result.metrics,
+    )

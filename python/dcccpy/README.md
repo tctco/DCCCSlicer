@@ -79,6 +79,12 @@ dcccpy.centiloid("amyloid.nii", suvr=True)
 dcccpy.centaurz("tau.nii", report_detailed_regions=True)
 dcccpy.fillstates("fdg.nii", tracer="fdg")
 dcccpy.normalize("pet.nii", iterative=True)
+dcccpy.pet_motion_correct(
+    "dynamic_pet.nii.gz",
+    "averaged_pet.nii.gz",
+    save_corrected_dynamic="corrected.nii.gz",
+    motion_output="motion.tsv",
+)
 dcccpy.run(["centiloid", "--input", "a.nii", "--output", "b.nii"])
 ```
 
@@ -142,7 +148,7 @@ the calculation again.
 Release wheels should vendor the matching `DCCCcore` runtime tree before build:
 
 ```bash
-python scripts/vendor_dccccore.py --version 4.2.4 --release-platform ubuntu-latest-x64
+python scripts/vendor_dccccore.py --version 4.3.0 --release-platform ubuntu-latest-x64
 python -m build --wheel
 ```
 
@@ -150,7 +156,7 @@ The Linux ARM64 runtime package uses the corresponding release asset:
 
 ```bash
 cd python/dcccpy-linux-arm64-runtime
-python scripts/vendor_dccccore.py --version 4.2.4 --release-platform ubuntu-latest-arm64
+python scripts/vendor_dccccore.py --version 4.3.0 --release-platform ubuntu-latest-arm64
 python -m build --wheel
 ```
 
