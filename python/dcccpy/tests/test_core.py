@@ -9,7 +9,14 @@ import zipfile
 import pytest
 
 import dcccpy
-from dcccpy.runtime import DCCCcoreNotFoundError, dccccore_path, find_existing_dccccore, release_platform
+from dcccpy.runtime import (
+    DCCCCORE_VERSION,
+    DCCCcoreNotFoundError,
+    dccccore_path,
+    find_existing_dccccore,
+    release_platform,
+    release_url,
+)
 
 
 def make_fake_dccccore(tmp_path: Path) -> Path:
@@ -135,7 +142,7 @@ def test_dccccore_path_can_disable_auto_download(tmp_path: Path, monkeypatch: py
 
 
 def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    asset_root = tmp_path / "asset" / "DCCCcore-4.2.4-ubuntu-latest-x64"
+    asset_root = tmp_path / "asset" / "DCCCcore-4.3.0-ubuntu-latest-x64"
     asset_root.mkdir(parents=True)
     exe = asset_root / "DCCCcore"
     exe.write_text("#!/usr/bin/env sh\nprintf 'fake dccccore\\n'\n")
@@ -143,7 +150,7 @@ def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pyte
 
     archive = tmp_path / "DCCCcore.zip"
     with zipfile.ZipFile(archive, "w") as zf:
-        zf.write(exe, "DCCCcore-4.2.4-ubuntu-latest-x64/DCCCcore")
+        zf.write(exe, "DCCCcore-4.3.0-ubuntu-latest-x64/DCCCcore")
 
     monkeypatch.delenv("DCCCPY_DCCCCORE", raising=False)
     monkeypatch.setenv("DCCCPY_AUTO_DOWNLOAD", "1")
@@ -179,6 +186,13 @@ def test_linux_arm64_release_platform() -> None:
     assert release_platform("linux-arm64") == "ubuntu-latest-arm64"
 
 
+def test_default_release_targets_dccccore_430() -> None:
+    assert DCCCCORE_VERSION == "4.3.0"
+    assert release_url(platform_name="ubuntu-latest-x64").endswith(
+        "/releases/download/v4.3.0/DCCCcore-4.3.0-ubuntu-latest-x64.zip"
+    )
+
+
 def test_find_existing_dccccore_checks_linux_arm64_runtime_package(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -209,6 +223,43 @@ def test_cli_forwards_raw_args(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, 
     assert code == 0
     assert fake_args.read_text().splitlines() == ["--help"]
     assert "Metric: Centiloid" in capsys.readouterr().out
+
+
+def test_pet_motion_correct_forwards_optional_outputs(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_args = tmp_path / "args.txt"
+    fake_exe = make_fake_dccccore(tmp_path)
+    input_path = tmp_path / "dynamic.nii.gz"
+    output_path = tmp_path / "average.nii.gz"
+    corrected_path = tmp_path / "corrected.nii.gz"
+    motion_path = tmp_path / "motion.tsv"
+    input_path.write_text("fake dynamic PET")
+    monkeypatch.setenv("DCCCPY_DCCCCORE", str(fake_exe))
+    monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(fake_args))
+
+    result = dcccpy.pet_motion_correct(
+        input_path,
+        output_path,
+        save_corrected_dynamic=corrected_path,
+        motion_output=motion_path,
+    )
+
+    assert result.returncode == 0
+    assert result.output == output_path
+    assert output_path.exists()
+    assert fake_args.read_text().splitlines() == [
+        "pet-motion-correct",
+        "--input",
+        str(input_path),
+        "--output",
+        str(output_path),
+        "--save-corrected-dynamic",
+        str(corrected_path),
+        "--motion-output",
+        str(motion_path),
+    ]
 
 
 def test_run_adds_macos_security_hint_for_blocked_runtime(

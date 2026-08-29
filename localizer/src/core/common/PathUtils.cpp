@@ -22,6 +22,14 @@ namespace Common::path {
 
 namespace {
 
+#ifdef _WIN32
+bool containsNonAscii(const std::string& value) {
+    return std::any_of(value.begin(), value.end(), [](unsigned char ch) {
+        return ch > 0x7F;
+    });
+}
+#endif
+
 std::string normalizeDirectory(const std::filesystem::path& directory) {
     if (directory.empty()) {
         return {};
@@ -103,6 +111,15 @@ std::string toUtf8(const std::filesystem::path& value) {
 
 std::string legacyFileName(const std::filesystem::path& value) {
 #ifdef _WIN32
+    const std::string utf8Path = toUtf8(value);
+    // ITK selects an ImageIO from the filename extension. Windows 8.3 paths
+    // collapse a compound NIfTI extension such as .nii.gz to .GZ, so keep
+    // ordinary ASCII paths intact and only fall back to a short path when it
+    // is needed for a non-ASCII filename.
+    if (!containsNonAscii(utf8Path)) {
+        return utf8Path;
+    }
+
     if (const std::wstring shortPath = shortPathForExistingPath(value); !shortPath.empty()) {
         return wideToUtf8(shortPath);
     }
