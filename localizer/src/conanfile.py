@@ -4,7 +4,7 @@ from conan import ConanFile
 
 class AppConan(ConanFile):
     name = "DCCCcore"
-    version = "4.2.6"
+    version = "4.3.0"
     settings = "os", "arch", "compiler", "build_type"
     generators = "CMakeDeps", "CMakeToolchain"
 
@@ -15,6 +15,7 @@ class AppConan(ConanFile):
         self.requires("onnxruntime/1.18.1")
         self.requires("tomlplusplus/3.4.0")
         self.requires("rapidcsv/8.84")
+        self.requires("zlib/1.3.2")
         # ---- conflict resolution: choose one Eigen for the whole graph ----
         # If the graph shows ORT wants 3.4.0, prefer:
         self.requires("eigen/3.4.0")

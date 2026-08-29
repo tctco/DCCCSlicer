@@ -78,6 +78,7 @@ class TestAdniPetCoreCLI:
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
         assert output_path.exists(), "adni-pet-core command did not create the expected output file."
+        assert "4D PET detected" not in result.stdout
 
     def test_manual_fov_iterative(self, run_subprocess, tmp_path, test_files):
         output_path = tmp_path / "adni_pet_core_iter_manual.nii"

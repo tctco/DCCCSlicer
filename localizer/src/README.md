@@ -110,11 +110,26 @@ Perform spatial standardization without metric calculation:
 # ADNI-style processing
 ./DCCCcore adni-pet-core --input pet.nii --output normalized.nii
 
+# Multi-frame PET motion correction and arithmetic mean
+./DCCCcore pet-motion-correct --input dynamic_pet.nii.gz --output averaged_pet.nii.gz
+
+# Optionally retain corrected frames and per-frame rigid motion parameters
+./DCCCcore pet-motion-correct --input dynamic_pet.nii.gz --output averaged_pet.nii.gz \
+  --save-corrected-dynamic corrected.nii.gz --motion-output motion.tsv
+
 # Iterative rigid registration
 ./DCCCcore normalize --input pet.nii --output normalized.nii --iterative
 ./DCCCcore adni-pet-core --input pet.nii --output normalized.nii --iterative
 ./DCCCcore rigid --input pet.nii --output rigid.nii --iterative
 ```
+
+`pet-motion-correct` accepts general 4D `X × Y × Z × N` PET data. It uses frame 0
+as the fixed reference, independently registers every later frame to it with a
+six-degree-of-freedom rigid transform, and writes the arithmetic mean as a 3D
+float NIfTI. A 4D input passed to `adni-pet-core` is automatically motion-corrected
+and averaged before the existing ADNI PET Core pipeline; 3D input follows the
+existing pipeline unchanged. Motion TSV translations are in millimetres and
+Euler rotations are in radians.
 
 #### ADAD Analysis
 Run the ADAD decoupling-based metric:
