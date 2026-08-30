@@ -601,7 +601,7 @@ jobs:
           fi
 
           shopt -s nullglob
-          assets=(dist/DCCCSlicer-*-windows-x64.zip)
+          assets=(dist/DCCCSlicer-*-windows-latest-x64.zip)
           shopt -u nullglob
 
           if (( ${#assets[@]} != 1 )); then
