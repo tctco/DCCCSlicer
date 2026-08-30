@@ -108,7 +108,10 @@ Perform spatial standardization without metric calculation:
 ./DCCCcore normalize --input pet.nii --output normalized.nii
 
 # ADNI-style processing
-./DCCCcore adni-pet-core --input pet.nii --output normalized.nii
+./DCCCcore adni-pet-core --input amyloid_pet.nii --output normalized.nii --tracer abeta
+
+# FDG uses ADNI's iterative masked global-mean normalization
+./DCCCcore adni-pet-core --input fdg_pet.nii --output normalized_fdg.nii --tracer fdg
 
 # Multi-frame PET motion correction and arithmetic mean
 ./DCCCcore pet-motion-correct --input dynamic_pet.nii.gz --output averaged_pet.nii.gz
@@ -119,7 +122,7 @@ Perform spatial standardization without metric calculation:
 
 # Iterative rigid registration
 ./DCCCcore normalize --input pet.nii --output normalized.nii --iterative
-./DCCCcore adni-pet-core --input pet.nii --output normalized.nii --iterative
+./DCCCcore adni-pet-core --input tau_pet.nii --output normalized.nii --tracer tau --iterative
 ./DCCCcore rigid --input pet.nii --output rigid.nii --iterative
 ```
 
@@ -128,8 +131,16 @@ as the fixed reference, independently registers every later frame to it with a
 six-degree-of-freedom rigid transform, and writes the arithmetic mean as a 3D
 float NIfTI. A 4D input passed to `adni-pet-core` is automatically motion-corrected
 and averaged before the existing ADNI PET Core pipeline; 3D input follows the
-existing pipeline unchanged. Motion TSV translations are in millimetres and
+existing tracer-specific pipeline unchanged. `adni-pet-core` requires
+`--tracer abeta`, `--tracer tau`, or `--tracer fdg`. Aβ and tau use cerebellar
+gray normalization. FDG first scales the entire image to mean 1, then repeatedly
+excludes voxels below 0.5 and rescales the retained voxels to mean 1 until the
+excluded voxel count stops changing. Motion TSV translations are in millimetres and
 Euler rotations are in radians.
+
+ADNI example DICOMs are close to, but not exact fixed points of, the published
+FDG iteration. Small systematic intensity differences are therefore expected;
+see the [ADNI FDG compatibility note](../../docs/adni-fdg-preprocessing-validation.md).
 
 #### ADAD Analysis
 Run the ADAD decoupling-based metric:
@@ -154,7 +165,7 @@ Run the ADAD decoupling-based metric:
 | `--manual-fov` | Enable manual field-of-view placement |
 | `--skip-normalization` | Skip spatial normalization step |
 | `--suvr` | Include SUVr values in metric outputs |
-| `--tracer <tracer>` | Tracer type for fill-states metric (`fillstates` command only). Supported values: `fbp`, `fdg`, `ftp`. |
+| `--tracer <tracer>` | Required tracer type. `adni-pet-core` accepts `abeta`, `tau`, or `fdg`; `fillstates` accepts `fbp`, `fdg`, or `ftp`. |
 | `--modality <type>` | Decoupling modality for `adad` (`abeta` or `tau`). |
 
 ## Developers

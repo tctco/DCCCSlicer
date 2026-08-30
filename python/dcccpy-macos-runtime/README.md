@@ -9,7 +9,7 @@ from GitHub releases on first use when no installed runtime is available.
 Before building this package, vendor the release asset:
 
 ```bash
-python scripts/vendor_dccccore.py --version 4.3.0 --release-platform macos-latest-arm64
+python scripts/vendor_dccccore.py --version 4.4.0 --release-platform macos-latest-arm64
 python -m build --wheel
 ```
 

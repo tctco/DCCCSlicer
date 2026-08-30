@@ -2,6 +2,10 @@ import pytest
 from pathlib import Path
 import shutil
 
+import numpy as np
+
+from test_pet_motion_correct_cli import _read_nifti
+
 
 def _expected_adad_outputs(base: Path):
     suffixes = ["", "_stripped_image", "_stripped_component", "_AD_prob_map"]
@@ -70,6 +74,8 @@ class TestAdniPetCoreCLI:
                 str(test_files["input"]),
                 "--output",
                 str(output_path),
+                "--tracer",
+                "abeta",
             ]
         )
 
@@ -89,6 +95,8 @@ class TestAdniPetCoreCLI:
                 str(test_files["input"]),
                 "--output",
                 str(output_path),
+                "--tracer",
+                "tau",
                 "--iterative",
                 "--manual-fov",
             ]
@@ -115,6 +123,65 @@ class TestAdniPetCoreCLI:
             f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
 
+    def test_requires_tracer(self, run_subprocess, tmp_path, test_files):
+        output_path = tmp_path / "adni_pet_core_missing_tracer.nii"
+        result = run_subprocess(
+            [
+                "adni-pet-core",
+                "--input",
+                str(test_files["input"]),
+                "--output",
+                str(output_path),
+            ]
+        )
+
+        assert result.returncode != 0
+        assert "--tracer" in result.stderr
+        assert not output_path.exists()
+
+    def test_rejects_unknown_tracer(self, run_subprocess, tmp_path, test_files):
+        output_path = tmp_path / "adni_pet_core_unknown_tracer.nii"
+        result = run_subprocess(
+            [
+                "adni-pet-core",
+                "--input",
+                str(test_files["input"]),
+                "--output",
+                str(output_path),
+                "--tracer",
+                "unknown",
+            ]
+        )
+
+        assert result.returncode != 0
+        assert "allowed options: {abeta, tau, fdg}" in result.stderr
+        assert not output_path.exists()
+
+    def test_fdg_uses_iterative_global_mean_normalization(
+        self, run_subprocess, tmp_path, test_files
+    ):
+        output_path = tmp_path / "adni_pet_core_fdg.nii"
+        result = run_subprocess(
+            [
+                "adni-pet-core",
+                "--input",
+                str(test_files["input"]),
+                "--output",
+                str(output_path),
+                "--tracer",
+                "fdg",
+            ]
+        )
+
+        assert result.returncode == 0, result.stderr
+        data, dimension = _read_nifti(output_path)
+        assert dimension == 3
+        retained = data[data >= 0.5]
+        assert retained.size > 0
+        assert np.count_nonzero((data > 0.0) & (data < 0.5)) > 0
+        assert retained.mean() == pytest.approx(1.0, abs=1e-5)
+        assert data.mean() < 0.5
+
     def test_batch_mode_outputs(self, run_subprocess, tmp_path, test_files):
         input_dir = tmp_path / "adni_pet_core_batch_inputs"
         output_dir = tmp_path / "adni_pet_core_batch_outputs"
@@ -131,6 +198,8 @@ class TestAdniPetCoreCLI:
                 "--output",
                 str(output_dir),
                 "--batch",
+                "--tracer",
+                "abeta",
             ]
         )
 

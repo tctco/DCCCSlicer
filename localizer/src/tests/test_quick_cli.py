@@ -95,7 +95,7 @@ TEST_CASES: List[Dict[str, Any]] = [
     {"id": "normalize_basic", "args": ["normalize", "--input", "{input}", "--output", "{output}"], "expected_failure": False},
     {
         "id": "adni_pet_core_basic",
-        "args": ["adni-pet-core", "--input", "{input}", "--output", "{output}"],
+        "args": ["adni-pet-core", "--input", "{input}", "--output", "{output}", "--tracer", "abeta"],
         "expected_failure": False,
     },
     {"id": "missing_input_error", "args": ["centiloid", "--output", "{output}"], "expected_failure": True},

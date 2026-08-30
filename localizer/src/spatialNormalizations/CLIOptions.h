@@ -20,10 +20,10 @@ struct SpatialNormalizationOptions {
 
 struct NormalizeCommandOptions : BaseCommandOptions, SpatialNormalizationOptions {
     bool enableADNIStyle = false;
+    std::string tracer;
     std::string normalizationMethod = "rigid_voxelmorph";
 };
 
 void addBaseArguments(argparse::ArgumentParser& parser);
 void addSpatialNormalizationArguments(argparse::ArgumentParser& parser);
 void setupDebugOutput(BaseCommandOptions& options);
-

@@ -34,6 +34,8 @@ class TestBatchProcessing:
             "--output", str(output_dir),
             "--batch"
         ]
+        if subcommand == "adni-pet-core":
+            args.extend(["--tracer", "abeta"])
         
         result = run_subprocess(args)
         
@@ -66,6 +68,8 @@ class TestBatchProcessing:
             "--output", str(output_dir),
             "--batch"
         ]
+        if subcommand == "adni-pet-core":
+            args.extend(["--tracer", "abeta"])
         
         result = run_subprocess(args)
         
@@ -106,6 +110,8 @@ class TestBatchProcessing:
             "--output", str(output_dir),
             "--bids", "sub-01",
         ]
+        if subcommand == "adni-pet-core":
+            args.extend(["--tracer", "abeta"])
 
         result = run_subprocess(args)
 

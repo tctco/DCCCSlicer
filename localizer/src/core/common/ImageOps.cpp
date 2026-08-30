@@ -1,13 +1,17 @@
 #include "ImageOps.h"
 
 #include <itkImageFileWriter.h>
+#include <itkImageRegionConstIterator.h>
 #include <itkImageRegionIterator.h>
 #include <itkLabelStatisticsImageFilter.h>
 #include <itkLinearInterpolateImageFunction.h>
 #include <itkResampleImageFilter.h>
 #include <itkWarpImageFilter.h>
 
+#include <cmath>
 #include <iostream>
+#include <limits>
+#include <stdexcept>
 
 namespace Common::image {
 
@@ -16,6 +20,58 @@ void divideVoxelsByValue(ImageType::Pointer image, float divisor) {
         image, image->GetLargestPossibleRegion());
     for (it.GoToBegin(); !it.IsAtEnd(); ++it) {
         it.Set(it.Get() / divisor);
+    }
+}
+
+void normalizeFdgIterativeGlobalMean(ImageType::Pointer image) {
+    if (!image) {
+        throw std::invalid_argument("FDG global mean normalization requires an image");
+    }
+
+    const auto region = image->GetLargestPossibleRegion();
+    const auto voxelCount = region.GetNumberOfPixels();
+    if (voxelCount == 0) {
+        throw std::invalid_argument("FDG global mean normalization requires a non-empty image");
+    }
+
+    double globalSum = 0.0;
+    itk::ImageRegionConstIterator<ImageType> inputIt(image, region);
+    for (inputIt.GoToBegin(); !inputIt.IsAtEnd(); ++inputIt) {
+        globalSum += static_cast<double>(inputIt.Get());
+    }
+    const double globalMean = globalSum / static_cast<double>(voxelCount);
+    if (!std::isfinite(globalMean) || globalMean <= 0.0) {
+        throw std::runtime_error("Invalid whole-image mean for FDG normalization");
+    }
+    divideVoxelsByValue(image, static_cast<float>(globalMean));
+
+    std::size_t previousMaskedCount = std::numeric_limits<std::size_t>::max();
+    while (true) {
+        std::size_t retainedCount = 0;
+        double retainedSum = 0.0;
+        itk::ImageRegionConstIterator<ImageType> it(image, region);
+        for (it.GoToBegin(); !it.IsAtEnd(); ++it) {
+            const double value = static_cast<double>(it.Get());
+            if (value >= 0.5) {
+                retainedSum += value;
+                ++retainedCount;
+            }
+        }
+
+        const std::size_t maskedCount = voxelCount - retainedCount;
+        if (maskedCount == previousMaskedCount) {
+            break;
+        }
+        if (retainedCount == 0) {
+            throw std::runtime_error("FDG normalization mask contains no voxels at or above 0.5");
+        }
+
+        const double retainedMean = retainedSum / static_cast<double>(retainedCount);
+        if (!std::isfinite(retainedMean) || retainedMean <= 0.0) {
+            throw std::runtime_error("Invalid masked mean for FDG normalization");
+        }
+        divideVoxelsByValue(image, static_cast<float>(retainedMean));
+        previousMaskedCount = maskedCount;
     }
 }
 
@@ -113,5 +169,3 @@ void extractImageData(ImageType::Pointer image, std::vector<float>& imageData) {
 }
 
 }  // namespace Common::image
-
-

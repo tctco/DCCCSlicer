@@ -13,6 +13,7 @@ struct SpatialNormalizationOptions {
     bool enableDebugOutput = false;
     std::string debugOutputBasePath;
     bool enableAdniPetCore = false;
+    std::string adniPetTracer;
     int maxIterations = 5;
     float convergenceThreshold = 2.0f;
     Common::debug::DebugReporterPtr debugReporter;

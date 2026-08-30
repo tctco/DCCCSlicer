@@ -9,6 +9,7 @@ namespace Common::image {
 using ImageType = nifti::ImageType;
 
 void divideVoxelsByValue(ImageType::Pointer image, float divisor);
+void normalizeFdgIterativeGlobalMean(ImageType::Pointer image);
 double calculateMeanInMask(ImageType::Pointer image,
                            ImageType::Pointer mask);
 ImageType::Pointer resampleToMatch(ImageType::Pointer referenceImage,
@@ -18,5 +19,3 @@ ImageType::Pointer createImageFromVector(const std::vector<float>& imageData,
 void extractImageData(ImageType::Pointer image, std::vector<float>& imageData);
 
 }  // namespace Common::image
-
-

@@ -409,9 +409,15 @@ def normalize(
 def adni_pet_core(
     input: object,
     output: str | os.PathLike[str] | None = None,
+    *,
+    tracer: str,
     **kwargs: object,
 ) -> DCCCResult:
-    return _spatial_command("adni-pet-core", input, output, **kwargs)
+    """Run tracer-specific ADNI PET Core preprocessing."""
+
+    extra_args = list(kwargs.pop("extra_args", ()))
+    extra_args.extend(["--tracer", tracer])
+    return _spatial_command("adni-pet-core", input, output, extra_args=extra_args, **kwargs)
 
 
 def rigid(

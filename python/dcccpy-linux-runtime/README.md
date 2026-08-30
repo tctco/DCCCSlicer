@@ -11,7 +11,7 @@ download.
 Before building this package, vendor the release asset:
 
 ```bash
-python scripts/vendor_dccccore.py --version 4.3.0 --release-platform ubuntu-latest-x64
+python scripts/vendor_dccccore.py --version 4.4.0 --release-platform ubuntu-latest-x64
 python -m build --wheel
 ```
 

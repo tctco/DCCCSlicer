@@ -142,7 +142,7 @@ def test_dccccore_path_can_disable_auto_download(tmp_path: Path, monkeypatch: py
 
 
 def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    asset_root = tmp_path / "asset" / "DCCCcore-4.3.0-ubuntu-latest-x64"
+    asset_root = tmp_path / "asset" / "DCCCcore-4.4.0-ubuntu-latest-x64"
     asset_root.mkdir(parents=True)
     exe = asset_root / "DCCCcore"
     exe.write_text("#!/usr/bin/env sh\nprintf 'fake dccccore\\n'\n")
@@ -150,7 +150,7 @@ def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pyte
 
     archive = tmp_path / "DCCCcore.zip"
     with zipfile.ZipFile(archive, "w") as zf:
-        zf.write(exe, "DCCCcore-4.3.0-ubuntu-latest-x64/DCCCcore")
+        zf.write(exe, "DCCCcore-4.4.0-ubuntu-latest-x64/DCCCcore")
 
     monkeypatch.delenv("DCCCPY_DCCCCORE", raising=False)
     monkeypatch.setenv("DCCCPY_AUTO_DOWNLOAD", "1")
@@ -186,10 +186,10 @@ def test_linux_arm64_release_platform() -> None:
     assert release_platform("linux-arm64") == "ubuntu-latest-arm64"
 
 
-def test_default_release_targets_dccccore_430() -> None:
-    assert DCCCCORE_VERSION == "4.3.0"
+def test_default_release_targets_dccccore_440() -> None:
+    assert DCCCCORE_VERSION == "4.4.0"
     assert release_url(platform_name="ubuntu-latest-x64").endswith(
-        "/releases/download/v4.3.0/DCCCcore-4.3.0-ubuntu-latest-x64.zip"
+        "/releases/download/v4.4.0/DCCCcore-4.4.0-ubuntu-latest-x64.zip"
     )
 
 
@@ -260,6 +260,37 @@ def test_pet_motion_correct_forwards_optional_outputs(
         "--motion-output",
         str(motion_path),
     ]
+
+
+def test_adni_pet_core_requires_and_forwards_tracer(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_args = tmp_path / "args.txt"
+    fake_exe = make_fake_dccccore(tmp_path)
+    input_path = tmp_path / "pet.nii"
+    output_path = tmp_path / "adni.nii"
+    input_path.write_text("fake PET")
+    monkeypatch.setenv("DCCCPY_DCCCCORE", str(fake_exe))
+    monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(fake_args))
+
+    result = dcccpy.adni_pet_core(input_path, output_path, tracer="fdg")
+
+    assert result.returncode == 0
+    assert fake_args.read_text().splitlines() == [
+        "adni-pet-core",
+        "--input",
+        str(input_path),
+        "--output",
+        str(output_path),
+        "--tracer",
+        "fdg",
+    ]
+
+
+def test_adni_pet_core_python_api_has_no_default_tracer() -> None:
+    with pytest.raises(TypeError, match="tracer"):
+        dcccpy.adni_pet_core("pet.nii")
 
 
 def test_run_adds_macos_security_hint_for_blocked_runtime(
