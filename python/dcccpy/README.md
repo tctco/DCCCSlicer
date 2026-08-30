@@ -174,7 +174,7 @@ The preferred distribution layout is:
 
 ## Packaging note
 
-The runtime wheels use a PyPI-size profile for version 4.2.3. They omit the
+The runtime wheels use a PyPI-size profile for DCCCcore version 4.3.0. They omit the
 `fast_and_acc` registration model/config and the ADAD decoupler ONNX ensemble,
 while keeping the default spatial normalization model and assets needed by
 common Centiloid/CenTauR/CenTauRz workflows.

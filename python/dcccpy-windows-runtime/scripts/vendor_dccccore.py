@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 REPO = "tctco/DCCCSlicer"
-DEFAULT_VERSION = "4.2.3"
+DEFAULT_VERSION = "4.3.0"
 DEFAULT_RELEASE_PLATFORM = "windows-latest-x64"
 
 EXCLUDE_PROFILES = {
