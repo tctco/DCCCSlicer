@@ -86,6 +86,7 @@ int processSingleImage(const NormalizeCommandOptions& options,
     request.options.enableDebugOutput = options.enableDebugOutput;
     request.options.debugOutputBasePath = debugOutputBasePath;
     request.options.enableAdniPetCore = config.enableAdniPetCore;
+    request.options.adniPetTracer = options.tracer;
     auto spatialService = container->resolve<ISpatialNormalizationService>();
     auto fileService = container->resolve<IFileService>();
 
@@ -261,6 +262,10 @@ public:
         parser.add_argument("--method")
             .help("Normalization method")
             .default_value("rigid_voxelmorph");
+        parser.add_argument("--tracer")
+            .help("PET tracer class (abeta, tau, or fdg); FDG uses iterative global mean normalization")
+            .required()
+            .choices("abeta", "tau", "fdg");
     }
 
     int execute(const argparse::ArgumentParser& parser, const std::string& fullCommand) override {
@@ -275,6 +280,7 @@ public:
         options.batchMode = parser.get<bool>("--batch");
         options.bidsPattern = parser.get<std::string>("--bids");
         options.enableADNIStyle = true;
+        options.tracer = parser.get<std::string>("--tracer");
 
         if (!options.batchMode && options.bidsPattern.empty()) {
             setupDebugOutput(options);

@@ -194,7 +194,8 @@ class TestAdniPetCoreDynamicInput:
         output_path = tmp_path / "adni_dynamic_output.nii"
 
         result = run_subprocess([
-            "adni-pet-core", "--input", str(dynamic_path), "--output", str(output_path)
+            "adni-pet-core", "--input", str(dynamic_path), "--output", str(output_path),
+            "--tracer", "fdg",
         ])
 
         assert result.returncode == 0, (

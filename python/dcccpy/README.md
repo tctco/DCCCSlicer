@@ -78,6 +78,7 @@ Common helpers mirror `DCCCcore` subcommands:
 dcccpy.centiloid("amyloid.nii", suvr=True)
 dcccpy.centaurz("tau.nii", report_detailed_regions=True)
 dcccpy.fillstates("fdg.nii", tracer="fdg")
+dcccpy.adni_pet_core("fdg.nii", tracer="fdg")
 dcccpy.normalize("pet.nii", iterative=True)
 dcccpy.pet_motion_correct(
     "dynamic_pet.nii.gz",
@@ -103,7 +104,16 @@ Each helper returns `DCCCResult` with:
 ```bash
 dcccpy --help
 dcccpy centiloid --input amyloid_pet.nii --output result.nii
+dcccpy adni-pet-core --input fdg.nii --output fdg_adni.nii --tracer fdg
 ```
+
+`adni_pet_core` deliberately has no default tracer. Use `abeta`, `tau`, or
+`fdg`; FDG selects ADNI's iterative masked global-mean normalization, while
+Aβ and tau retain cerebellar gray normalization.
+
+Downloaded ADNI preprocessed FDG DICOMs can differ slightly from the exact
+published iteration. See the repository's
+[ADNI FDG compatibility note](../../docs/adni-fdg-preprocessing-validation.md).
 
 ## Runtime lookup
 
@@ -148,7 +158,7 @@ the calculation again.
 Release wheels should vendor the matching `DCCCcore` runtime tree before build:
 
 ```bash
-python scripts/vendor_dccccore.py --version 4.3.0 --release-platform ubuntu-latest-x64
+python scripts/vendor_dccccore.py --version 4.4.0 --release-platform ubuntu-latest-x64
 python -m build --wheel
 ```
 
@@ -156,7 +166,7 @@ The Linux ARM64 runtime package uses the corresponding release asset:
 
 ```bash
 cd python/dcccpy-linux-arm64-runtime
-python scripts/vendor_dccccore.py --version 4.3.0 --release-platform ubuntu-latest-arm64
+python scripts/vendor_dccccore.py --version 4.4.0 --release-platform ubuntu-latest-arm64
 python -m build --wheel
 ```
 
@@ -174,7 +184,7 @@ The preferred distribution layout is:
 
 ## Packaging note
 
-The runtime wheels use a PyPI-size profile for DCCCcore version 4.3.0. They omit the
+The runtime wheels use a PyPI-size profile for DCCCcore version 4.4.0. They omit the
 `fast_and_acc` registration model/config and the ADAD decoupler ONNX ensemble,
 while keeping the default spatial normalization model and assets needed by
 common Centiloid/CenTauR/CenTauRz workflows.

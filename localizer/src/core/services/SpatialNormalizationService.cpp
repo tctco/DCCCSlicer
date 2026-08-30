@@ -65,7 +65,8 @@ SpatialNormalizationOutput SpatialNormalizationService::normalize(const SpatialN
     if (request.options.enableAdniPetCore && !request.options.rigidOnly) {
         output.spatiallyNormalizedImage = prepareAdniPetCoreImage(
             output.rigidAlignedImage,
-            output.spatiallyNormalizedImage);
+            output.spatiallyNormalizedImage,
+            request.options.adniPetTracer);
     }
 
     return output;
@@ -80,20 +81,14 @@ ImageType::Pointer SpatialNormalizationService::loadInput(const std::string& inp
 }
 
 ImageType::Pointer SpatialNormalizationService::prepareAdniPetCoreImage(ImageType::Pointer rigidImage,
-                                                                       ImageType::Pointer normalizedImage) const {
+                                                                       ImageType::Pointer normalizedImage,
+                                                                       const std::string& tracer) const {
     if (!rigidImage || !normalizedImage) {
         throw std::invalid_argument("ADNI PET Core preparation requires rigid and normalized images");
     }
 
-    ImageType::Pointer cerebellarGray = Common::nifti::loadImage(config_->getMaskPath("cerebral_gray"));
-    if (!cerebellarGray) {
-        throw std::runtime_error("Failed to load cerebellar gray mask");
-    }
-
-    ImageType::Pointer resampled = Common::image::resampleToMatch(cerebellarGray, normalizedImage);
-    double meanGray = Common::image::calculateMeanInMask(resampled, cerebellarGray);
-    if (meanGray <= 0.0) {
-        throw std::runtime_error("Invalid cerebellar gray mean value for ADNI PET Core normalization");
+    if (tracer != "abeta" && tracer != "tau" && tracer != "fdg") {
+        throw std::invalid_argument("ADNI PET Core tracer must be one of: abeta, tau, fdg");
     }
 
     ImageType::Pointer adniTemplate = Common::nifti::loadImage(config_->getTemplatePath("adni_pet_core"));
@@ -102,6 +97,21 @@ ImageType::Pointer SpatialNormalizationService::prepareAdniPetCoreImage(ImageTyp
     }
 
     ImageType::Pointer adniStyle = Common::image::resampleToMatch(adniTemplate, rigidImage);
+    if (tracer == "fdg") {
+        Common::image::normalizeFdgIterativeGlobalMean(adniStyle);
+        return adniStyle;
+    }
+
+    ImageType::Pointer cerebellarGray = Common::nifti::loadImage(config_->getMaskPath("cerebral_gray"));
+    if (!cerebellarGray) {
+        throw std::runtime_error("Failed to load cerebellar gray mask");
+    }
+
+    ImageType::Pointer resampled = Common::image::resampleToMatch(cerebellarGray, normalizedImage);
+    const double meanGray = Common::image::calculateMeanInMask(resampled, cerebellarGray);
+    if (meanGray <= 0.0) {
+        throw std::runtime_error("Invalid cerebellar gray mean value for ADNI PET Core normalization");
+    }
     Common::image::divideVoxelsByValue(adniStyle, static_cast<float>(meanGray));
     return adniStyle;
 }

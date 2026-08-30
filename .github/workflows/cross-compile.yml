@@ -17,7 +17,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(startsWith(github.ref, 'refs/tags/') && '["ubuntu-latest","ubuntu-24.04-arm","windows-latest","macos-latest","macos-14"]' || '["ubuntu-latest","ubuntu-24.04-arm","windows-latest"]') }}
+        # Pull requests need one representative compile/test job. Tags retain
+        # the complete release matrix, including Linux ARM64 artifacts.
+        os: ${{ fromJSON(startsWith(github.ref, 'refs/tags/') && '["ubuntu-latest","ubuntu-24.04-arm","windows-latest","macos-latest","macos-14"]' || '["ubuntu-latest"]') }}
 
     steps:
       - name: Checkout (with Git LFS)
@@ -221,7 +223,7 @@ jobs:
             exit 1
           fi
 
-      - name: Run PR smoke tests on installed binary (Linux)
+      - name: Run PR tests on installed binary (Linux)
         if: github.event_name == 'pull_request' && runner.os == 'Linux'
         working-directory: localizer/src/tests
         shell: bash
@@ -229,6 +231,18 @@ jobs:
           set -e
           python -m pip install pytest pandas
           python -m pytest -v test_ui_metric_command_builder.py test_quick_cli.py -k "help or version_information or no_subcommand"
+          python -m pytest -v \
+            test_adad_cli.py::TestAdniPetCoreCLI::test_requires_tracer \
+            test_adad_cli.py::TestAdniPetCoreCLI::test_rejects_unknown_tracer
+
+      - name: Run dcccpy tests (Linux PR)
+        if: github.event_name == 'pull_request' && runner.os == 'Linux'
+        working-directory: python/dcccpy
+        shell: bash
+        run: |
+          set -e
+          python -m pip install -e . pytest
+          python -m pytest -v
 
       - name: Run pytest on installed binary (Linux/macOS)
         if: startsWith(github.ref, 'refs/tags/') && runner.os != 'Windows'

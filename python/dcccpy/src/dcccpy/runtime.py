@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Iterable
 
 
-DCCCCORE_VERSION = "4.3.0"
+DCCCCORE_VERSION = "4.4.0"
 RELEASE_REPO = "tctco/DCCCSlicer"
 
 
