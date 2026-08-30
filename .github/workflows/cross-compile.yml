@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: ${{ startsWith(github.ref, 'refs/tags/') }}
+          lfs: true
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -231,9 +231,7 @@ jobs:
           set -e
           python -m pip install pytest pandas
           python -m pytest -v test_ui_metric_command_builder.py test_quick_cli.py -k "help or version_information or no_subcommand"
-          python -m pytest -v \
-            test_adad_cli.py::TestAdniPetCoreCLI::test_requires_tracer \
-            test_adad_cli.py::TestAdniPetCoreCLI::test_rejects_unknown_tracer
+          python -m pytest -v test_adad_cli.py
 
       - name: Run dcccpy tests (Linux PR)
         if: github.event_name == 'pull_request' && runner.os == 'Linux'

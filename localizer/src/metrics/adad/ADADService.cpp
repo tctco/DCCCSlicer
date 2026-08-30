@@ -28,6 +28,8 @@ SpatialNormalizationRequest buildNormalizationRequest(const ADADCLIOptions& opti
     request.options.enableDebugOutput = options.enableDebugOutput;
     request.options.debugOutputBasePath = options.enableDebugOutput ? debugBasePath : std::string{};
     request.options.enableAdniPetCore = true;
+    request.options.adniPetTracer =
+        Common::path::toLower(options.modality) == "tau" ? "tau" : "abeta";
     return request;
 }
 
