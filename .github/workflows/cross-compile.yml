@@ -229,7 +229,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          python -m pip install pytest pandas
+          python -m pip install pytest pandas nibabel
           python -m pytest -v test_ui_metric_command_builder.py test_quick_cli.py -k "help or version_information or no_subcommand"
           python -m pytest -v test_adad_cli.py
 
@@ -248,7 +248,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          python -m pip install pytest pandas
+          python -m pip install pytest pandas nibabel
           python -m pytest -v
 
       - name: Set up MSVC Developer Command Prompt
@@ -329,7 +329,7 @@ jobs:
         working-directory: localizer/src/tests
         shell: pwsh
         run: |
-          python -m pip install pytest pandas
+          python -m pip install pytest pandas nibabel
           python -m pytest -v test_ui_metric_command_builder.py test_quick_cli.py -k "help or version_information or no_subcommand"
 
       - name: Run pytest on installed binary (Windows)
@@ -337,7 +337,7 @@ jobs:
         working-directory: localizer/src/tests
         shell: pwsh
         run: |
-          python -m pip install pytest pandas
+          python -m pip install pytest pandas nibabel
           python -m pytest -v
 
       - name: Copy install/bin into localizer/cpp (Linux/macOS)
