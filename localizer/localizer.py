@@ -20,6 +20,7 @@ from lib.image_alignment import ImageAlignmentLogic
 from lib.metric_calculator import MetricCalculatorLogic
 from lib.ai_decoupling import AIDecouplingLogic
 from lib.atlas_manager import AtlasManager
+from lib.biomarker_region_viewer import BiomarkerRegionViewer
 from lib.core_executable import dccccore_executable_path
 from lib.ui_components import TimeConsumingMessageBox, MarkupManager
 
@@ -159,6 +160,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.image_alignment = ImageAlignmentLogic()
         self.metric_calculator = MetricCalculatorLogic(self.PLUGIN_PATH)
         self.ai_decoupling = AIDecouplingLogic(self.PLUGIN_PATH)
+        self.biomarker_region_viewer = BiomarkerRegionViewer(self.PLUGIN_PATH)
 
         # Connections
 
@@ -181,6 +183,9 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.calcMetricButton.connect("clicked(bool)", self.onCalcMetricButton)
         self.ui.calculateSUVrButton.connect("clicked(bool)", self.onCalculateSUVrButton)
         self.ui.showImgButton.connect("clicked(bool)", self.onShowImgButton)
+        self.ui.showVOIButton.connect("clicked(bool)", self.onShowVOIButton)
+        self.ui.showRefButton.connect("clicked(bool)", self.onShowRefButton)
+        self.ui.showMNI152Button.connect("clicked(bool)", self.onShowMNI152Button)
         self.ui.inputSelector.connect(
             "currentNodeChanged(vtkMRMLNode*)", self.onInputVolumeChanged
         )
@@ -194,6 +199,8 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 )
         except AttributeError as e:
             print(f"metricSelector not found when setting up connections: {e}")
+
+        self.onMetricSelectionChanged(self.ui.metricSelector.currentIndex)
         
         # Atlas相关按钮连接
         try:
@@ -493,6 +500,16 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             tracer_selector.setEnabled(False)
             tracer_selector.blockSignals(False)
 
+        show_ref_button = getattr(self.ui, "showRefButton", None)
+        if show_ref_button is not None:
+            has_reference_region = metric_text != "Fill States"
+            show_ref_button.setEnabled(has_reference_region)
+            show_ref_button.setToolTip(
+                "Show the reference region for the selected biomarker"
+                if has_reference_region
+                else "Fill States does not use a reference region"
+            )
+
     def onCalcMetricButton(self) -> None:
         currentNode = self._checkCurrentVolume()
         if not currentNode:
@@ -771,6 +788,24 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # 更新视图以适应新加载的图像
         slicer.app.applicationLogic().FitSliceToAll()
+
+    def _selected_biomarker_preview(self):
+        metric_type = self.ui.metricSelector.currentText
+        tracer = None
+        if metric_type == "Fill States":
+            tracer = (self.ui.tracerSelector.currentText or "").strip()
+        return metric_type, tracer
+
+    def onShowVOIButton(self) -> None:
+        metric_type, tracer = self._selected_biomarker_preview()
+        self.biomarker_region_viewer.show_region("voi", metric_type, tracer)
+
+    def onShowRefButton(self) -> None:
+        metric_type, tracer = self._selected_biomarker_preview()
+        self.biomarker_region_viewer.show_region("ref", metric_type, tracer)
+
+    def onShowMNI152Button(self) -> None:
+        self.biomarker_region_viewer.show_region("mni")
 
     def onACButton(self) -> None:
         """
