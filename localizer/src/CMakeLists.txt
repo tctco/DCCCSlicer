@@ -101,6 +101,8 @@ target_sources(DCCCcore PRIVATE
     core/services/FileService.cpp
     core/extraction/BrainExtractor.h
     core/extraction/BrainExtractor.cpp
+    core/extraction/BrainParcellator.h
+    core/extraction/BrainParcellator.cpp
     core/di/Bootstrap.h
     core/di/Bootstrap.cpp
     metrics/shared/MetricTypes.h
@@ -193,6 +195,8 @@ target_sources(DCCCcore PRIVATE
     spatialNormalizations/rigid/RigidCLI.cpp
     spatialNormalizations/brain/BrainExtractionCLI.h
     spatialNormalizations/brain/BrainExtractionCLI.cpp
+    spatialNormalizations/brain/BrainParcellationCLI.h
+    spatialNormalizations/brain/BrainParcellationCLI.cpp
     spatialNormalizations/pet/PetMotionCorrectionCLI.h
     spatialNormalizations/pet/PetMotionCorrectionCLI.cpp
 )

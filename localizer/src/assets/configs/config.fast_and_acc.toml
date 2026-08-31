@@ -34,6 +34,7 @@ whole_cerebral = "assets/nii/voi_WhlCbl_2mm.nii"
 centaur_voi = "assets/nii/CenTauR.nii"
 centaur_ref = "assets/nii/voi_CerebGry_tau_2mm.nii"
 padded_brain = "assets/nii/padded_brain_mask.nii.gz"
+padded_aparc_aseg = "assets/nii/adni_regions/padded_aparc_aseg.nii.gz"
 
 # Processing parameters
 [processing]

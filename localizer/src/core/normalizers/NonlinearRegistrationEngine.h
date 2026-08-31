@@ -1,5 +1,6 @@
 #pragma once
 #include "onnxruntime_cxx_api.h"
+#include <cstddef>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -19,7 +20,8 @@ public:
         const std::vector<float>& originalImg, 
         const std::vector<float>& movingImg,
         const std::vector<float>& templateImg,
-        const std::vector<float>* templateImage = nullptr);
+        const std::vector<float>* templateImage = nullptr,
+        std::size_t templateImageChannels = 1);
 
     bool supportsInverseWarp() const;
 

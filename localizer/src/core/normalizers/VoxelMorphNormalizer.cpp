@@ -4,6 +4,7 @@
 #include "../preprocessing/ImagePreprocessor.h"
 
 #include <itkRegionOfInterestImageFilter.h>
+#include <algorithm>
 #include <stdexcept>
 #include <vector>
 
@@ -49,9 +50,20 @@ ImageType::Pointer VoxelMorphNormalizer::normalize(ImageType::Pointer rigidImage
 
 ImageType::Pointer VoxelMorphNormalizer::inverseWarp(
     ImageType::Pointer rigidImage, ImageType::Pointer templateImage) {
-    if (!rigidImage || !templateImage) {
+    auto channels = inverseWarpChannels(rigidImage, {templateImage});
+    return channels.front();
+}
+
+std::vector<ImageType::Pointer> VoxelMorphNormalizer::inverseWarpChannels(
+    ImageType::Pointer rigidImage,
+    const std::vector<ImageType::Pointer>& templateImages) {
+    if (!rigidImage || templateImages.empty()) {
         throw std::invalid_argument(
-            "Inverse VoxelMorph warping requires a rigid image and template image");
+            "Inverse VoxelMorph warping requires a rigid image and template images");
+    }
+    if (std::any_of(templateImages.begin(), templateImages.end(),
+                    [](const ImageType::Pointer& image) { return !image; })) {
+        throw std::invalid_argument("Inverse VoxelMorph template images cannot be null");
     }
     if (!nonlinearEngine_->supportsInverseWarp()) {
         throw std::runtime_error(
@@ -65,9 +77,6 @@ ImageType::Pointer VoxelMorphNormalizer::inverseWarp(
 
     ImageType::Pointer paddedOriginalImage =
         Common::image::resampleToMatch(paddedTemplate_, rigidImage);
-    ImageType::Pointer paddedTemplateImage =
-        Common::image::resampleToMatch(paddedTemplate_, templateImage);
-
     std::vector<float> paddedImageData;
     std::vector<float> paddedTemplateData;
     std::vector<float> paddedOriginalData;
@@ -75,22 +84,46 @@ ImageType::Pointer VoxelMorphNormalizer::inverseWarp(
     Common::image::extractImageData(paddedImage, paddedImageData);
     Common::image::extractImageData(paddedTemplate_, paddedTemplateData);
     Common::image::extractImageData(paddedOriginalImage, paddedOriginalData);
-    Common::image::extractImageData(paddedTemplateImage, templateImageData);
+    const std::size_t channelVoxelCount =
+        paddedTemplate_->GetLargestPossibleRegion().GetNumberOfPixels();
+    templateImageData.reserve(channelVoxelCount * templateImages.size());
+    for (const auto& templateImage : templateImages) {
+        ImageType::Pointer paddedTemplateImage =
+            Common::image::resampleToMatch(paddedTemplate_, templateImage);
+        std::vector<float> channelData;
+        Common::image::extractImageData(paddedTemplateImage, channelData);
+        templateImageData.insert(
+            templateImageData.end(), channelData.begin(), channelData.end());
+    }
 
     auto prediction = nonlinearEngine_->predict(
-        paddedOriginalData, paddedImageData, paddedTemplateData, &templateImageData);
+        paddedOriginalData, paddedImageData, paddedTemplateData,
+        &templateImageData, templateImages.size());
     const auto inverseIt = prediction.find("inverse_warped");
     if (inverseIt == prediction.end()) {
         throw std::runtime_error("Inverse VoxelMorph prediction did not return inverse_warped");
     }
 
-    ImageType::Pointer inverseImage = Common::image::createImageFromVector(
-        inverseIt->second, paddedTemplate_->GetLargestPossibleRegion().GetSize());
-    inverseImage->SetDirection(paddedTemplate_->GetDirection());
-    inverseImage->SetOrigin(paddedTemplate_->GetOrigin());
-    inverseImage->SetSpacing(paddedTemplate_->GetSpacing());
-    saveDebugImage(inverseImage, "inverse_warped");
-    return inverseImage;
+    if (inverseIt->second.size() != channelVoxelCount * templateImages.size()) {
+        throw std::runtime_error(
+            "Inverse VoxelMorph output channel count does not match its input");
+    }
+
+    std::vector<ImageType::Pointer> inverseImages;
+    inverseImages.reserve(templateImages.size());
+    for (std::size_t channel = 0; channel < templateImages.size(); ++channel) {
+        const auto begin = inverseIt->second.begin() + channel * channelVoxelCount;
+        std::vector<float> channelData(begin, begin + channelVoxelCount);
+        ImageType::Pointer inverseImage = Common::image::createImageFromVector(
+            channelData, paddedTemplate_->GetLargestPossibleRegion().GetSize());
+        inverseImage->SetDirection(paddedTemplate_->GetDirection());
+        inverseImage->SetOrigin(paddedTemplate_->GetOrigin());
+        inverseImage->SetSpacing(paddedTemplate_->GetSpacing());
+        saveDebugImage(inverseImage,
+                       "inverse_warped_channel_" + std::to_string(channel));
+        inverseImages.push_back(inverseImage);
+    }
+    return inverseImages;
 }
 
 ImageType::Pointer VoxelMorphNormalizer::cropMNI(ImageType::Pointer image) {

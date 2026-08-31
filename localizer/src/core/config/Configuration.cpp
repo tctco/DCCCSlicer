@@ -39,6 +39,8 @@ void Configuration::initializeDefaults() {
   configMap["masks.centaur_voi"] = "nii/CenTauR.nii";
   configMap["masks.centaur_ref"] = "nii/voi_CerebGry_tau_2mm.nii";
   configMap["masks.padded_brain"] = "nii/padded_brain_mask.nii.gz";
+  configMap["masks.padded_aparc_aseg"] =
+      "nii/adni_regions/padded_aparc_aseg.nii.gz";
   configMap["masks.centaurz_mesial_temporal_voi"] =
       "assets/nii/centaurz/Mesial_CenTauR.nii.gz";
   configMap["masks.centaurz_meta_temporal_voi"] =
@@ -314,6 +316,8 @@ void Configuration::printAllConfigurations() const {
   std::cout << "centaur_voi: " << getMaskPath("centaur_voi") << std::endl;
   std::cout << "centaur_ref: " << getMaskPath("centaur_ref") << std::endl;
   std::cout << "padded_brain: " << getMaskPath("padded_brain") << std::endl;
+  std::cout << "padded_aparc_aseg: "
+            << getMaskPath("padded_aparc_aseg") << std::endl;
 
   std::cout << "\n--- Processing Parameters ---" << std::endl;
   std::cout << "max_iter: " << getInt("processing.max_iter") << std::endl;

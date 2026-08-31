@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 class VoxelMorphNormalizer {
 public:
@@ -16,6 +17,9 @@ public:
     ImageType::Pointer normalize(ImageType::Pointer rigidImage);
     ImageType::Pointer inverseWarp(ImageType::Pointer rigidImage,
                                    ImageType::Pointer templateImage);
+    std::vector<ImageType::Pointer> inverseWarpChannels(
+        ImageType::Pointer rigidImage,
+        const std::vector<ImageType::Pointer>& templateImages);
     void setDebugMode(bool enable, const std::string& basePath = "");
 
 private:

@@ -139,6 +139,23 @@ written beside the extracted image as `brain_mask.nii.gz` unless
   --mask-output subject_brain_mask.nii.gz
 ```
 
+### ADNI-style regional volumes
+
+`brain-parcellate` inverse-warps a bundled FreeSurfer fsaverage
+Desikan-Killiany + aseg atlas and writes native-space binary masks plus a
+`volumes.json` summary. `--output` is an output directory.
+
+```bash
+./DCCCcore brain-parcellate --input structural_mri.nii.gz \
+  --output regional_volumes
+```
+
+The summary includes ventricles, left/right and bilateral hippocampus,
+entorhinal cortex, fusiform gyrus and middle temporal gyrus, whole brain, and
+an intracranial mask estimate. The reported ICV is an inverse-warped mask
+proxy; it is deliberately not called FreeSurfer eTIV because eTIV is derived
+from the subject's Talairach transform rather than an `aseg` voxel label.
+
 `pet-motion-correct` accepts general 4D `X × Y × Z × N` PET data. It uses frame 0
 as the fixed reference, independently registers every later frame to it with a
 six-degree-of-freedom rigid transform, and writes the arithmetic mean as a 3D

@@ -38,6 +38,16 @@ void requireTensorSize(const std::vector<float>& values, const char* name) {
     }
 }
 
+void requireTemplateTensorSize(const std::vector<float>& values,
+                               std::size_t channels) {
+    if (channels == 0 || values.size() != channels * kVoxelCount) {
+        throw std::invalid_argument(
+            "Nonlinear registration input 'template_image' must contain " +
+            std::to_string(channels) + " channel(s) of " +
+            std::to_string(kVoxelCount) + " voxels");
+    }
+}
+
 }  // namespace
 
 NonlinearRegistrationEngine::NonlinearRegistrationEngine(const std::string& modelPath)
@@ -75,12 +85,13 @@ std::unordered_map<std::string, std::vector<float>> NonlinearRegistrationEngine:
     const std::vector<float>& originalImg,
     const std::vector<float>& movingImg,
     const std::vector<float>& templateImg,
-    const std::vector<float>* templateImage) {
+    const std::vector<float>* templateImage,
+    std::size_t templateImageChannels) {
     requireTensorSize(originalImg, "input_raw");
     requireTensorSize(movingImg, "input");
     requireTensorSize(templateImg, "template");
     if (templateImage) {
-        requireTensorSize(*templateImage, "template_image");
+        requireTemplateTensorSize(*templateImage, templateImageChannels);
         if (!supportsInverseWarp()) {
             throw std::runtime_error(
                 "The configured affine VoxelMorph model does not support inverse warping");
@@ -109,10 +120,13 @@ std::unordered_map<std::string, std::vector<float>> NonlinearRegistrationEngine:
     // harmless placeholder because ONNX Runtime prunes the unrequested inverse branch.
     if (hasTemplateImageInput_) {
         const std::vector<float>& inverseInput = templateImage ? *templateImage : templateImg;
+        const std::size_t inverseChannels = templateImage ? templateImageChannels : 1;
+        const std::vector<int64_t> inverseInputShape = {
+            1, static_cast<int64_t>(inverseChannels), 96, 128, 96};
         inputNames.push_back("template_image");
         inputTensors.push_back(Ort::Value::CreateTensor<float>(
             memoryInfo, const_cast<float*>(inverseInput.data()), inverseInput.size(),
-            inputShape.data(), inputShape.size()));
+            inverseInputShape.data(), inverseInputShape.size()));
     }
 
     std::vector<const char*> outputNames = {
