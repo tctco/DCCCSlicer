@@ -142,7 +142,7 @@ def test_dccccore_path_can_disable_auto_download(tmp_path: Path, monkeypatch: py
 
 
 def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    asset_root = tmp_path / "asset" / "DCCCcore-4.4.0-ubuntu-latest-x64"
+    asset_root = tmp_path / "asset" / "DCCCcore-4.5.0-alpha-ubuntu-latest-x64"
     asset_root.mkdir(parents=True)
     exe = asset_root / "DCCCcore"
     exe.write_text("#!/usr/bin/env sh\nprintf 'fake dccccore\\n'\n")
@@ -150,7 +150,7 @@ def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pyte
 
     archive = tmp_path / "DCCCcore.zip"
     with zipfile.ZipFile(archive, "w") as zf:
-        zf.write(exe, "DCCCcore-4.4.0-ubuntu-latest-x64/DCCCcore")
+        zf.write(exe, "DCCCcore-4.5.0-alpha-ubuntu-latest-x64/DCCCcore")
 
     monkeypatch.delenv("DCCCPY_DCCCCORE", raising=False)
     monkeypatch.setenv("DCCCPY_AUTO_DOWNLOAD", "1")
@@ -179,18 +179,35 @@ def test_find_existing_dccccore_checks_macos_runtime_package(
     monkeypatch.setitem(sys.modules, "dcccpy_macos_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 
-    assert find_existing_dccccore() == exe
+    assert find_existing_dccccore("4.4.0") == exe
 
 
 def test_linux_arm64_release_platform() -> None:
     assert release_platform("linux-arm64") == "ubuntu-latest-arm64"
 
 
-def test_default_release_targets_dccccore_440() -> None:
-    assert DCCCCORE_VERSION == "4.4.0"
+def test_default_release_targets_dccccore_450_alpha() -> None:
+    assert DCCCCORE_VERSION == "4.5.0-alpha"
     assert release_url(platform_name="ubuntu-latest-x64").endswith(
-        "/releases/download/v4.4.0/DCCCcore-4.4.0-ubuntu-latest-x64.zip"
+        "/releases/download/v4.5.0-alpha/DCCCcore-4.5.0-alpha-ubuntu-latest-x64.zip"
     )
+
+
+def test_alpha_ignores_incompatible_stable_runtime_package(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path / "stable-runtime"
+    root.mkdir()
+    exe = root / "DCCCcore"
+    exe.write_text("#!/usr/bin/env sh\n")
+    exe.chmod(0o755)
+
+    module = types.SimpleNamespace(dccccore_root=lambda: root)
+    monkeypatch.setitem(sys.modules, "dcccpy_linux_runtime", module)
+    monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
+
+    assert find_existing_dccccore() is None
 
 
 def test_find_existing_dccccore_checks_linux_arm64_runtime_package(
@@ -207,7 +224,7 @@ def test_find_existing_dccccore_checks_linux_arm64_runtime_package(
     monkeypatch.setitem(sys.modules, "dcccpy_linux_arm64_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 
-    assert find_existing_dccccore() == exe
+    assert find_existing_dccccore("4.4.0") == exe
 
 
 def test_cli_forwards_raw_args(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:

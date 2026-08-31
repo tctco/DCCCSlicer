@@ -4,7 +4,7 @@ from conan import ConanFile
 
 class AppConan(ConanFile):
     name = "DCCCcore"
-    version = "4.4.0"
+    version = "4.5.0-alpha"
     settings = "os", "arch", "compiler", "build_type"
     generators = "CMakeDeps", "CMakeToolchain"
 

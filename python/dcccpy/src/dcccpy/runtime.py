@@ -12,7 +12,10 @@ from pathlib import Path
 from typing import Iterable
 
 
-DCCCCORE_VERSION = "4.4.0"
+DCCCCORE_VERSION = "4.5.0-alpha"
+# The optional runtime wheels currently contain the last stable native core.
+# Do not let an installed older runtime shadow the release selected above.
+RUNTIME_PACKAGE_DCCCCORE_VERSION = "4.4.0"
 RELEASE_REPO = "tctco/DCCCSlicer"
 
 
@@ -99,7 +102,10 @@ def _main_package_vendor_dirs() -> list[Path]:
     return [vendor_root / key, vendor_root]
 
 
-def _runtime_package_dirs() -> list[Path]:
+def _runtime_package_dirs(version: str = DCCCCORE_VERSION) -> list[Path]:
+    if version != RUNTIME_PACKAGE_DCCCCORE_VERSION:
+        return []
+
     roots: list[Path] = []
     try:
         import dcccpy_linux_runtime
@@ -141,7 +147,7 @@ def find_existing_dccccore(version: str = DCCCCORE_VERSION) -> Path | None:
         if candidate.exists():
             return candidate
 
-    for candidate in candidate_executables(_runtime_package_dirs()):
+    for candidate in candidate_executables(_runtime_package_dirs(version)):
         if candidate.exists():
             return candidate
 

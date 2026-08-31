@@ -175,7 +175,7 @@ the calculation again.
 Release wheels should vendor the matching `DCCCcore` runtime tree before build:
 
 ```bash
-python scripts/vendor_dccccore.py --version 4.4.0 --release-platform ubuntu-latest-x64
+python scripts/vendor_dccccore.py --version 4.5.0-alpha --release-platform ubuntu-latest-x64
 python -m build --wheel
 ```
 
@@ -183,7 +183,7 @@ The Linux ARM64 runtime package uses the corresponding release asset:
 
 ```bash
 cd python/dcccpy-linux-arm64-runtime
-python scripts/vendor_dccccore.py --version 4.4.0 --release-platform ubuntu-latest-arm64
+python scripts/vendor_dccccore.py --version 4.5.0-alpha --release-platform ubuntu-latest-arm64
 python -m build --wheel
 ```
 
@@ -201,11 +201,11 @@ The preferred distribution layout is:
 
 ## Packaging note
 
-The runtime wheels use a PyPI-size profile for DCCCcore version 4.4.0. They omit the
+The current optional runtime wheels use a PyPI-size profile for DCCCcore version 4.4.0. They omit the
 `fast_and_acc` registration model/config and the ADAD decoupler ONNX ensemble,
 while keeping the default spatial normalization model and assets needed by
 common Centiloid/CenTauR/CenTauRz workflows.
 
-The plain `dcccpy` package remains slim and downloads the full matching
-`DCCCcore` release package from GitHub on first use when no installed runtime is
-available.
+The `dcccpy` 0.3 alpha package targets DCCCcore 4.5.0-alpha. Because the optional
+runtime wheels still contain DCCCcore 4.4.0, this alpha wrapper ignores those
+older runtimes and downloads the full matching GitHub release on first use.
