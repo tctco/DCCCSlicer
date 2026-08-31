@@ -18,9 +18,14 @@ public:
     std::unordered_map<std::string, std::vector<float>> predict(
         const std::vector<float>& originalImg, 
         const std::vector<float>& movingImg,
-        const std::vector<float>& templateImg);
+        const std::vector<float>& templateImg,
+        const std::vector<float>* templateImage = nullptr);
+
+    bool supportsInverseWarp() const;
 
 private:
     Ort::Env env_;
     Ort::Session* session_;
+    bool hasTemplateImageInput_ = false;
+    bool hasInverseWarpOutput_ = false;
 };

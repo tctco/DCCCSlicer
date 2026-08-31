@@ -7,14 +7,15 @@
 #include <stdexcept>
 #include <vector>
 
-VoxelMorphNormalizer::VoxelMorphNormalizer(ConfigurationPtr config)
+VoxelMorphNormalizer::VoxelMorphNormalizer(ConfigurationPtr config,
+                                           const std::string& modelName)
     : config_(config) {
     if (!config_) {
         throw std::invalid_argument("VoxelMorphNormalizer requires configuration");
     }
 
     nonlinearEngine_ = std::make_unique<NonlinearRegistrationEngine>(
-        config_->getModelPath("affine_voxelmorph"));
+        config_->getModelPath(modelName));
     paddedTemplate_ = Common::nifti::loadImage(config_->getTemplatePath("padded"));
 }
 
@@ -44,6 +45,52 @@ ImageType::Pointer VoxelMorphNormalizer::normalize(ImageType::Pointer rigidImage
     warpedImage->SetSpacing(paddedTemplate_->GetSpacing());
 
     return cropMNI(warpedImage);
+}
+
+ImageType::Pointer VoxelMorphNormalizer::inverseWarp(
+    ImageType::Pointer rigidImage, ImageType::Pointer templateImage) {
+    if (!rigidImage || !templateImage) {
+        throw std::invalid_argument(
+            "Inverse VoxelMorph warping requires a rigid image and template image");
+    }
+    if (!nonlinearEngine_->supportsInverseWarp()) {
+        throw std::runtime_error(
+            "The configured affine VoxelMorph model does not expose inverse_warped");
+    }
+
+    ImageType::Pointer paddedImage =
+        Common::image::resampleToMatch(paddedTemplate_, rigidImage);
+    paddedImage = ImagePreprocessor::preprocessForVoxelMorph(paddedImage);
+    saveDebugImage(paddedImage, "elastic_preprocessed");
+
+    ImageType::Pointer paddedOriginalImage =
+        Common::image::resampleToMatch(paddedTemplate_, rigidImage);
+    ImageType::Pointer paddedTemplateImage =
+        Common::image::resampleToMatch(paddedTemplate_, templateImage);
+
+    std::vector<float> paddedImageData;
+    std::vector<float> paddedTemplateData;
+    std::vector<float> paddedOriginalData;
+    std::vector<float> templateImageData;
+    Common::image::extractImageData(paddedImage, paddedImageData);
+    Common::image::extractImageData(paddedTemplate_, paddedTemplateData);
+    Common::image::extractImageData(paddedOriginalImage, paddedOriginalData);
+    Common::image::extractImageData(paddedTemplateImage, templateImageData);
+
+    auto prediction = nonlinearEngine_->predict(
+        paddedOriginalData, paddedImageData, paddedTemplateData, &templateImageData);
+    const auto inverseIt = prediction.find("inverse_warped");
+    if (inverseIt == prediction.end()) {
+        throw std::runtime_error("Inverse VoxelMorph prediction did not return inverse_warped");
+    }
+
+    ImageType::Pointer inverseImage = Common::image::createImageFromVector(
+        inverseIt->second, paddedTemplate_->GetLargestPossibleRegion().GetSize());
+    inverseImage->SetDirection(paddedTemplate_->GetDirection());
+    inverseImage->SetOrigin(paddedTemplate_->GetOrigin());
+    inverseImage->SetSpacing(paddedTemplate_->GetSpacing());
+    saveDebugImage(inverseImage, "inverse_warped");
+    return inverseImage;
 }
 
 ImageType::Pointer VoxelMorphNormalizer::cropMNI(ImageType::Pointer image) {

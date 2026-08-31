@@ -99,6 +99,8 @@ target_sources(DCCCcore PRIVATE
     core/services/IFileService.h
     core/services/FileService.h
     core/services/FileService.cpp
+    core/extraction/BrainExtractor.h
+    core/extraction/BrainExtractor.cpp
     core/di/Bootstrap.h
     core/di/Bootstrap.cpp
     metrics/shared/MetricTypes.h
@@ -189,6 +191,8 @@ target_sources(DCCCcore PRIVATE
     spatialNormalizations/adni/AdniPetCoreCLI.cpp
     spatialNormalizations/rigid/RigidCLI.h
     spatialNormalizations/rigid/RigidCLI.cpp
+    spatialNormalizations/brain/BrainExtractionCLI.h
+    spatialNormalizations/brain/BrainExtractionCLI.cpp
     spatialNormalizations/pet/PetMotionCorrectionCLI.h
     spatialNormalizations/pet/PetMotionCorrectionCLI.cpp
 )

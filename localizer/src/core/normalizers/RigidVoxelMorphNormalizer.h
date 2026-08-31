@@ -25,7 +25,7 @@ public:
     ImageType::Pointer normalizeIterativeRigidOnly(ImageType::Pointer inputImage, int maxIter = 5, float threshold = 2.0f);
     ImageType::Pointer normalizeIterative(ImageType::Pointer inputImage, int maxIter = 5, float threshold = 2.0f);
     ImageType::Pointer normalizeManualFOV(ImageType::Pointer inputImage);
-    
+
     /**
      * @brief Normalize with both rigid and spatial results
      */

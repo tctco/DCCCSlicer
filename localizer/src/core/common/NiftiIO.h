@@ -7,8 +7,8 @@
 namespace Common::nifti {
 
 void saveImage(ImageType::Pointer image, const std::string& filename);
+void saveBinaryImage(BinaryImageType::Pointer image, const std::string& filename);
 ImageType::Pointer loadImage(const std::string& filename);
 
 }  // namespace Common::nifti
-
 

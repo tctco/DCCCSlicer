@@ -106,6 +106,31 @@ void saveImage(ImageType::Pointer image, const std::string& filename) {
     }
 }
 
+void saveBinaryImage(BinaryImageType::Pointer image, const std::string& filename) {
+    using WriterType = itk::ImageFileWriter<BinaryImageType>;
+    const std::filesystem::path outputPath = Common::path::fromUtf8(filename);
+    std::filesystem::path stagingPath;
+    bool requiresCopyBack = false;
+
+    WriterType::Pointer writer = WriterType::New();
+    writer->SetFileName(writablePathForItk(outputPath, stagingPath, requiresCopyBack));
+    writer->SetInput(image);
+    try {
+        writer->Update();
+
+        if (requiresCopyBack) {
+            std::filesystem::copy_file(
+                stagingPath, outputPath, std::filesystem::copy_options::overwrite_existing);
+            cleanupTempFile(stagingPath);
+        }
+    } catch (...) {
+        if (requiresCopyBack) {
+            cleanupTempFile(stagingPath);
+        }
+        throw;
+    }
+}
+
 ImageType::Pointer loadImage(const std::string& filename) {
     const std::filesystem::path inputPath = Common::path::fromUtf8(filename);
     std::filesystem::path stagingPath;

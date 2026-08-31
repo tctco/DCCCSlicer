@@ -9,9 +9,13 @@
 
 class VoxelMorphNormalizer {
 public:
-    explicit VoxelMorphNormalizer(ConfigurationPtr config);
+    explicit VoxelMorphNormalizer(
+        ConfigurationPtr config,
+        const std::string& modelName = "affine_voxelmorph");
 
     ImageType::Pointer normalize(ImageType::Pointer rigidImage);
+    ImageType::Pointer inverseWarp(ImageType::Pointer rigidImage,
+                                   ImageType::Pointer templateImage);
     void setDebugMode(bool enable, const std::string& basePath = "");
 
 private:

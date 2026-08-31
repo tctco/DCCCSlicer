@@ -5,6 +5,7 @@
 [models]
 rigid = "assets/models/registration/rigid.onnx"
 affine_voxelmorph = "assets/models/registration/affine_voxelmorph.onnx"
+affine_voxelmorph_inverse = "assets/models/registration/affine_voxelmorph.onnx"
 abeta_decoupler = [
   "assets/models/decouple/abeta_fold0.onnx",
   "assets/models/decouple/abeta_fold1.onnx",
@@ -37,6 +38,7 @@ centiloid_voi = "assets/nii/voi_ctx_2mm.nii"
 whole_cerebral = "assets/nii/voi_WhlCbl_2mm.nii"
 centaur_voi = "assets/nii/CenTauR.nii"
 centaur_ref = "assets/nii/voi_CerebGry_tau_2mm.nii"
+padded_brain = "assets/nii/padded_brain_mask.nii.gz"
 centaurz_mesial_temporal_voi = "assets/nii/centaurz/Mesial_CenTauR.nii.gz"
 centaurz_meta_temporal_voi = "assets/nii/centaurz/Meta_CenTauR.nii.gz"
 centaurz_temporo_parietal_voi = "assets/nii/centaurz/TP_CenTauR.nii.gz"

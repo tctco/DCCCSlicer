@@ -5,6 +5,7 @@
 [models]
 rigid = "assets/models/registration/rigid.onnx"
 affine_voxelmorph = "assets/models/registration/affine_voxelmorph.fast_and_acc.onnx"
+affine_voxelmorph_inverse = "assets/models/registration/affine_voxelmorph.fast_and_acc.onnx"
 abeta_decoupler = [
   "assets/models/decouple/abeta_fold0.onnx",
   "assets/models/decouple/abeta_fold1.onnx",
@@ -32,6 +33,7 @@ centiloid_voi = "assets/nii/voi_ctx_2mm.nii"
 whole_cerebral = "assets/nii/voi_WhlCbl_2mm.nii"
 centaur_voi = "assets/nii/CenTauR.nii"
 centaur_ref = "assets/nii/voi_CerebGry_tau_2mm.nii"
+padded_brain = "assets/nii/padded_brain_mask.nii.gz"
 
 # Processing parameters
 [processing]

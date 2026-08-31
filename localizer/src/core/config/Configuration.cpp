@@ -21,6 +21,8 @@ void Configuration::initializeDefaults() {
   configMap["models.rigid"] = "models/registration/rigid.onnx";
   configMap["models.affine_voxelmorph"] =
       "models/registration/affine_voxelmorph.onnx";
+  configMap["models.affine_voxelmorph_inverse"] =
+      "models/registration/affine_voxelmorph.onnx";
   configMap["models.abeta_decoupler"] = "models/decouple/abeta.onnx";
   configMap["models.tau_decoupler"] = "models/decouple/tau.onnx";
 
@@ -36,6 +38,7 @@ void Configuration::initializeDefaults() {
   configMap["masks.whole_cerebral"] = "nii/voi_WhlCbl_2mm.nii";
   configMap["masks.centaur_voi"] = "nii/CenTauR.nii";
   configMap["masks.centaur_ref"] = "nii/voi_CerebGry_tau_2mm.nii";
+  configMap["masks.padded_brain"] = "nii/padded_brain_mask.nii.gz";
   configMap["masks.centaurz_mesial_temporal_voi"] =
       "assets/nii/centaurz/Mesial_CenTauR.nii.gz";
   configMap["masks.centaurz_meta_temporal_voi"] =
@@ -293,6 +296,8 @@ void Configuration::printAllConfigurations() const {
   std::cout << "rigid: " << getModelPath("rigid") << std::endl;
   std::cout << "affine_voxelmorph: " << getModelPath("affine_voxelmorph")
             << std::endl;
+  std::cout << "affine_voxelmorph_inverse: "
+            << getModelPath("affine_voxelmorph_inverse") << std::endl;
   std::cout << "abeta_decoupler: " << getModelPath("abeta_decoupler")
             << std::endl;
   std::cout << "tau_decoupler: " << getModelPath("tau_decoupler") << std::endl;
@@ -308,6 +313,7 @@ void Configuration::printAllConfigurations() const {
   std::cout << "whole_cerebral: " << getMaskPath("whole_cerebral") << std::endl;
   std::cout << "centaur_voi: " << getMaskPath("centaur_voi") << std::endl;
   std::cout << "centaur_ref: " << getMaskPath("centaur_ref") << std::endl;
+  std::cout << "padded_brain: " << getMaskPath("padded_brain") << std::endl;
 
   std::cout << "\n--- Processing Parameters ---" << std::endl;
   std::cout << "max_iter: " << getInt("processing.max_iter") << std::endl;

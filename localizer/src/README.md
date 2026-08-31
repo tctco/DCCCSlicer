@@ -126,6 +126,19 @@ Perform spatial standardization without metric calculation:
 ./DCCCcore rigid --input pet.nii --output rigid.nii --iterative
 ```
 
+### Whole-brain extraction
+
+The inverse-capable VoxelMorph model can warp the bundled MNI brain mask back
+to the input voxel grid and use it for skull stripping. The binary mask is
+written beside the extracted image as `brain_mask.nii.gz` unless
+`--mask-output` is specified.
+
+```bash
+./DCCCcore brain-extract --input structural_mri.nii.gz --output brain.nii.gz
+./DCCCcore brain-extract --input structural_mri.nii.gz --output brain.nii.gz \
+  --mask-output subject_brain_mask.nii.gz
+```
+
 `pet-motion-correct` accepts general 4D `X × Y × Z × N` PET data. It uses frame 0
 as the fixed reference, independently registers every later frame to it with a
 six-degree-of-freedom rigid transform, and writes the arithmetic mean as a 3D
