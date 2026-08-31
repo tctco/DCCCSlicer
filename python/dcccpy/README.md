@@ -107,6 +107,23 @@ dcccpy centiloid --input amyloid_pet.nii --output result.nii
 dcccpy adni-pet-core --input fdg.nii --output fdg_adni.nii --tracer fdg
 ```
 
+The Python helper accepts the same staged exports. Pass one integer or a
+sequence; only the requested stages are saved:
+
+```python
+dcccpy.adni_pet_core(
+    "dynamic_pet.nii.gz",
+    "standardized.nii.gz",
+    tracer="fdg",
+    level=(1, 3),
+)
+```
+
+Level 1 is the motion-corrected dynamic PET, Level 2 is its 3D average, and
+Level 3 is the standardized ADNI-style image. The output argument names the
+highest selected level, while selected lower levels receive `_Coreg` or
+`_Coreg_Avg` suffixes.
+
 `adni_pet_core` deliberately has no default tracer. Use `abeta`, `tau`, or
 `fdg`; FDG selects ADNI's iterative masked global-mean normalization, while
 Aβ and tau retain cerebellar gray normalization.

@@ -113,6 +113,14 @@ Perform spatial standardization without metric calculation:
 # FDG uses ADNI's iterative masked global-mean normalization
 ./DCCCcore adni-pet-core --input fdg_pet.nii --output normalized_fdg.nii --tracer fdg
 
+# Export only motion-corrected dynamic PET (Level 1)
+./DCCCcore adni-pet-core --input dynamic_pet.nii.gz --output coreg.nii.gz \
+  --tracer fdg --level 1
+
+# Export selected stages only: Level 1 and Level 3 (Level 2 remains temporary)
+./DCCCcore adni-pet-core --input dynamic_pet.nii.gz --output standardized.nii.gz \
+  --tracer fdg --level 1 3
+
 # Multi-frame PET motion correction and arithmetic mean
 ./DCCCcore pet-motion-correct --input dynamic_pet.nii.gz --output averaged_pet.nii.gz
 
@@ -159,9 +167,23 @@ from the subject's Talairach transform rather than an `aseg` voxel label.
 `pet-motion-correct` accepts general 4D `X × Y × Z × N` PET data. It uses frame 0
 as the fixed reference, independently registers every later frame to it with a
 six-degree-of-freedom rigid transform, and writes the arithmetic mean as a 3D
-float NIfTI. A 4D input passed to `adni-pet-core` is automatically motion-corrected
-and averaged before the existing ADNI PET Core pipeline; 3D input follows the
-existing tracer-specific pipeline unchanged. `adni-pet-core` requires
+float NIfTI. `adni-pet-core --level` accepts any combination of the following
+stages (default: `3`):
+
+1. `Coreg`: motion-corrected 4D dynamic PET; requires a 4D input.
+2. `Coreg, Avg`: the averaged 3D PET. A 3D input is treated as already averaged.
+3. `Coreg, Avg, Std Img and Vox Siz`: the existing tracer-specific standardized output.
+
+Only explicitly selected levels are retained. The pipeline calculates required
+intermediate data but does not export it; for example, `--level 1 3` writes
+Levels 1 and 3 but not Level 2. Processing stops after the highest requested
+level, so `--level 1` does not allocate an average image or initialize spatial
+normalization, while `--level 1 2` stops before spatial normalization. For a
+single input, `--output` names the highest selected level; any selected lower
+outputs use `_Coreg` or `_Coreg_Avg` before the NIfTI extension. Batch outputs
+use `_Coreg.nii`, `_Coreg_Avg.nii`, and `_ADNI_style.nii` respectively.
+
+`adni-pet-core` requires
 `--tracer abeta`, `--tracer tau`, or `--tracer fdg`. Aβ and tau use cerebellar
 gray normalization. FDG first scales the entire image to mean 1, then repeatedly
 excludes voxels below 0.5 and rescales the retained voxels to mean 1 until the
@@ -196,6 +218,7 @@ Run the ADAD decoupling-based metric:
 | `--skip-normalization` | Skip spatial normalization step |
 | `--suvr` | Include SUVr values in metric outputs |
 | `--tracer <tracer>` | Required tracer type. `adni-pet-core` accepts `abeta`, `tau`, or `fdg`; `fillstates` accepts `fbp`, `fdg`, or `ftp`. |
+| `--level <1\|2\|3> [...]` | `adni-pet-core` export levels. Accepts one or more values and defaults to Level 3. Only selected levels are saved. |
 | `--modality <type>` | Decoupling modality for `adad` (`abeta` or `tau`). |
 
 ## Developers

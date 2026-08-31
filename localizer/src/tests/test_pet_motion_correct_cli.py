@@ -179,6 +179,115 @@ class TestPetMotionCorrectCLI:
 
 
 class TestAdniPetCoreDynamicInput:
+    def test_level_one_exports_coreg_dynamic_and_skips_normalization(
+        self, run_subprocess, tmp_path
+    ):
+        frames = np.stack([_synthetic_pet((20, 21, 22))])
+        input_path = tmp_path / "dynamic.nii.gz"
+        output_path = tmp_path / "coreg.nii.gz"
+        _write_float_nifti(input_path, frames)
+
+        result = run_subprocess([
+            "adni-pet-core",
+            "--input", str(input_path),
+            "--output", str(output_path),
+            "--tracer", "fdg",
+            "--level", "1",
+            "--config", str(tmp_path / "does-not-exist.toml"),
+        ])
+
+        assert result.returncode == 0, result.stderr
+        corrected, dimension = _read_nifti(output_path)
+        assert dimension == 4
+        np.testing.assert_allclose(corrected, frames, rtol=0.0, atol=1e-6)
+        assert "stopped before Level 3" in result.stdout
+
+    def test_combined_levels_export_coreg_and_average_then_stop(
+        self, run_subprocess, tmp_path
+    ):
+        frame = _synthetic_pet((20, 21, 22))
+        input_path = tmp_path / "dynamic.nii.gz"
+        output_path = tmp_path / "average.nii.gz"
+        coreg_path = tmp_path / "average_Coreg.nii.gz"
+        _write_float_nifti(input_path, frame[np.newaxis, ...])
+
+        result = run_subprocess([
+            "adni-pet-core",
+            "--input", str(input_path),
+            "--output", str(output_path),
+            "--tracer", "fdg",
+            "--level", "1", "2",
+            "--config", str(tmp_path / "does-not-exist.toml"),
+        ])
+
+        assert result.returncode == 0, result.stderr
+        corrected, corrected_dimension = _read_nifti(coreg_path)
+        averaged, averaged_dimension = _read_nifti(output_path)
+        assert corrected_dimension == 4
+        assert averaged_dimension == 3
+        np.testing.assert_allclose(corrected[0], frame, rtol=0.0, atol=1e-6)
+        np.testing.assert_allclose(averaged, frame, rtol=0.0, atol=1e-6)
+        assert "Level 1 Coreg saved" in result.stdout
+        assert "Level 2 Coreg, Avg saved" in result.stdout
+        assert "stopped before Level 3" in result.stdout
+
+    def test_level_two_accepts_an_already_averaged_3d_input(
+        self, run_subprocess, tmp_path
+    ):
+        frame = _synthetic_pet((20, 21, 22))
+        input_path = tmp_path / "average_input.nii.gz"
+        output_path = tmp_path / "average_output.nii.gz"
+        _write_float_nifti(input_path, frame)
+
+        result = run_subprocess([
+            "adni-pet-core",
+            "--input", str(input_path),
+            "--output", str(output_path),
+            "--tracer", "fdg",
+            "--level", "2",
+            "--config", str(tmp_path / "does-not-exist.toml"),
+        ])
+
+        assert result.returncode == 0, result.stderr
+        averaged, dimension = _read_nifti(output_path)
+        assert dimension == 3
+        np.testing.assert_allclose(averaged, frame, rtol=0.0, atol=1e-6)
+        assert "already averaged input" in result.stdout
+
+    def test_level_one_rejects_3d_input(self, run_subprocess, tmp_path):
+        input_path = tmp_path / "static.nii.gz"
+        output_path = tmp_path / "coreg.nii.gz"
+        _write_float_nifti(input_path, _synthetic_pet((20, 21, 22)))
+
+        result = run_subprocess([
+            "adni-pet-core",
+            "--input", str(input_path),
+            "--output", str(output_path),
+            "--tracer", "fdg",
+            "--level", "1",
+        ])
+
+        assert result.returncode != 0
+        assert "level 1 (Coreg) requires a 4D dynamic PET input" in result.stderr
+        assert not output_path.exists()
+
+    def test_rejects_unknown_export_level(self, run_subprocess, tmp_path):
+        input_path = tmp_path / "dynamic.nii.gz"
+        output_path = tmp_path / "output.nii.gz"
+        _write_float_nifti(input_path, _synthetic_pet((20, 21, 22))[np.newaxis, ...])
+
+        result = run_subprocess([
+            "adni-pet-core",
+            "--input", str(input_path),
+            "--output", str(output_path),
+            "--tracer", "fdg",
+            "--level", "4",
+        ])
+
+        assert result.returncode != 0
+        assert "allowed options: {1, 2, 3}" in result.stderr
+        assert not output_path.exists()
+
     def test_single_frame_4d_runs_automatic_preprocessing(
         self, run_subprocess, tmp_path, test_files
     ):
@@ -192,10 +301,13 @@ class TestAdniPetCoreDynamicInput:
         dynamic_path = tmp_path / "single_frame_dynamic.nii"
         dynamic_path.write_bytes(dynamic_header)
         output_path = tmp_path / "adni_dynamic_output.nii"
+        coreg_path = tmp_path / "adni_dynamic_output_Coreg.nii"
+        unrequested_average_path = tmp_path / "adni_dynamic_output_Coreg_Avg.nii"
 
         result = run_subprocess([
             "adni-pet-core", "--input", str(dynamic_path), "--output", str(output_path),
             "--tracer", "fdg",
+            "--level", "1", "3",
         ])
 
         assert result.returncode == 0, (
@@ -204,3 +316,6 @@ class TestAdniPetCoreDynamicInput:
         assert "4D PET detected" in result.stdout
         _, output_dimension = _read_nifti(output_path)
         assert output_dimension == 3
+        _, coreg_dimension = _read_nifti(coreg_path)
+        assert coreg_dimension == 4
+        assert not unrequested_average_path.exists()

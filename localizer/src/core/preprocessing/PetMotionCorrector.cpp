@@ -217,7 +217,8 @@ unsigned int PetMotionCorrector::inspectImageDimension(const std::string& inputP
 }
 
 PetMotionCorrectionResult PetMotionCorrector::correct(const std::string& inputPath,
-                                                      bool retainCorrectedDynamic) const {
+                                                      bool retainCorrectedDynamic,
+                                                      bool calculateAverage) const {
     const unsigned int dimension = inspectImageDimension(inputPath);
     if (dimension != 4) {
         if (dimension == 3) {
@@ -245,16 +246,20 @@ PetMotionCorrectionResult PetMotionCorrector::correct(const std::string& inputPa
         result.correctedDynamicImage = allocateCorrectedDynamic(dynamicImage);
     }
     auto fixed = extractFrame(dynamicImage, 0);
-    result.averagedImage = ImageType::New();
-    result.averagedImage->SetRegions(fixed->GetLargestPossibleRegion());
-    result.averagedImage->CopyInformation(fixed);
-    result.averagedImage->Allocate();
-    result.averagedImage->FillBuffer(0.0f);
+    if (calculateAverage) {
+        result.averagedImage = ImageType::New();
+        result.averagedImage->SetRegions(fixed->GetLargestPossibleRegion());
+        result.averagedImage->CopyInformation(fixed);
+        result.averagedImage->Allocate();
+        result.averagedImage->FillBuffer(0.0f);
+    }
 
     if (result.correctedDynamicImage) {
         copyFrameIntoDynamic(fixed, result.correctedDynamicImage, 0);
     }
-    addFrameToAverage(fixed, result.averagedImage);
+    if (result.averagedImage) {
+        addFrameToAverage(fixed, result.averagedImage);
+    }
     result.motion.push_back({0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 
     for (unsigned int frame = 1; frame < numberOfFrames; ++frame) {
@@ -264,7 +269,9 @@ PetMotionCorrectionResult PetMotionCorrector::correct(const std::string& inputPa
         if (result.correctedDynamicImage) {
             copyFrameIntoDynamic(corrected, result.correctedDynamicImage, frame);
         }
-        addFrameToAverage(corrected, result.averagedImage);
+        if (result.averagedImage) {
+            addFrameToAverage(corrected, result.averagedImage);
+        }
 
         const auto parameters = transform->GetParameters();
         result.motion.push_back({frame,
@@ -272,17 +279,23 @@ PetMotionCorrectionResult PetMotionCorrector::correct(const std::string& inputPa
                                  parameters[0], parameters[1], parameters[2]});
     }
 
-    const float scale = 1.0f / static_cast<float>(numberOfFrames);
-    itk::ImageRegionIterator<ImageType> averageIt(
-        result.averagedImage, result.averagedImage->GetLargestPossibleRegion());
-    for (averageIt.GoToBegin(); !averageIt.IsAtEnd(); ++averageIt) {
-        averageIt.Set(averageIt.Get() * scale);
+    if (result.averagedImage) {
+        const float scale = 1.0f / static_cast<float>(numberOfFrames);
+        itk::ImageRegionIterator<ImageType> averageIt(
+            result.averagedImage, result.averagedImage->GetLargestPossibleRegion());
+        for (averageIt.GoToBegin(); !averageIt.IsAtEnd(); ++averageIt) {
+            averageIt.Set(averageIt.Get() * scale);
+        }
     }
     return result;
 }
 
 void PetMotionCorrector::saveAveragedImage(const PetMotionCorrectionResult& result,
                                            const std::string& outputPath) {
+    if (!result.averagedImage) {
+        throw std::invalid_argument(
+            "An averaged PET image was not calculated for this motion-correction run.");
+    }
     Common::nifti::saveImage(result.averagedImage, outputPath);
 }
 

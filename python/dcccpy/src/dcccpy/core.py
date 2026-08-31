@@ -411,12 +411,23 @@ def adni_pet_core(
     output: str | os.PathLike[str] | None = None,
     *,
     tracer: str,
+    level: int | Sequence[int] = 3,
     **kwargs: object,
 ) -> DCCCResult:
-    """Run tracer-specific ADNI PET Core preprocessing."""
+    """Run tracer-specific ADNI PET Core preprocessing.
+
+    ``level`` accepts one level or a sequence: 1 exports Coreg, 2 exports
+    Coreg/Avg, and 3 exports the standardized image. Multiple levels produce
+    multiple files while ``output`` identifies the deepest requested level.
+    """
 
     extra_args = list(kwargs.pop("extra_args", ()))
     extra_args.extend(["--tracer", tracer])
+    levels = (level,) if isinstance(level, int) else tuple(level)
+    if not levels or any(value not in (1, 2, 3) for value in levels):
+        raise ValueError("level must contain one or more of: 1, 2, 3")
+    if levels != (3,):
+        extra_args.extend(["--level", *(str(value) for value in levels)])
     return _spatial_command("adni-pet-core", input, output, extra_args=extra_args, **kwargs)
 
 

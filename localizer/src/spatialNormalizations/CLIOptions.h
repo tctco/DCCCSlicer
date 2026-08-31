@@ -2,6 +2,7 @@
 
 #include <argparse/argparse.hpp>
 #include <string>
+#include <vector>
 
 struct BaseCommandOptions {
     std::string inputPath;
@@ -21,6 +22,7 @@ struct SpatialNormalizationOptions {
 struct NormalizeCommandOptions : BaseCommandOptions, SpatialNormalizationOptions {
     bool enableADNIStyle = false;
     std::string tracer;
+    std::vector<int> adniPetLevels{3};
     std::string normalizationMethod = "rigid_voxelmorph";
 };
 

@@ -293,6 +293,43 @@ def test_adni_pet_core_python_api_has_no_default_tracer() -> None:
         dcccpy.adni_pet_core("pet.nii")
 
 
+def test_adni_pet_core_forwards_combined_export_levels(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_args = tmp_path / "args.txt"
+    fake_exe = make_fake_dccccore(tmp_path)
+    input_path = tmp_path / "pet.nii"
+    output_path = tmp_path / "adni.nii"
+    input_path.write_text("fake PET")
+    monkeypatch.setenv("DCCCPY_DCCCCORE", str(fake_exe))
+    monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(fake_args))
+
+    result = dcccpy.adni_pet_core(
+        input_path, output_path, tracer="fdg", level=(1, 2)
+    )
+
+    assert result.returncode == 0
+    assert fake_args.read_text().splitlines() == [
+        "adni-pet-core",
+        "--input",
+        str(input_path),
+        "--output",
+        str(output_path),
+        "--tracer",
+        "fdg",
+        "--level",
+        "1",
+        "2",
+    ]
+
+
+@pytest.mark.parametrize("level", [(), 0, 4, (1, 4)])
+def test_adni_pet_core_rejects_invalid_export_levels(level: object) -> None:
+    with pytest.raises(ValueError, match="level must contain"):
+        dcccpy.adni_pet_core("pet.nii", tracer="fdg", level=level)  # type: ignore[arg-type]
+
+
 def test_run_adds_macos_security_hint_for_blocked_runtime(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

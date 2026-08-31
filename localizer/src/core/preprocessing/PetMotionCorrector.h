@@ -31,7 +31,8 @@ public:
     static unsigned int inspectImageDimension(const std::string& inputPath);
 
     PetMotionCorrectionResult correct(const std::string& inputPath,
-                                      bool retainCorrectedDynamic = false) const;
+                                      bool retainCorrectedDynamic = false,
+                                      bool calculateAverage = true) const;
 
     static void saveAveragedImage(const PetMotionCorrectionResult& result,
                                   const std::string& outputPath);

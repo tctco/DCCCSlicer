@@ -1,6 +1,7 @@
 #include "AdniPetCoreCLI.h"
 #include "../CLIOptions.h"
 #include "../../core/common/Filesystem.h"
+#include "../../core/common/NiftiIO.h"
 #include "../../core/common/NormalizationContracts.h"
 #include "../../core/common/PathUtils.h"
 #include "../../core/config/Version.h"
@@ -9,6 +10,8 @@
 #include "../../core/services/IFileService.h"
 #include "../../core/services/ISpatialNormalizationService.h"
 #include "../../metrics/shared/BatchLogging.h"
+#include <algorithm>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <exception>
@@ -28,6 +31,69 @@ struct RunConfig {
 };
 
 constexpr const char* kBatchOutputSuffix = "_ADNI_style.nii";
+constexpr const char* kCoregSuffix = "_Coreg.nii";
+constexpr const char* kAveragedSuffix = "_Coreg_Avg.nii";
+
+using OutputPaths = std::array<std::string, 4>;
+
+int deepestLevel(const NormalizeCommandOptions& options) {
+    return *std::max_element(options.adniPetLevels.begin(), options.adniPetLevels.end());
+}
+
+bool exportsLevel(const NormalizeCommandOptions& options, int level) {
+    return std::find(options.adniPetLevels.begin(), options.adniPetLevels.end(), level) !=
+           options.adniPetLevels.end();
+}
+
+std::string addNiftiSuffix(const std::string& outputPath, const std::string& suffix) {
+    const auto path = Common::path::fromUtf8(outputPath);
+    const auto baseName = Common::fs::baseNameFromNifti(path);
+    std::string extension = Common::path::toUtf8(path.extension());
+    if (extension == ".gz" && path.stem().extension() == ".nii") {
+        extension = ".nii.gz";
+    }
+    return Common::path::toUtf8(
+        path.parent_path() / Common::path::fromUtf8(baseName + suffix + extension));
+}
+
+OutputPaths singleOutputPaths(const NormalizeCommandOptions& options) {
+    OutputPaths paths;
+    const int deepest = deepestLevel(options);
+    for (const int level : options.adniPetLevels) {
+        if (level == deepest) {
+            paths[level] = options.outputPath;
+        } else if (level == 1) {
+            paths[level] = addNiftiSuffix(options.outputPath, "_Coreg");
+        } else if (level == 2) {
+            paths[level] = addNiftiSuffix(options.outputPath, "_Coreg_Avg");
+        }
+    }
+    return paths;
+}
+
+OutputPaths batchOutputPaths(const NormalizeCommandOptions& options,
+                             const std::filesystem::path& inputFile,
+                             const std::filesystem::path& outputDir) {
+    OutputPaths paths;
+    if (exportsLevel(options, 1)) {
+        paths[1] = Common::fs::buildOutputPath(inputFile, outputDir, kCoregSuffix);
+    }
+    if (exportsLevel(options, 2)) {
+        paths[2] = Common::fs::buildOutputPath(inputFile, outputDir, kAveragedSuffix);
+    }
+    if (exportsLevel(options, 3)) {
+        paths[3] = Common::fs::buildOutputPath(inputFile, outputDir, kBatchOutputSuffix);
+    }
+    return paths;
+}
+
+void ensureOutputDirectories(const OutputPaths& paths) {
+    for (std::size_t level = 1; level < paths.size(); ++level) {
+        if (!paths[level].empty() && !Common::fs::ensureParentDirectory(paths[level])) {
+            throw std::runtime_error("Failed to prepare output directory: " + paths[level]);
+        }
+    }
+}
 
 class TemporaryNiftiFile {
 public:
@@ -69,29 +135,14 @@ std::string resolveDebugBasePath(const NormalizeCommandOptions& options, const s
 int processSingleImage(const NormalizeCommandOptions& options,
                        const RunConfig& config,
                        const std::string& inputPath,
-                       const std::string& outputPath,
+                       const OutputPaths& outputPaths,
                        const std::string& debugOutputBasePath,
                        bool logCompletion) {
-    BootstrapOptions bootstrapOptions;
-    bootstrapOptions.configPath = options.configPath;
-    bootstrapOptions.enableConfigDebug = options.enableDebugOutput;
-    bootstrapOptions.logTag = config.logTag;
-
-    auto container = Pipeline::buildCoreContainer(bootstrapOptions);
-    SpatialNormalizationRequest request;
-    request.inputPath = inputPath;
-    request.skip = false;
-    request.options.useIterativeRigid = options.useIterativeRigid;
-    request.options.useManualFOV = options.useManualFOV;
-    request.options.enableDebugOutput = options.enableDebugOutput;
-    request.options.debugOutputBasePath = debugOutputBasePath;
-    request.options.enableAdniPetCore = config.enableAdniPetCore;
-    request.options.adniPetTracer = options.tracer;
-    auto spatialService = container->resolve<ISpatialNormalizationService>();
-    auto fileService = container->resolve<IFileService>();
-
     try {
+        ensureOutputDirectories(outputPaths);
+        const int deepest = deepestLevel(options);
         TemporaryNiftiFile averagedDynamicInput;
+        std::string normalizationInputPath = inputPath;
         const unsigned int inputDimension =
             Pipeline::Preprocessing::PetMotionCorrector::inspectImageDimension(inputPath);
         if (inputDimension == 4) {
@@ -99,22 +150,77 @@ int processSingleImage(const NormalizeCommandOptions& options,
                       << "] 4D PET detected; motion-correcting each frame to frame 0 before ADNI processing."
                       << std::endl;
             Pipeline::Preprocessing::PetMotionCorrector corrector;
-            auto motionResult = corrector.correct(inputPath);
-            request.inputPath = averagedDynamicInput.create();
-            Pipeline::Preprocessing::PetMotionCorrector::saveAveragedImage(
-                motionResult, request.inputPath);
+            const bool retainCorrectedDynamic = exportsLevel(options, 1);
+            const bool calculateAverage = deepest >= 2;
+            auto motionResult = corrector.correct(
+                inputPath, retainCorrectedDynamic, calculateAverage);
+
+            if (retainCorrectedDynamic) {
+                Pipeline::Preprocessing::PetMotionCorrector::saveCorrectedDynamicImage(
+                    motionResult, outputPaths[1]);
+                std::cout << "[" << config.logTag << "] Level 1 Coreg saved to "
+                          << outputPaths[1] << std::endl;
+            }
+            if (calculateAverage) {
+                normalizationInputPath = exportsLevel(options, 2)
+                                             ? outputPaths[2]
+                                             : averagedDynamicInput.create();
+                Pipeline::Preprocessing::PetMotionCorrector::saveAveragedImage(
+                    motionResult, normalizationInputPath);
+                if (exportsLevel(options, 2)) {
+                    std::cout << "[" << config.logTag << "] Level 2 Coreg, Avg saved to "
+                              << outputPaths[2] << std::endl;
+                }
+            }
         } else if (inputDimension != 3) {
             throw std::invalid_argument(
                 "adni-pet-core requires a 3D or 4D PET input; received a " +
                 std::to_string(inputDimension) + "D image.");
+        } else {
+            if (exportsLevel(options, 1)) {
+                throw std::invalid_argument(
+                    "ADNI PET Core level 1 (Coreg) requires a 4D dynamic PET input.");
+            }
+            if (exportsLevel(options, 2)) {
+                auto inputImage = Common::nifti::loadImage(inputPath);
+                Common::nifti::saveImage(inputImage, outputPaths[2]);
+                std::cout << "[" << config.logTag
+                          << "] 3D PET treated as an already averaged input; Level 2 saved to "
+                          << outputPaths[2] << std::endl;
+            }
         }
 
+        if (deepest < 3) {
+            if (logCompletion) {
+                std::cout << "\n[" << config.logTag << "] Requested export level(s) complete; "
+                          << "stopped before Level 3 spatial standardization." << std::endl;
+            }
+            return EXIT_SUCCESS;
+        }
+
+        BootstrapOptions bootstrapOptions;
+        bootstrapOptions.configPath = options.configPath;
+        bootstrapOptions.enableConfigDebug = options.enableDebugOutput;
+        bootstrapOptions.logTag = config.logTag;
+        auto container = Pipeline::buildCoreContainer(bootstrapOptions);
+        auto spatialService = container->resolve<ISpatialNormalizationService>();
+        auto fileService = container->resolve<IFileService>();
+
+        SpatialNormalizationRequest request;
+        request.inputPath = normalizationInputPath;
+        request.skip = false;
+        request.options.useIterativeRigid = options.useIterativeRigid;
+        request.options.useManualFOV = options.useManualFOV;
+        request.options.enableDebugOutput = options.enableDebugOutput;
+        request.options.debugOutputBasePath = debugOutputBasePath;
+        request.options.enableAdniPetCore = config.enableAdniPetCore;
+        request.options.adniPetTracer = options.tracer;
         auto output = spatialService->normalize(request);
-        fileService->saveNormalizedImage({output.spatiallyNormalizedImage, outputPath});
+        fileService->saveNormalizedImage({output.spatiallyNormalizedImage, outputPaths[3]});
         if (logCompletion) {
             std::cout << "\n[" << config.logTag
-                      << "] ADNI PET Core normalization complete. Output saved to "
-                      << outputPath << std::endl;
+                      << "] Level 3 Coreg, Avg, Std Img and Vox Siz saved to "
+                      << outputPaths[3] << std::endl;
         }
     } catch (const std::exception& ex) {
         std::cerr << "[" << config.logTag << "] Processing failed: " << ex.what() << std::endl;
@@ -127,18 +233,12 @@ int processSingleImage(const NormalizeCommandOptions& options,
 int runSingleNormalization(const NormalizeCommandOptions& options,
                            const RunConfig& config,
                            const std::string& fullCommand) {
-    if (!Common::fs::ensureParentDirectory(options.outputPath)) {
-        std::cerr << "[" << config.logTag << "] Failed to prepare output directory: "
-                  << options.outputPath << std::endl;
-        return EXIT_FAILURE;
-    }
-
     std::cout << "[" << config.logTag << "] Starting processing: " << fullCommand << std::endl;
     const int result = processSingleImage(
         options,
         config,
         options.inputPath,
-        options.outputPath,
+        singleOutputPaths(options),
         options.debugOutputBasePath,
         true);
     if (result != EXIT_SUCCESS) {
@@ -197,18 +297,18 @@ int runBatchNormalization(const NormalizeCommandOptions& options,
 
     for (const auto& inputFile : files) {
         summary.processed++;
-        const std::string outputPath =
-            Common::fs::buildOutputPath(inputFile, outputDir, kBatchOutputSuffix);
+        const auto outputPaths = batchOutputPaths(options, inputFile, outputDir);
         const std::string inputPath = Common::path::toUtf8(inputFile);
         const std::string fileLabel = Common::path::toUtf8(inputFile.filename());
-        const std::string debugBase = resolveDebugBasePath(options, outputPath);
+        const std::string debugBase = resolveDebugBasePath(
+            options, outputPaths[deepestLevel(options)]);
 
         try {
             const int result = processSingleImage(
                 options,
                 config,
                 inputPath,
-                outputPath,
+                outputPaths,
                 debugBase,
                 false);
             if (result != EXIT_SUCCESS) {
@@ -266,6 +366,13 @@ public:
             .help("PET tracer class (abeta, tau, or fdg); FDG uses iterative global mean normalization")
             .required()
             .choices("abeta", "tau", "fdg");
+        parser.add_argument("--level")
+            .help("Export one or more ADNI preprocessing levels: 1=Coreg, "
+                  "2=Coreg Avg, 3=Coreg Avg Std Img and Vox Siz (default: 3)")
+            .nargs(argparse::nargs_pattern::at_least_one)
+            .append()
+            .scan<'i', int>()
+            .choices(1, 2, 3);
     }
 
     int execute(const argparse::ArgumentParser& parser, const std::string& fullCommand) override {
@@ -281,6 +388,12 @@ public:
         options.bidsPattern = parser.get<std::string>("--bids");
         options.enableADNIStyle = true;
         options.tracer = parser.get<std::string>("--tracer");
+        options.adniPetLevels =
+            parser.present<std::vector<int>>("--level").value_or(std::vector<int>{3});
+        std::sort(options.adniPetLevels.begin(), options.adniPetLevels.end());
+        options.adniPetLevels.erase(
+            std::unique(options.adniPetLevels.begin(), options.adniPetLevels.end()),
+            options.adniPetLevels.end());
 
         if (!options.batchMode && options.bidsPattern.empty()) {
             setupDebugOutput(options);
