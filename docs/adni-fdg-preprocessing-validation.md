@@ -1,7 +1,8 @@
 # ADNI FDG preprocessing compatibility note
 
 DCCCcore 4.4 adds tracer-aware `adni-pet-core` preprocessing. The command now
-requires `--tracer abeta`, `--tracer tau`, or `--tracer fdg`. FDG uses the
+requires `--tracer abeta`, `--tracer tau`, `--tracer fdg`, or `--tracer dat`.
+FDG uses the
 iterative global-mean procedure described by the ADNI PET Core: scale the whole
 image to mean 1, exclude voxels below 0.5, rescale retained voxels to mean 1,
 and repeat until the excluded voxel count is unchanged.

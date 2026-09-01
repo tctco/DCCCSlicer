@@ -72,6 +72,11 @@ def test_files():
         "input": TEST_DIR / "test_batch" / "input.nii",
         "voi_mask": TEST_DIR / "voi_mask.nii",
         "ref_mask": TEST_DIR / "ref_mask.nii",
+        "four_frames": TEST_DIR / "4frames.nii.gz",
+        "dat_occipital_ref": (
+            TEST_DIR.parent / "assets" / "nii" / "DAT" / "DAT_Occipital_Ref.nii"
+        ),
+        "config": TEST_DIR.parent / "assets" / "configs" / "config.toml",
     }
 
     # missing = [name for name, path in files.items() if name != "test_dir" and not path.exists()]
@@ -79,4 +84,3 @@ def test_files():
     #    pytest.skip(f"Required test files missing: {', '.join(missing)}")
 
     return files
-

@@ -116,6 +116,7 @@ dcccpy.adni_pet_core(
     "standardized.nii.gz",
     tracer="fdg",
     level=(1, 3),
+    deface=True,
 )
 ```
 
@@ -124,9 +125,14 @@ Level 3 is the standardized ADNI-style image. The output argument names the
 highest selected level, while selected lower levels receive `_Coreg` or
 `_Coreg_Avg` suffixes.
 
-`adni_pet_core` deliberately has no default tracer. Use `abeta`, `tau`, or
-`fdg`; FDG selects ADNI's iterative masked global-mean normalization, while
-Aβ and tau retain cerebellar gray normalization.
+Set `deface=True` to zero facial voxels in every selected output. Motion and
+spatial transforms are estimated from the original PET before the privacy mask
+is applied, so the flag does not change the estimated alignment.
+
+`adni_pet_core` deliberately has no default tracer. Use `abeta`, `tau`, `fdg`,
+or `dat`; FDG selects ADNI's iterative masked global-mean normalization,
+DAT selects PPMI-style occipital-reference normalization, and Aβ/tau retain
+cerebellar gray normalization.
 
 Downloaded ADNI preprocessed FDG DICOMs can differ slightly from the exact
 published iteration. See the repository's
@@ -175,7 +181,7 @@ the calculation again.
 Release wheels should vendor the matching `DCCCcore` runtime tree before build:
 
 ```bash
-python scripts/vendor_dccccore.py --version 4.5.0-alpha --release-platform ubuntu-latest-x64
+python scripts/vendor_dccccore.py --version 4.5.1-alpha --release-platform ubuntu-latest-x64
 python -m build --wheel
 ```
 
@@ -183,7 +189,7 @@ The Linux ARM64 runtime package uses the corresponding release asset:
 
 ```bash
 cd python/dcccpy-linux-arm64-runtime
-python scripts/vendor_dccccore.py --version 4.5.0-alpha --release-platform ubuntu-latest-arm64
+python scripts/vendor_dccccore.py --version 4.5.1-alpha --release-platform ubuntu-latest-arm64
 python -m build --wheel
 ```
 
@@ -201,7 +207,7 @@ The preferred distribution layout is:
 
 ## Packaging note
 
-The current optional runtime wheels use a PyPI-size profile for DCCCcore version 4.5.0-alpha. They omit the
+The current optional runtime wheels use a PyPI-size profile for DCCCcore version 4.5.1-alpha. They omit the
 `fast_and_acc` registration model/config and the ADAD decoupler ONNX ensemble,
 while keeping the default spatial normalization model and assets needed by
 common Centiloid/CenTauR/CenTauRz workflows.

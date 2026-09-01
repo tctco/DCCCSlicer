@@ -87,8 +87,10 @@ ImageType::Pointer SpatialNormalizationService::prepareAdniPetCoreImage(ImageTyp
         throw std::invalid_argument("ADNI PET Core preparation requires rigid and normalized images");
     }
 
-    if (tracer != "abeta" && tracer != "tau" && tracer != "fdg") {
-        throw std::invalid_argument("ADNI PET Core tracer must be one of: abeta, tau, fdg");
+    if (tracer != "abeta" && tracer != "tau" && tracer != "fdg" &&
+        tracer != "dat") {
+        throw std::invalid_argument(
+            "ADNI PET Core tracer must be one of: abeta, tau, fdg, dat");
     }
 
     ImageType::Pointer adniTemplate = Common::nifti::loadImage(config_->getTemplatePath("adni_pet_core"));
@@ -102,17 +104,30 @@ ImageType::Pointer SpatialNormalizationService::prepareAdniPetCoreImage(ImageTyp
         return adniStyle;
     }
 
-    ImageType::Pointer cerebellarGray = Common::nifti::loadImage(config_->getMaskPath("cerebral_gray"));
-    if (!cerebellarGray) {
-        throw std::runtime_error("Failed to load cerebellar gray mask");
+    const bool useOccipitalReference = tracer == "dat";
+    const std::string referenceMaskName =
+        useOccipitalReference ? "dat_occipital_ref" : "cerebral_gray";
+    ImageType::Pointer referenceMask =
+        Common::nifti::loadImage(config_->getMaskPath(referenceMaskName));
+    if (!referenceMask) {
+        throw std::runtime_error(
+            useOccipitalReference
+                ? "Failed to load DAT occipital reference mask"
+                : "Failed to load cerebellar gray mask");
     }
 
-    ImageType::Pointer resampled = Common::image::resampleToMatch(cerebellarGray, normalizedImage);
-    const double meanGray = Common::image::calculateMeanInMask(resampled, cerebellarGray);
-    if (meanGray <= 0.0) {
-        throw std::runtime_error("Invalid cerebellar gray mean value for ADNI PET Core normalization");
+    ImageType::Pointer resampled =
+        Common::image::resampleToMatch(referenceMask, normalizedImage);
+    const double referenceMean =
+        Common::image::calculateMeanInMask(resampled, referenceMask);
+    if (referenceMean <= 0.0) {
+        throw std::runtime_error(
+            useOccipitalReference
+                ? "Invalid occipital mean value for DAT PPMI-style normalization"
+                : "Invalid cerebellar gray mean value for ADNI PET Core normalization");
     }
-    Common::image::divideVoxelsByValue(adniStyle, static_cast<float>(meanGray));
+    Common::image::divideVoxelsByValue(
+        adniStyle, static_cast<float>(referenceMean));
     return adniStyle;
 }
 

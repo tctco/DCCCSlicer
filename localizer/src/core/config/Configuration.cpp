@@ -38,6 +38,8 @@ void Configuration::initializeDefaults() {
   configMap["masks.whole_cerebral"] = "nii/voi_WhlCbl_2mm.nii";
   configMap["masks.centaur_voi"] = "nii/CenTauR.nii";
   configMap["masks.centaur_ref"] = "nii/voi_CerebGry_tau_2mm.nii";
+  configMap["masks.dat_occipital_ref"] =
+      "assets/nii/DAT/DAT_Occipital_Ref.nii";
   configMap["masks.padded_brain"] = "nii/padded_brain_mask.nii.gz";
   configMap["masks.padded_aparc_aseg"] =
       "nii/adni_regions/padded_aparc_aseg.nii.gz";

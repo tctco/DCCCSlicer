@@ -142,7 +142,7 @@ def test_dccccore_path_can_disable_auto_download(tmp_path: Path, monkeypatch: py
 
 
 def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    asset_root = tmp_path / "asset" / "DCCCcore-4.5.0-alpha-ubuntu-latest-x64"
+    asset_root = tmp_path / "asset" / "DCCCcore-4.5.1-alpha-ubuntu-latest-x64"
     asset_root.mkdir(parents=True)
     exe = asset_root / "DCCCcore"
     exe.write_text("#!/usr/bin/env sh\nprintf 'fake dccccore\\n'\n")
@@ -150,7 +150,7 @@ def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pyte
 
     archive = tmp_path / "DCCCcore.zip"
     with zipfile.ZipFile(archive, "w") as zf:
-        zf.write(exe, "DCCCcore-4.5.0-alpha-ubuntu-latest-x64/DCCCcore")
+        zf.write(exe, "DCCCcore-4.5.1-alpha-ubuntu-latest-x64/DCCCcore")
 
     monkeypatch.delenv("DCCCPY_DCCCCORE", raising=False)
     monkeypatch.setenv("DCCCPY_AUTO_DOWNLOAD", "1")
@@ -175,7 +175,7 @@ def test_find_existing_dccccore_checks_macos_runtime_package(
     exe.write_text("#!/usr/bin/env sh\n")
     exe.chmod(0o755)
 
-    module = types.SimpleNamespace(DCCCCORE_VERSION="4.5.0-alpha", dccccore_root=lambda: root)
+    module = types.SimpleNamespace(DCCCCORE_VERSION="4.5.1-alpha", dccccore_root=lambda: root)
     monkeypatch.setitem(sys.modules, "dcccpy_macos_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 
@@ -187,9 +187,9 @@ def test_linux_arm64_release_platform() -> None:
 
 
 def test_default_release_targets_dccccore_450_alpha() -> None:
-    assert DCCCCORE_VERSION == "4.5.0-alpha"
+    assert DCCCCORE_VERSION == "4.5.1-alpha"
     assert release_url(platform_name="ubuntu-latest-x64").endswith(
-        "/releases/download/v4.5.0-alpha/DCCCcore-4.5.0-alpha-ubuntu-latest-x64.zip"
+        "/releases/download/v4.5.1-alpha/DCCCcore-4.5.1-alpha-ubuntu-latest-x64.zip"
     )
 
 
@@ -220,7 +220,7 @@ def test_find_existing_dccccore_checks_linux_arm64_runtime_package(
     exe.write_text("#!/usr/bin/env sh\n")
     exe.chmod(0o755)
 
-    module = types.SimpleNamespace(DCCCCORE_VERSION="4.5.0-alpha", dccccore_root=lambda: root)
+    module = types.SimpleNamespace(DCCCCORE_VERSION="4.5.1-alpha", dccccore_root=lambda: root)
     monkeypatch.setitem(sys.modules, "dcccpy_linux_arm64_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 
@@ -345,6 +345,38 @@ def test_adni_pet_core_forwards_combined_export_levels(
 def test_adni_pet_core_rejects_invalid_export_levels(level: object) -> None:
     with pytest.raises(ValueError, match="level must contain"):
         dcccpy.adni_pet_core("pet.nii", tracer="fdg", level=level)  # type: ignore[arg-type]
+
+
+def test_adni_pet_core_forwards_deface(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_args = tmp_path / "args.txt"
+    fake_exe = make_fake_dccccore(tmp_path)
+    input_path = tmp_path / "pet.nii"
+    output_path = tmp_path / "adni.nii"
+    input_path.write_text("fake PET")
+    monkeypatch.setenv("DCCCPY_DCCCCORE", str(fake_exe))
+    monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(fake_args))
+
+    result = dcccpy.adni_pet_core(
+        input_path, output_path, tracer="fdg", level=(1, 3), deface=True
+    )
+
+    assert result.returncode == 0
+    assert fake_args.read_text().splitlines() == [
+        "adni-pet-core",
+        "--input",
+        str(input_path),
+        "--output",
+        str(output_path),
+        "--tracer",
+        "fdg",
+        "--level",
+        "1",
+        "3",
+        "--deface",
+    ]
 
 
 def test_run_adds_macos_security_hint_for_blocked_runtime(

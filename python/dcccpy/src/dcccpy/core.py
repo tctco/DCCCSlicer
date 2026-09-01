@@ -412,6 +412,7 @@ def adni_pet_core(
     *,
     tracer: str,
     level: int | Sequence[int] = 3,
+    deface: bool = False,
     **kwargs: object,
 ) -> DCCCResult:
     """Run tracer-specific ADNI PET Core preprocessing.
@@ -419,6 +420,7 @@ def adni_pet_core(
     ``level`` accepts one level or a sequence: 1 exports Coreg, 2 exports
     Coreg/Avg, and 3 exports the standardized image. Multiple levels produce
     multiple files while ``output`` identifies the deepest requested level.
+    Set ``deface=True`` to zero facial voxels after transform estimation.
     """
 
     extra_args = list(kwargs.pop("extra_args", ()))
@@ -428,6 +430,8 @@ def adni_pet_core(
         raise ValueError("level must contain one or more of: 1, 2, 3")
     if levels != (3,):
         extra_args.extend(["--level", *(str(value) for value in levels)])
+    if deface:
+        extra_args.append("--deface")
     return _spatial_command("adni-pet-core", input, output, extra_args=extra_args, **kwargs)
 
 

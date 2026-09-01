@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 REPO = "tctco/DCCCSlicer"
-DEFAULT_VERSION = "4.5.0-alpha"
+DEFAULT_VERSION = "4.5.1-alpha"
 DEFAULT_RELEASE_PLATFORM = "macos-latest-arm64"
 
 EXCLUDE_PROFILES = {

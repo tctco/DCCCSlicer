@@ -70,6 +70,14 @@ def _nifti_datatype(path):
     return struct.unpack_from(f"{endian}h", header, 70)[0]
 
 
+def _nifti_spacing(path):
+    with _open_nifti(path, "rb") as source:
+        header = source.read(108)
+    endian = "<" if struct.unpack_from("<i", header, 0)[0] == 348 else ">"
+    dimension = struct.unpack_from(f"{endian}h", header, 40)[0]
+    return struct.unpack_from(f"{endian}{dimension}f", header, 80)
+
+
 def _synthetic_pet(shape=(32, 32, 32)):
     z, y, x = np.indices(shape, dtype=np.float32)
     return (

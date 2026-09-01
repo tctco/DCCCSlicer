@@ -1,7 +1,7 @@
 # CMakeList.txt: DCCCcore Refactored Version
 cmake_minimum_required(VERSION 3.21)
 
-project(DCCCcore VERSION 4.5.0)
+project(DCCCcore VERSION 4.5.1)
 set(DCCCCORE_VERSION_SUFFIX "-alpha")
 set(DCCCCORE_SOFTWARE_VERSION "${PROJECT_VERSION}${DCCCCORE_VERSION_SUFFIX}")
 
@@ -68,6 +68,8 @@ target_sources(DCCCcore PRIVATE
 target_sources(DCCCcore PRIVATE
     core/preprocessing/ImagePreprocessor.h
     core/preprocessing/ImagePreprocessor.cpp
+    core/preprocessing/ImageDefacer.h
+    core/preprocessing/ImageDefacer.cpp
     core/preprocessing/PetMotionCorrector.h
     core/preprocessing/PetMotionCorrector.cpp
 )

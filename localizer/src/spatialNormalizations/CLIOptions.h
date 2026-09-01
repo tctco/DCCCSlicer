@@ -23,6 +23,7 @@ struct NormalizeCommandOptions : BaseCommandOptions, SpatialNormalizationOptions
     bool enableADNIStyle = false;
     std::string tracer;
     std::vector<int> adniPetLevels{3};
+    bool deface = false;
     std::string normalizationMethod = "rigid_voxelmorph";
 };
 

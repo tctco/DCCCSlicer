@@ -4,7 +4,7 @@ import shutil
 
 import numpy as np
 
-from test_pet_motion_correct_cli import _read_nifti
+from test_pet_motion_correct_cli import _nifti_spacing, _read_nifti
 
 
 def _expected_adad_outputs(base: Path):
@@ -154,7 +154,7 @@ class TestAdniPetCoreCLI:
         )
 
         assert result.returncode != 0
-        assert "allowed options: {abeta, tau, fdg}" in result.stderr
+        assert "allowed options: {abeta, tau, fdg, dat}" in result.stderr
         assert not output_path.exists()
 
     def test_fdg_uses_iterative_global_mean_normalization(
@@ -181,6 +181,94 @@ class TestAdniPetCoreCLI:
         assert np.count_nonzero((data > 0.0) & (data < 0.5)) > 0
         assert retained.mean() == pytest.approx(1.0, abs=1e-5)
         assert data.mean() < 0.5
+
+    def test_dat_ppmi_levels_one_and_two_use_four_frame_input(
+        self, run_subprocess, tmp_path, test_files
+    ):
+        output_path = tmp_path / "dat_Coreg_Avg.nii.gz"
+        coreg_path = tmp_path / "dat_Coreg_Avg_Coreg.nii.gz"
+
+        result = run_subprocess(
+            [
+                "adni-pet-core",
+                "--input", str(test_files["four_frames"]),
+                "--output", str(output_path),
+                "--tracer", "dat",
+                "--level", "1", "2",
+            ]
+        )
+
+        assert result.returncode == 0, result.stderr
+        _, coreg_dimension = _read_nifti(coreg_path)
+        _, average_dimension = _read_nifti(output_path)
+        assert coreg_dimension == 4
+        assert average_dimension == 3
+        assert "stopped before Level 3" in result.stdout
+
+    def test_dat_ppmi_level_three_uses_occipital_reference(
+        self, run_subprocess, tmp_path, test_files
+    ):
+        output_path = tmp_path / "dat_ppmi.nii.gz"
+        result = run_subprocess(
+            [
+                "adni-pet-core",
+                "--input", str(test_files["four_frames"]),
+                "--output", str(output_path),
+                "--tracer", "dat",
+                "--level", "3",
+                "--config", str(test_files["config"]),
+            ]
+        )
+
+        assert result.returncode == 0, result.stderr
+        data, dimension = _read_nifti(output_path)
+        occipital_mask, mask_dimension = _read_nifti(
+            test_files["dat_occipital_ref"]
+        )
+        assert dimension == mask_dimension == 3
+        assert occipital_mask.shape == (91, 109, 91)
+        assert _nifti_spacing(test_files["dat_occipital_ref"]) == (
+            2.0,
+            2.0,
+            2.0,
+        )
+        assert (
+            'dat_occipital_ref = "assets/nii/DAT/DAT_Occipital_Ref.nii"'
+            in test_files["config"].read_text()
+        )
+        assert np.count_nonzero(occipital_mask == 1) > 0
+        assert np.isfinite(data).all()
+        assert np.count_nonzero(data > 0.0) > 0
+
+    def test_deface_applies_to_dynamic_coreg_and_average(
+        self, run_subprocess, tmp_path, test_files
+    ):
+        output_path = tmp_path / "defaced_average.nii.gz"
+        coreg_path = tmp_path / "defaced_average_Coreg.nii.gz"
+
+        result = run_subprocess(
+            [
+                "adni-pet-core",
+                "--input", str(test_files["four_frames"]),
+                "--output", str(output_path),
+                "--tracer", "dat",
+                "--level", "1", "2",
+                "--deface",
+                "--config", str(test_files["config"]),
+            ]
+        )
+
+        assert result.returncode == 0, result.stderr
+        corrected, corrected_dimension = _read_nifti(coreg_path)
+        averaged, averaged_dimension = _read_nifti(output_path)
+        assert corrected_dimension == 4
+        assert averaged_dimension == 3
+        np.testing.assert_allclose(
+            averaged, corrected.mean(axis=0), rtol=1e-5, atol=1e-6
+        )
+        assert np.count_nonzero(np.all(corrected == 0.0, axis=0)) > 0
+        assert "Level 1 Coreg defaced and saved" in result.stdout
+        assert "Level 2 Coreg, Avg defaced and saved" in result.stdout
 
     def test_batch_mode_outputs(self, run_subprocess, tmp_path, test_files):
         input_dir = tmp_path / "adni_pet_core_batch_inputs"

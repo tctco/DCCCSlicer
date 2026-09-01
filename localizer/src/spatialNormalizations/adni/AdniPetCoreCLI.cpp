@@ -6,6 +6,8 @@
 #include "../../core/common/PathUtils.h"
 #include "../../core/config/Version.h"
 #include "../../core/di/Bootstrap.h"
+#include "../../core/interfaces/IConfiguration.h"
+#include "../../core/preprocessing/ImageDefacer.h"
 #include "../../core/preprocessing/PetMotionCorrector.h"
 #include "../../core/services/IFileService.h"
 #include "../../core/services/ISpatialNormalizationService.h"
@@ -17,6 +19,7 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <regex>
 #include <stdexcept>
 #include <vector>
@@ -133,8 +136,7 @@ std::string resolveDebugBasePath(const NormalizeCommandOptions& options, const s
 }
 
 int processSingleImage(const NormalizeCommandOptions& options,
-                       const RunConfig& config,
-                       const std::string& inputPath,
+                       const RunConfig& config, const std::string& inputPath,
                        const OutputPaths& outputPaths,
                        const std::string& debugOutputBasePath,
                        bool logCompletion) {
@@ -143,32 +145,74 @@ int processSingleImage(const NormalizeCommandOptions& options,
         const int deepest = deepestLevel(options);
         TemporaryNiftiFile averagedDynamicInput;
         std::string normalizationInputPath = inputPath;
+        Pipeline::Preprocessing::PetMotionCorrectionResult motionResult;
+        ImageType::Pointer averagedImageForDefacing;
+
+        std::shared_ptr<ServiceContainer> container;
+        ConfigurationPtr coreConfig;
+        std::unique_ptr<Pipeline::Preprocessing::ImageDefacer> defacer;
+        ImageType::Pointer templateBrainMask;
+        ImageType::Pointer templateKeepMask;
+        const auto prepareCore = [&]() {
+            if (!container) {
+                BootstrapOptions bootstrapOptions;
+                bootstrapOptions.configPath = options.configPath;
+                bootstrapOptions.enableConfigDebug = options.enableDebugOutput;
+                bootstrapOptions.logTag = config.logTag;
+                container = Pipeline::buildCoreContainer(bootstrapOptions);
+                coreConfig = container->resolve<IConfiguration>();
+            }
+        };
+        const auto prepareDefacer = [&]() {
+            if (defacer) {
+                return;
+            }
+            prepareCore();
+            templateBrainMask = Common::nifti::loadImage(
+                coreConfig->getMaskPath("padded_brain"));
+            defacer = std::make_unique<Pipeline::Preprocessing::ImageDefacer>(
+                coreConfig);
+            templateKeepMask =
+                defacer->createTemplateKeepMask(templateBrainMask);
+        };
+
         const unsigned int inputDimension =
-            Pipeline::Preprocessing::PetMotionCorrector::inspectImageDimension(inputPath);
+            Pipeline::Preprocessing::PetMotionCorrector::inspectImageDimension(
+                inputPath);
         if (inputDimension == 4) {
-            std::cout << "[" << config.logTag
-                      << "] 4D PET detected; motion-correcting each frame to frame 0 before ADNI processing."
-                      << std::endl;
+            std::cout
+                << "[" << config.logTag
+                << "] 4D PET detected; motion-correcting each frame to frame 0 "
+                   "before ADNI processing."
+                << std::endl;
             Pipeline::Preprocessing::PetMotionCorrector corrector;
             const bool retainCorrectedDynamic = exportsLevel(options, 1);
-            const bool calculateAverage = deepest >= 2;
-            auto motionResult = corrector.correct(
-                inputPath, retainCorrectedDynamic, calculateAverage);
+            const bool calculateAverage = deepest >= 2 || options.deface;
+            motionResult = corrector.correct(inputPath, retainCorrectedDynamic,
+                                             calculateAverage);
 
-            if (retainCorrectedDynamic) {
-                Pipeline::Preprocessing::PetMotionCorrector::saveCorrectedDynamicImage(
-                    motionResult, outputPaths[1]);
+            if (retainCorrectedDynamic && !options.deface) {
+                Pipeline::Preprocessing::PetMotionCorrector::
+                    saveCorrectedDynamicImage(motionResult, outputPaths[1]);
                 std::cout << "[" << config.logTag << "] Level 1 Coreg saved to "
                           << outputPaths[1] << std::endl;
             }
             if (calculateAverage) {
-                normalizationInputPath = exportsLevel(options, 2)
-                                             ? outputPaths[2]
-                                             : averagedDynamicInput.create();
-                Pipeline::Preprocessing::PetMotionCorrector::saveAveragedImage(
-                    motionResult, normalizationInputPath);
-                if (exportsLevel(options, 2)) {
-                    std::cout << "[" << config.logTag << "] Level 2 Coreg, Avg saved to "
+                averagedImageForDefacing = motionResult.averagedImage;
+                if (deepest >= 3) {
+                    normalizationInputPath =
+                        exportsLevel(options, 2) && !options.deface
+                            ? outputPaths[2]
+                            : averagedDynamicInput.create();
+                    Pipeline::Preprocessing::PetMotionCorrector::
+                        saveAveragedImage(motionResult, normalizationInputPath);
+                } else if (exportsLevel(options, 2) && !options.deface) {
+                    Pipeline::Preprocessing::PetMotionCorrector::
+                        saveAveragedImage(motionResult, outputPaths[2]);
+                }
+                if (exportsLevel(options, 2) && !options.deface) {
+                    std::cout << "[" << config.logTag
+                              << "] Level 2 Coreg, Avg saved to "
                               << outputPaths[2] << std::endl;
                 }
             }
@@ -178,32 +222,67 @@ int processSingleImage(const NormalizeCommandOptions& options,
                 std::to_string(inputDimension) + "D image.");
         } else {
             if (exportsLevel(options, 1)) {
-                throw std::invalid_argument(
-                    "ADNI PET Core level 1 (Coreg) requires a 4D dynamic PET input.");
+                throw std::invalid_argument("ADNI PET Core level 1 (Coreg) "
+                                            "requires a 4D dynamic PET input.");
             }
             if (exportsLevel(options, 2)) {
                 auto inputImage = Common::nifti::loadImage(inputPath);
-                Common::nifti::saveImage(inputImage, outputPaths[2]);
+                if (options.deface) {
+                    averagedImageForDefacing = inputImage;
+                } else {
+                    Common::nifti::saveImage(inputImage, outputPaths[2]);
+                    std::cout << "[" << config.logTag
+                              << "] 3D PET treated as an already averaged "
+                                 "input; Level 2 "
+                                 "saved to "
+                              << outputPaths[2] << std::endl;
+                }
+            }
+        }
+
+        if (options.deface &&
+            (exportsLevel(options, 1) || exportsLevel(options, 2))) {
+            if (!averagedImageForDefacing) {
+                throw std::runtime_error(
+                    "Defacing Level 1/2 requires an averaged PET image");
+            }
+            prepareDefacer();
+            auto nativeKeepMask = defacer->createNativeKeepMask(
+                averagedImageForDefacing, templateBrainMask, 0.5f,
+                options.useIterativeRigid, options.useManualFOV);
+            if (exportsLevel(options, 1)) {
+                Pipeline::Preprocessing::ImageDefacer::applyMask(
+                    motionResult.correctedDynamicImage, nativeKeepMask);
+                Pipeline::Preprocessing::PetMotionCorrector::
+                    saveCorrectedDynamicImage(motionResult, outputPaths[1]);
                 std::cout << "[" << config.logTag
-                          << "] 3D PET treated as an already averaged input; Level 2 saved to "
+                          << "] Level 1 Coreg defaced and saved to "
+                          << outputPaths[1] << std::endl;
+            }
+            if (exportsLevel(options, 2)) {
+                Pipeline::Preprocessing::ImageDefacer::applyMask(
+                    averagedImageForDefacing, nativeKeepMask);
+                Common::nifti::saveImage(averagedImageForDefacing,
+                                         outputPaths[2]);
+                std::cout << "[" << config.logTag
+                          << "] Level 2 Coreg, Avg defaced and saved to "
                           << outputPaths[2] << std::endl;
             }
         }
 
         if (deepest < 3) {
             if (logCompletion) {
-                std::cout << "\n[" << config.logTag << "] Requested export level(s) complete; "
-                          << "stopped before Level 3 spatial standardization." << std::endl;
+                std::cout << "\n[" << config.logTag
+                          << "] Requested export level(s) complete; "
+                          << "stopped before Level 3 spatial standardization."
+                          << std::endl;
             }
             return EXIT_SUCCESS;
         }
 
-        BootstrapOptions bootstrapOptions;
-        bootstrapOptions.configPath = options.configPath;
-        bootstrapOptions.enableConfigDebug = options.enableDebugOutput;
-        bootstrapOptions.logTag = config.logTag;
-        auto container = Pipeline::buildCoreContainer(bootstrapOptions);
-        auto spatialService = container->resolve<ISpatialNormalizationService>();
+        prepareCore();
+        auto spatialService =
+            container->resolve<ISpatialNormalizationService>();
         auto fileService = container->resolve<IFileService>();
 
         SpatialNormalizationRequest request;
@@ -216,20 +295,31 @@ int processSingleImage(const NormalizeCommandOptions& options,
         request.options.enableAdniPetCore = config.enableAdniPetCore;
         request.options.adniPetTracer = options.tracer;
         auto output = spatialService->normalize(request);
-        fileService->saveNormalizedImage({output.spatiallyNormalizedImage, outputPaths[3]});
+        if (options.deface) {
+            prepareDefacer();
+            Pipeline::Preprocessing::ImageDefacer::applyTemplateMask(
+                output.spatiallyNormalizedImage, templateKeepMask);
+            std::cout
+                << "[" << config.logTag
+                << "] Level 3 face voxels set to zero after spatial transform "
+                   "estimation."
+                << std::endl;
+        }
+        fileService->saveNormalizedImage(
+            {output.spatiallyNormalizedImage, outputPaths[3]});
         if (logCompletion) {
             std::cout << "\n[" << config.logTag
                       << "] Level 3 Coreg, Avg, Std Img and Vox Siz saved to "
                       << outputPaths[3] << std::endl;
         }
     } catch (const std::exception& ex) {
-        std::cerr << "[" << config.logTag << "] Processing failed: " << ex.what() << std::endl;
+        std::cerr << "[" << config.logTag
+                  << "] Processing failed: " << ex.what() << std::endl;
         return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;
 }
-
 int runSingleNormalization(const NormalizeCommandOptions& options,
                            const RunConfig& config,
                            const std::string& fullCommand) {
@@ -363,9 +453,10 @@ public:
             .help("Normalization method")
             .default_value("rigid_voxelmorph");
         parser.add_argument("--tracer")
-            .help("PET tracer class (abeta, tau, or fdg); FDG uses iterative global mean normalization")
+            .help("PET tracer class (abeta, tau, fdg, or dat); DAT uses "
+                  "PPMI-style occipital normalization")
             .required()
-            .choices("abeta", "tau", "fdg");
+            .choices("abeta", "tau", "fdg", "dat");
         parser.add_argument("--level")
             .help("Export one or more ADNI preprocessing levels: 1=Coreg, "
                   "2=Coreg Avg, 3=Coreg Avg Std Img and Vox Siz (default: 3)")
@@ -373,6 +464,10 @@ public:
             .append()
             .scan<'i', int>()
             .choices(1, 2, 3);
+        parser.add_argument("--deface")
+            .help("Set facial voxels to zero after estimating spatial transforms")
+            .default_value(false)
+            .implicit_value(true);
     }
 
     int execute(const argparse::ArgumentParser& parser, const std::string& fullCommand) override {
@@ -394,6 +489,7 @@ public:
         options.adniPetLevels.erase(
             std::unique(options.adniPetLevels.begin(), options.adniPetLevels.end()),
             options.adniPetLevels.end());
+        options.deface = parser.get<bool>("--deface");
 
         if (!options.batchMode && options.bidsPattern.empty()) {
             setupDebugOutput(options);

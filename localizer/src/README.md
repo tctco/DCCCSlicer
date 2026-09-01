@@ -121,6 +121,10 @@ Perform spatial standardization without metric calculation:
 ./DCCCcore adni-pet-core --input dynamic_pet.nii.gz --output standardized.nii.gz \
   --tracer fdg --level 1 3
 
+# Zero facial voxels after estimating transforms from the original data
+./DCCCcore adni-pet-core --input dynamic_pet.nii.gz --output defaced.nii.gz \
+  --tracer fdg --level 1 3 --deface
+
 # Multi-frame PET motion correction and arithmetic mean
 ./DCCCcore pet-motion-correct --input dynamic_pet.nii.gz --output averaged_pet.nii.gz
 
@@ -184,8 +188,10 @@ outputs use `_Coreg` or `_Coreg_Avg` before the NIfTI extension. Batch outputs
 use `_Coreg.nii`, `_Coreg_Avg.nii`, and `_ADNI_style.nii` respectively.
 
 `adni-pet-core` requires
-`--tracer abeta`, `--tracer tau`, or `--tracer fdg`. Aβ and tau use cerebellar
-gray normalization. FDG first scales the entire image to mean 1, then repeatedly
+`--tracer abeta`, `--tracer tau`, `--tracer fdg`, or `--tracer dat`. Aβ and tau
+use cerebellar gray normalization. DAT follows the PPMI-style workflow and uses
+the occipital lobe as its Level 3 intensity reference. The bundled reference
+mask uses the MNI152 2 mm grid. FDG first scales the entire image to mean 1, then repeatedly
 excludes voxels below 0.5 and rescales the retained voxels to mean 1 until the
 excluded voxel count stops changing. Motion TSV translations are in millimetres and
 Euler rotations are in radians.
@@ -217,8 +223,9 @@ Run the ADAD decoupling-based metric:
 | `--manual-fov` | Enable manual field-of-view placement |
 | `--skip-normalization` | Skip spatial normalization step |
 | `--suvr` | Include SUVr values in metric outputs |
-| `--tracer <tracer>` | Required tracer type. `adni-pet-core` accepts `abeta`, `tau`, or `fdg`; `fillstates` accepts `fbp`, `fdg`, or `ftp`. |
+| `--tracer <tracer>` | Required tracer type. `adni-pet-core` accepts `abeta`, `tau`, `fdg`, or `dat`; `fillstates` accepts `fbp`, `fdg`, or `ftp`. |
 | `--level <1\|2\|3> [...]` | `adni-pet-core` export levels. Accepts one or more values and defaults to Level 3. Only selected levels are saved. |
+| `--deface` | `adni-pet-core` only. Sets facial voxels to zero in every selected output after transform estimation. |
 | `--modality <type>` | Decoupling modality for `adad` (`abeta` or `tau`). |
 
 ## Developers
