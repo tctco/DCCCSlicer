@@ -175,11 +175,11 @@ def test_find_existing_dccccore_checks_macos_runtime_package(
     exe.write_text("#!/usr/bin/env sh\n")
     exe.chmod(0o755)
 
-    module = types.SimpleNamespace(dccccore_root=lambda: root)
+    module = types.SimpleNamespace(DCCCCORE_VERSION="4.5.0-alpha", dccccore_root=lambda: root)
     monkeypatch.setitem(sys.modules, "dcccpy_macos_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 
-    assert find_existing_dccccore("4.4.0") == exe
+    assert find_existing_dccccore() == exe
 
 
 def test_linux_arm64_release_platform() -> None:
@@ -203,7 +203,7 @@ def test_alpha_ignores_incompatible_stable_runtime_package(
     exe.write_text("#!/usr/bin/env sh\n")
     exe.chmod(0o755)
 
-    module = types.SimpleNamespace(dccccore_root=lambda: root)
+    module = types.SimpleNamespace(DCCCCORE_VERSION="4.4.0", dccccore_root=lambda: root)
     monkeypatch.setitem(sys.modules, "dcccpy_linux_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 
@@ -220,11 +220,11 @@ def test_find_existing_dccccore_checks_linux_arm64_runtime_package(
     exe.write_text("#!/usr/bin/env sh\n")
     exe.chmod(0o755)
 
-    module = types.SimpleNamespace(dccccore_root=lambda: root)
+    module = types.SimpleNamespace(DCCCCORE_VERSION="4.5.0-alpha", dccccore_root=lambda: root)
     monkeypatch.setitem(sys.modules, "dcccpy_linux_arm64_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 
-    assert find_existing_dccccore("4.4.0") == exe
+    assert find_existing_dccccore() == exe
 
 
 def test_cli_forwards_raw_args(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:

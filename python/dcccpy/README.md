@@ -201,11 +201,11 @@ The preferred distribution layout is:
 
 ## Packaging note
 
-The current optional runtime wheels use a PyPI-size profile for DCCCcore version 4.4.0. They omit the
+The current optional runtime wheels use a PyPI-size profile for DCCCcore version 4.5.0-alpha. They omit the
 `fast_and_acc` registration model/config and the ADAD decoupler ONNX ensemble,
 while keeping the default spatial normalization model and assets needed by
 common Centiloid/CenTauR/CenTauRz workflows.
 
-The `dcccpy` 0.3 alpha package targets DCCCcore 4.5.0-alpha. Because the optional
-runtime wheels still contain DCCCcore 4.4.0, this alpha wrapper ignores those
-older runtimes and downloads the full matching GitHub release on first use.
+Each runtime package declares its bundled DCCCcore version. The wrapper ignores
+an installed runtime whose native version does not match, preventing an older
+runtime package from shadowing the requested release.

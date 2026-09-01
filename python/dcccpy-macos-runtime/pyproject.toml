@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dcccpy-macos-runtime"
-version = "0.1.2"
+version = "0.2.0a1"
 description = "macOS arm64 DCCCcore runtime package for dcccpy"
 readme = "README.md"
 requires-python = ">=3.9"

@@ -13,9 +13,6 @@ from typing import Iterable
 
 
 DCCCCORE_VERSION = "4.5.0-alpha"
-# The optional runtime wheels currently contain the last stable native core.
-# Do not let an installed older runtime shadow the release selected above.
-RUNTIME_PACKAGE_DCCCCORE_VERSION = "4.4.0"
 RELEASE_REPO = "tctco/DCCCSlicer"
 
 
@@ -103,37 +100,38 @@ def _main_package_vendor_dirs() -> list[Path]:
 
 
 def _runtime_package_dirs(version: str = DCCCCORE_VERSION) -> list[Path]:
-    if version != RUNTIME_PACKAGE_DCCCCORE_VERSION:
-        return []
-
     roots: list[Path] = []
     try:
         import dcccpy_linux_runtime
     except Exception:
         pass
     else:
-        roots.append(Path(dcccpy_linux_runtime.dccccore_root()))
+        if getattr(dcccpy_linux_runtime, "DCCCCORE_VERSION", None) == version:
+            roots.append(Path(dcccpy_linux_runtime.dccccore_root()))
 
     try:
         import dcccpy_linux_arm64_runtime
     except Exception:
         pass
     else:
-        roots.append(Path(dcccpy_linux_arm64_runtime.dccccore_root()))
+        if getattr(dcccpy_linux_arm64_runtime, "DCCCCORE_VERSION", None) == version:
+            roots.append(Path(dcccpy_linux_arm64_runtime.dccccore_root()))
 
     try:
         import dcccpy_windows_runtime
     except Exception:
         pass
     else:
-        roots.append(Path(dcccpy_windows_runtime.dccccore_root()))
+        if getattr(dcccpy_windows_runtime, "DCCCCORE_VERSION", None) == version:
+            roots.append(Path(dcccpy_windows_runtime.dccccore_root()))
 
     try:
         import dcccpy_macos_runtime
     except Exception:
         pass
     else:
-        roots.append(Path(dcccpy_macos_runtime.dccccore_root()))
+        if getattr(dcccpy_macos_runtime, "DCCCCORE_VERSION", None) == version:
+            roots.append(Path(dcccpy_macos_runtime.dccccore_root()))
 
     return roots
 
