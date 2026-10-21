@@ -19,6 +19,56 @@ The Deep Cascaded Cerebral Calculator Core is a comprehensive C++ toolkit design
 
 The software provides a command-line interface with multiple subcommands for different analysis tasks.
 
+### Native PET segmentation (`seg`)
+
+```sh
+./DCCCcore seg --input pet.nii.gz --output labels.nii.gz
+```
+
+`seg` uses the bundled DCCC Seg 96-class ONNX model. It performs exactly two
+rigid predictions, samples the verified 1.5 mm training grid, applies nnU-Net
+cropping/Z-score normalization and Gaussian inference with 8-way mirror TTA,
+then restores signed 16-bit categorical labels to the original PET geometry.
+The production command does not require Python, PyTorch or nnU-Net.
+
+| Option | Meaning |
+| --- | --- |
+| `--mode freesurfer` | Default: reversible raw DKT/aseg IDs |
+| `--mode training` | Contiguous training IDs 0–95 |
+| `--mode neurosegmenter` | Partial regional aggregation; no IDs 45/46 or pons SUVR |
+| `--threads 4` | CPU thread count; must be positive |
+| `--no-tta` | Disable mirror TTA, explicitly changing inference protocol |
+| `--bundle DIRECTORY` | Override `assets/models/seg` next to the executable |
+| `--rigid-header FILE` | Two-step rigid header with exactly the input's voxel values; skips internal rigid |
+| `--debug` | Save rigid header, task PET, normalized crop, task training IDs and JSON receipt |
+
+Input must be one finite 3-D PET with positive signal. The output parent must
+exist and the output must be new. Batch/BIDS inputs are unsupported. Training
+IDs and FreeSurfer IDs are different vocabularies; consult the bundled
+`labels.json` and `neurosegmenter_mapping.json` before interpreting a label.
+The original bundle README documents provenance and reference validation.
+
+In DCCCSlicer, select the PET input volume and use **PET segmentation → Segment
+PET**. The command runs asynchronously and loads a named categorical labelmap
+over the original volume. In Python use `dcccpy.seg("pet.nii.gz", "labels.nii.gz")`.
+
+For integration parity checks inside a Docker environment containing nnU-Net:
+
+```sh
+python scripts/validate-seg-parity.py \
+  --core localizer/src/install-seg/bin/DCCCcore \
+  --bundle localizer/src/assets/models/seg \
+  --input localizer/src/tests/test_batch/input.nii \
+  --work-dir /new/private/seg-parity-case
+```
+
+This retains QC artifacts and reports preprocessing errors and native-label
+agreement against the shipped Python reference, conditioned on the native C++
+rigid header. It verifies two rigid predictions and voxel-index preservation;
+independent rigid transform parity requires the original checkpoint/pipeline,
+which is not in the bundle. It does not establish clinical accuracy or replace
+visual review in Slicer.
+
 ### Basic Commands
 
 #### Centiloid Analysis

@@ -58,7 +58,11 @@ def test_seg_rejects_invalid_images(run_subprocess, tmp_path, kind, message):
         data = data.astype(">f8")
         data[1, 2, 3] = np.inf
     native = tmp_path / "pet.nii.gz"
-    nib.save(nib.Nifti1Image(data, np.eye(4)), native)
+    header = None
+    if kind == "inf64":
+        header = nib.Nifti1Header(endianness=">")
+        header.set_data_dtype(np.float64)
+    nib.save(nib.Nifti1Image(data, np.eye(4), header), native)
     args = ["seg", "--input", str(native), "--output", str(tmp_path / "out.nii.gz")]
     if kind == "bad_rigid":
         rigid = tmp_path / "rigid.nii.gz"

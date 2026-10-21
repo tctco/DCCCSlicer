@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from pathlib import Path
 import sys
 import types
@@ -75,6 +76,19 @@ def test_seg_defaults_and_explicit_options(tmp_path, monkeypatch):
 def test_seg_rejects_bad_options(kwargs):
     with pytest.raises(ValueError):
         dcccpy.seg("pet.nii", **kwargs)
+
+
+def test_seg_preserves_native_failure(tmp_path):
+    exe = tmp_path / "DCCCcore"
+    exe.write_text("#!/bin/sh\nprintf 'invalid segmentation model' >&2\nexit 7\n")
+    exe.chmod(0o755)
+    result = dcccpy.seg("pet.nii", check=False, executable=exe)
+    assert result.returncode == 7
+    assert "invalid segmentation model" in result.stderr
+    assert not result.output.exists()
+    with pytest.raises(subprocess.CalledProcessError) as error:
+        dcccpy.seg("pet.nii", executable=exe)
+    assert error.value.returncode == 7
 
 
 def test_centiloid_omits_output_by_creating_temp_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
