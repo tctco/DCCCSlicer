@@ -443,6 +443,44 @@ def rigid(
     return _spatial_command("rigid", input, output, **kwargs)
 
 
+def seg(
+    input: object,
+    output: str | os.PathLike[str] | None = None,
+    *,
+    mode: str = "freesurfer",
+    threads: int = 4,
+    tta: bool = True,
+    bundle: str | os.PathLike[str] | None = None,
+    rigid_header: str | os.PathLike[str] | None = None,
+    debug: bool = False,
+    config: str | os.PathLike[str] | None = None,
+    check: bool = True,
+    executable: str | os.PathLike[str] | None = None,
+) -> DCCCResult:
+    """Segment one 3-D PET into native-space categorical labels.
+
+    ``freesurfer`` emits raw DKT/aseg IDs, ``training`` IDs 0–95, and
+    ``neurosegmenter`` a partial aggregation without brainstem/pons IDs 45/46.
+    Mirror TTA is enabled by default. ``rigid_header``, when supplied, must
+    retain the input's voxel values after exactly two rigid predictions.
+    """
+    if mode not in ("freesurfer", "training", "neurosegmenter"):
+        raise ValueError("mode must be freesurfer, training, or neurosegmenter")
+    if isinstance(threads, bool) or not isinstance(threads, int) or threads < 1:
+        raise ValueError("threads must be a positive integer")
+    args: list[object] = ["--mode", mode, "--threads", threads]
+    if not tta:
+        args.append("--no-tta")
+    if debug:
+        args.append("--debug")
+    for flag, path in (("--bundle", bundle), ("--rigid-header", rigid_header),
+                       ("--config", config)):
+        if path is not None:
+            args.extend([flag, _resolve_user_path(path)])
+    return _spatial_command("seg", input, output, extra_args=args,
+                            check=check, executable=executable)
+
+
 def pet_motion_correct(
     input: object,
     output: str | os.PathLike[str] | None = None,

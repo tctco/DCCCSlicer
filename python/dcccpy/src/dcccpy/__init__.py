@@ -15,6 +15,7 @@ from .core import (
     parse_metrics,
     pet_motion_correct,
     rigid,
+    seg,
     run,
     suvr,
 )
@@ -39,6 +40,7 @@ __all__ = [
     "parse_metrics",
     "pet_motion_correct",
     "rigid",
+    "seg",
     "run",
     "suvr",
 ]

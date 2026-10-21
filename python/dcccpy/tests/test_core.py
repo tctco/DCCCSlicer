@@ -46,6 +46,37 @@ def test_parse_metrics() -> None:
     assert metrics == {"fbp": 12.5, "SUVr": 1.23, "ADAD score": -0.2}
 
 
+def test_seg_defaults_and_explicit_options(tmp_path, monkeypatch):
+    fake_args = tmp_path / "args.txt"
+    fake_exe = make_fake_dccccore(tmp_path)
+    monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(fake_args))
+    result = dcccpy.seg("pet.nii", executable=fake_exe)
+    args = fake_args.read_text().splitlines()
+    assert args[0] == "seg"
+    assert args[args.index("--mode") + 1] == "freesurfer"
+    assert args[args.index("--threads") + 1] == "4"
+    assert "--no-tta" not in args
+    assert result.output.exists()
+    result = dcccpy.seg("pet.nii", tmp_path / "labels.nii.gz", mode="training",
+                        threads=2, tta=False, bundle="model bundle",
+                        rigid_header="rigid header.nii.gz", config="config.toml",
+                        debug=True, executable=fake_exe)
+    args = fake_args.read_text().splitlines()
+    assert args[args.index("--mode") + 1] == "training"
+    assert args[args.index("--threads") + 1] == "2"
+    assert args[args.index("--bundle") + 1] == str(Path("model bundle").resolve())
+    assert args[args.index("--rigid-header") + 1] == str(Path("rigid header.nii.gz").resolve())
+    assert args[args.index("--config") + 1] == str(Path("config.toml").resolve())
+    assert "--debug" in args and "--no-tta" in args
+
+
+@pytest.mark.parametrize("kwargs", [{"mode": "bogus"}, {"threads": 0},
+                                    {"threads": 1.5}, {"threads": True}])
+def test_seg_rejects_bad_options(kwargs):
+    with pytest.raises(ValueError):
+        dcccpy.seg("pet.nii", **kwargs)
+
+
 def test_centiloid_omits_output_by_creating_temp_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     fake_args = tmp_path / "args.txt"
     fake_exe = make_fake_dccccore(tmp_path)

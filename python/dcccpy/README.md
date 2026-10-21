@@ -1,5 +1,24 @@
 # dcccpy
 
+### Native PET segmentation
+
+```python
+import dcccpy
+result = dcccpy.seg("pet.nii.gz", "labels.nii.gz")
+labels = result.load_output()
+```
+
+Requires a DCCCcore build containing the `seg` command and its bundled model.
+The signed integer output matches the input PET's native shape and geometry.
+The default `mode="freesurfer"` returns raw DKT/aseg IDs; `mode="training"`
+returns IDs 0–95. `mode="neurosegmenter"` provides partial regional compatibility:
+brainstem/pons IDs 45/46 are unavailable, so pons SUVR is unsupported.
+Mirror TTA is enabled by default; `tta=False` explicitly changes that protocol.
+Use `threads=4` to select the CPU thread count, `bundle=...` to override the model
+directory, and `debug=True` to save intermediate grids and a transform receipt.
+An optional `rigid_header=...` must retain the exact native PET values and record
+exactly two rigid steps. Existing output images are refused by the core.
+
 `dcccpy` is a Python wrapper for the `DCCCcore` command-line tool from
 DCCCSlicer. It keeps the native C++ core as the execution engine and provides a
 small Python API for running common PET biomarker workflows.
