@@ -3,6 +3,7 @@
 
 # Model file paths (relative to executable directory)
 [models]
+seg = "assets/models/seg/dccc_seg.onnx"
 rigid = "assets/models/registration/rigid.onnx"
 affine_voxelmorph = "assets/models/registration/affine_voxelmorph.onnx"
 affine_voxelmorph_inverse = "assets/models/registration/affine_voxelmorph.onnx"

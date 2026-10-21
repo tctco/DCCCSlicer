@@ -1,0 +1,713 @@
+{
+  "raw_to_neuro": {
+    "1028": 1,
+    "2028": 2,
+    "1012": 3,
+    "1014": 3,
+    "2012": 4,
+    "2014": 4,
+    "1003": 5,
+    "1027": 5,
+    "1018": 5,
+    "1019": 5,
+    "1020": 5,
+    "1024": 5,
+    "2003": 6,
+    "2027": 6,
+    "2018": 6,
+    "2019": 6,
+    "2020": 6,
+    "2024": 6,
+    "1017": 7,
+    "2017": 8,
+    "1022": 9,
+    "2022": 10,
+    "1029": 11,
+    "1031": 11,
+    "1008": 11,
+    "2029": 12,
+    "2031": 12,
+    "2008": 12,
+    "1025": 13,
+    "2025": 14,
+    "1002": 15,
+    "1026": 15,
+    "2002": 16,
+    "2026": 16,
+    "1023": 17,
+    "2023": 18,
+    "1010": 19,
+    "2010": 20,
+    "1030": 21,
+    "1034": 21,
+    "1015": 21,
+    "1009": 21,
+    "2030": 22,
+    "2034": 22,
+    "2015": 22,
+    "2009": 22,
+    "1006": 23,
+    "1007": 23,
+    "1016": 23,
+    "2006": 24,
+    "2007": 24,
+    "2016": 24,
+    "1011": 25,
+    "2011": 26,
+    "1021": 27,
+    "2021": 28,
+    "1013": 29,
+    "2013": 30,
+    "1005": 31,
+    "2005": 32,
+    "1035": 33,
+    "2035": 34,
+    "8": 35,
+    "47": 36,
+    "10": 37,
+    "49": 38,
+    "11": 39,
+    "50": 40,
+    "12": 41,
+    "51": 42,
+    "13": 43,
+    "52": 44,
+    "17": 47,
+    "53": 48,
+    "18": 49,
+    "54": 50,
+    "28": 51,
+    "60": 52
+  },
+  "regions": [
+    {
+      "id": 1,
+      "name": "superior_frontal_gyrus_left",
+      "raw_ids": [
+        1028
+      ],
+      "official_raw_ids": [
+        1028
+      ],
+      "available": true
+    },
+    {
+      "id": 2,
+      "name": "superior_frontal_gyrus_right",
+      "raw_ids": [
+        2028
+      ],
+      "official_raw_ids": [
+        2028
+      ],
+      "available": true
+    },
+    {
+      "id": 3,
+      "name": "orbitofrontal_cortex_left",
+      "raw_ids": [
+        1012,
+        1014
+      ],
+      "official_raw_ids": [
+        1012,
+        1014
+      ],
+      "available": true
+    },
+    {
+      "id": 4,
+      "name": "orbitofrontal_cortex_right",
+      "raw_ids": [
+        2012,
+        2014
+      ],
+      "official_raw_ids": [
+        2012,
+        2014
+      ],
+      "available": true
+    },
+    {
+      "id": 5,
+      "name": "dorsolateral_frontal_cortex_left",
+      "raw_ids": [
+        1003,
+        1027,
+        1018,
+        1019,
+        1020,
+        1024
+      ],
+      "official_raw_ids": [
+        1003,
+        1027,
+        1018,
+        1019,
+        1020,
+        1024
+      ],
+      "available": true
+    },
+    {
+      "id": 6,
+      "name": "dorsolateral_frontal_cortex_right",
+      "raw_ids": [
+        2003,
+        2027,
+        2018,
+        2019,
+        2020,
+        2024
+      ],
+      "official_raw_ids": [
+        2003,
+        2027,
+        2018,
+        2019,
+        2020,
+        2024
+      ],
+      "available": true
+    },
+    {
+      "id": 7,
+      "name": "paracentral_lobule_left",
+      "raw_ids": [
+        1017
+      ],
+      "official_raw_ids": [
+        1017
+      ],
+      "available": true
+    },
+    {
+      "id": 8,
+      "name": "paracentral_lobule_right",
+      "raw_ids": [
+        2017
+      ],
+      "official_raw_ids": [
+        2017
+      ],
+      "available": true
+    },
+    {
+      "id": 9,
+      "name": "postcentral_gyrus_left",
+      "raw_ids": [
+        1022
+      ],
+      "official_raw_ids": [
+        1022
+      ],
+      "available": true
+    },
+    {
+      "id": 10,
+      "name": "postcentral_gyrus_right",
+      "raw_ids": [
+        2022
+      ],
+      "official_raw_ids": [
+        2022
+      ],
+      "available": true
+    },
+    {
+      "id": 11,
+      "name": "dorsolateral_parietal_cortex_left",
+      "raw_ids": [
+        1029,
+        1031,
+        1008
+      ],
+      "official_raw_ids": [
+        1029,
+        1031,
+        1008
+      ],
+      "available": true
+    },
+    {
+      "id": 12,
+      "name": "dorsolateral_parietal_cortex_right",
+      "raw_ids": [
+        2029,
+        2031,
+        2008
+      ],
+      "official_raw_ids": [
+        2029,
+        2031,
+        2008
+      ],
+      "available": true
+    },
+    {
+      "id": 13,
+      "name": "precuneus_left",
+      "raw_ids": [
+        1025
+      ],
+      "official_raw_ids": [
+        1025
+      ],
+      "available": true
+    },
+    {
+      "id": 14,
+      "name": "precuneus_right",
+      "raw_ids": [
+        2025
+      ],
+      "official_raw_ids": [
+        2025
+      ],
+      "available": true
+    },
+    {
+      "id": 15,
+      "name": "anterior_cingulate_cortex_left",
+      "raw_ids": [
+        1002,
+        1026
+      ],
+      "official_raw_ids": [
+        1002,
+        1026
+      ],
+      "available": true
+    },
+    {
+      "id": 16,
+      "name": "anterior_cingulate_cortex_right",
+      "raw_ids": [
+        2002,
+        2026
+      ],
+      "official_raw_ids": [
+        2002,
+        2026
+      ],
+      "available": true
+    },
+    {
+      "id": 17,
+      "name": "posterior_cingulate_cortex_left",
+      "raw_ids": [
+        1023
+      ],
+      "official_raw_ids": [
+        1023
+      ],
+      "available": true
+    },
+    {
+      "id": 18,
+      "name": "posterior_cingulate_cortex_right",
+      "raw_ids": [
+        2023
+      ],
+      "official_raw_ids": [
+        2023
+      ],
+      "available": true
+    },
+    {
+      "id": 19,
+      "name": "isthmus_cingulate_cortex_left",
+      "raw_ids": [
+        1010
+      ],
+      "official_raw_ids": [
+        1010
+      ],
+      "available": true
+    },
+    {
+      "id": 20,
+      "name": "isthmus_cingulate_cortex_right",
+      "raw_ids": [
+        2010
+      ],
+      "official_raw_ids": [
+        2010
+      ],
+      "available": true
+    },
+    {
+      "id": 21,
+      "name": "lateral_temporal_cortex_left",
+      "raw_ids": [
+        1030,
+        1034,
+        1015,
+        1009
+      ],
+      "official_raw_ids": [
+        1030,
+        1034,
+        1015,
+        1009
+      ],
+      "available": true
+    },
+    {
+      "id": 22,
+      "name": "lateral_temporal_cortex_right",
+      "raw_ids": [
+        2030,
+        2034,
+        2015,
+        2009
+      ],
+      "official_raw_ids": [
+        2030,
+        2034,
+        2015,
+        2009
+      ],
+      "available": true
+    },
+    {
+      "id": 23,
+      "name": "mesial_temporal_cortex_left",
+      "raw_ids": [
+        1006,
+        1007,
+        1016
+      ],
+      "official_raw_ids": [
+        1006,
+        1007,
+        1016
+      ],
+      "available": true
+    },
+    {
+      "id": 24,
+      "name": "mesial_temporal_cortex_right",
+      "raw_ids": [
+        2006,
+        2007,
+        2016
+      ],
+      "official_raw_ids": [
+        2006,
+        2007,
+        2016
+      ],
+      "available": true
+    },
+    {
+      "id": 25,
+      "name": "lateral_occipital_cortex_left",
+      "raw_ids": [
+        1011
+      ],
+      "official_raw_ids": [
+        1011
+      ],
+      "available": true
+    },
+    {
+      "id": 26,
+      "name": "lateral_occipital_cortex_right",
+      "raw_ids": [
+        2011
+      ],
+      "official_raw_ids": [
+        2011
+      ],
+      "available": true
+    },
+    {
+      "id": 27,
+      "name": "pericalcarine_cortex_left",
+      "raw_ids": [
+        1021
+      ],
+      "official_raw_ids": [
+        1021
+      ],
+      "available": true
+    },
+    {
+      "id": 28,
+      "name": "pericalcarine_cortex_right",
+      "raw_ids": [
+        2021
+      ],
+      "official_raw_ids": [
+        2021
+      ],
+      "available": true
+    },
+    {
+      "id": 29,
+      "name": "lingual_gyrus_left",
+      "raw_ids": [
+        1013
+      ],
+      "official_raw_ids": [
+        1013
+      ],
+      "available": true
+    },
+    {
+      "id": 30,
+      "name": "lingual_gyrus_right",
+      "raw_ids": [
+        2013
+      ],
+      "official_raw_ids": [
+        2013
+      ],
+      "available": true
+    },
+    {
+      "id": 31,
+      "name": "cuneus_left",
+      "raw_ids": [
+        1005
+      ],
+      "official_raw_ids": [
+        1005
+      ],
+      "available": true
+    },
+    {
+      "id": 32,
+      "name": "cuneus_right",
+      "raw_ids": [
+        2005
+      ],
+      "official_raw_ids": [
+        2005
+      ],
+      "available": true
+    },
+    {
+      "id": 33,
+      "name": "insula_left",
+      "raw_ids": [
+        1035
+      ],
+      "official_raw_ids": [
+        1035
+      ],
+      "available": true
+    },
+    {
+      "id": 34,
+      "name": "insula_right",
+      "raw_ids": [
+        2035
+      ],
+      "official_raw_ids": [
+        2035
+      ],
+      "available": true
+    },
+    {
+      "id": 35,
+      "name": "cerebellar_cortex_left",
+      "raw_ids": [
+        8
+      ],
+      "official_raw_ids": [
+        8
+      ],
+      "available": true
+    },
+    {
+      "id": 36,
+      "name": "cerebellar_cortex_right",
+      "raw_ids": [
+        47
+      ],
+      "official_raw_ids": [
+        47
+      ],
+      "available": true
+    },
+    {
+      "id": 37,
+      "name": "thalamus_left",
+      "raw_ids": [
+        10
+      ],
+      "official_raw_ids": [
+        10
+      ],
+      "available": true
+    },
+    {
+      "id": 38,
+      "name": "thalamus_right",
+      "raw_ids": [
+        49
+      ],
+      "official_raw_ids": [
+        49
+      ],
+      "available": true
+    },
+    {
+      "id": 39,
+      "name": "caudate_left",
+      "raw_ids": [
+        11
+      ],
+      "official_raw_ids": [
+        11
+      ],
+      "available": true
+    },
+    {
+      "id": 40,
+      "name": "caudate_right",
+      "raw_ids": [
+        50
+      ],
+      "official_raw_ids": [
+        50
+      ],
+      "available": true
+    },
+    {
+      "id": 41,
+      "name": "putamen_left",
+      "raw_ids": [
+        12
+      ],
+      "official_raw_ids": [
+        12
+      ],
+      "available": true
+    },
+    {
+      "id": 42,
+      "name": "putamen_right",
+      "raw_ids": [
+        51
+      ],
+      "official_raw_ids": [
+        51
+      ],
+      "available": true
+    },
+    {
+      "id": 43,
+      "name": "globus_pallidus_left",
+      "raw_ids": [
+        13
+      ],
+      "official_raw_ids": [
+        13
+      ],
+      "available": true
+    },
+    {
+      "id": 44,
+      "name": "globus_pallidus_right",
+      "raw_ids": [
+        52
+      ],
+      "official_raw_ids": [
+        52
+      ],
+      "available": true
+    },
+    {
+      "id": 45,
+      "name": "brainstem_wo_pons",
+      "raw_ids": [],
+      "official_raw_ids": [
+        16
+      ],
+      "available": false
+    },
+    {
+      "id": 46,
+      "name": "pons",
+      "raw_ids": [],
+      "official_raw_ids": [],
+      "available": false
+    },
+    {
+      "id": 47,
+      "name": "hippocampus_left",
+      "raw_ids": [
+        17
+      ],
+      "official_raw_ids": [
+        17
+      ],
+      "available": true
+    },
+    {
+      "id": 48,
+      "name": "hippocampus_right",
+      "raw_ids": [
+        53
+      ],
+      "official_raw_ids": [
+        53
+      ],
+      "available": true
+    },
+    {
+      "id": 49,
+      "name": "amygdala_left",
+      "raw_ids": [
+        18
+      ],
+      "official_raw_ids": [
+        18
+      ],
+      "available": true
+    },
+    {
+      "id": 50,
+      "name": "amygdala_right",
+      "raw_ids": [
+        54
+      ],
+      "official_raw_ids": [
+        54
+      ],
+      "available": true
+    },
+    {
+      "id": 51,
+      "name": "ventral_diencephalon_left",
+      "raw_ids": [
+        28
+      ],
+      "official_raw_ids": [
+        28
+      ],
+      "available": true
+    },
+    {
+      "id": 52,
+      "name": "ventral_diencephalon_right",
+      "raw_ids": [
+        60
+      ],
+      "official_raw_ids": [
+        60
+      ],
+      "available": true
+    }
+  ],
+  "source": "FDG-NeuroSegmenter/src/fdg_neurosegmenter/data/label_correspondence.csv",
+  "limitations": [
+    "Partial anatomical label compatibility; not NeuroSegmenter model inference.",
+    "Whole brainstem (raw 16) is unmapped (0); labels 45 and 46 are unavailable.",
+    "White matter, ventricles, CSF, and other unmapped structures become 0.",
+    "Pons-based SUVR normalization is unsupported by this output."
+  ]
+}

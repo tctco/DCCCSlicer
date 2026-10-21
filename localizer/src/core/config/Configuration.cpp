@@ -19,6 +19,7 @@ std::string Configuration::getExecutablePath() const {
 void Configuration::initializeDefaults() {
   // 模型路径
   configMap["models.rigid"] = "models/registration/rigid.onnx";
+  configMap["models.seg"] = "assets/models/seg/dccc_seg.onnx";
   configMap["models.affine_voxelmorph"] =
       "models/registration/affine_voxelmorph.onnx";
   configMap["models.affine_voxelmorph_inverse"] =

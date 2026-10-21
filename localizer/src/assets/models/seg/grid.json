@@ -1,0 +1,40 @@
+{
+  "schema": "native_direct_1p5mm_fixed_fov_v2",
+  "shape": [
+    128,
+    171,
+    128
+  ],
+  "affine": [
+    [
+      -1.5,
+      0.0,
+      0.0,
+      94.25
+    ],
+    [
+      0.0,
+      1.5,
+      0.0,
+      -144.5
+    ],
+    [
+      0.0,
+      0.0,
+      1.5,
+      -86.25
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "spacing_mm": [
+    1.5,
+    1.5,
+    1.5
+  ],
+  "PET_sampling": "native_values_with_recorded_rigid_affine_then_single_linear_resampling"
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "dccc_seg_onnx_v1",
+  "dataset": "Dataset618_DCCC_FineDKT_1p5mm_Fold0",
+  "fold": 0,
+  "checkpoint": "checkpoint_final.pth",
+  "checkpoint_size": 256180253,
+  "checkpoint_mtime_ns": 1792544763072898194,
+  "trainer_name": "nnUNetTrainer",
+  "mirroring_axes": [
+    0,
+    1,
+    2
+  ],
+  "input": {
+    "name": "image",
+    "dtype": "float32",
+    "layout": "NCDHW (official nnU-Net preprocessed axes)",
+    "inference_shape": [
+      1,
+      1,
+      128,
+      192,
+      128
+    ]
+  },
+  "output": {
+    "name": "logits",
+    "dtype": "float32",
+    "layout": "NCDHW",
+    "channels": 96
+  },
+  "preprocessing": "two iterative rigid iterations, materialized 1.5mm training grid, official nnU-Net",
+  "opset": 17,
+  "torch_version": "2.14.0+cu130",
+  "onnx_version": "1.22.0",
+  "onnxruntime_version": "1.29.0",
+  "export_unix": 1792604506.6864262
+}

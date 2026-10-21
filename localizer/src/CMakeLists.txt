@@ -21,6 +21,7 @@ find_package(tomlplusplus CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
 find_package(rapidcsv CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 # Include directories
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -73,6 +74,14 @@ target_sources(DCCCcore PRIVATE
     core/preprocessing/PetMotionCorrector.h
     core/preprocessing/PetMotionCorrector.cpp
 )
+
+target_sources(DCCCcore PRIVATE
+    core/segmentation/SegmentationBundle.cpp
+    core/segmentation/PetSegmenter.cpp
+    core/segmentation/SegmentationInference.cpp
+    spatialNormalizations/seg/SegCLI.cpp
+)
+target_link_libraries(DCCCcore PRIVATE nlohmann_json::nlohmann_json)
 
 # Add utility sources
 target_sources(DCCCcore PRIVATE

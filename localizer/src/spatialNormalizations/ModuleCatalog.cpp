@@ -5,6 +5,7 @@
 #include "brain/BrainParcellationCLI.h"
 #include "pet/PetMotionCorrectionCLI.h"
 #include "rigid/RigidCLI.h"
+#include "seg/SegCLI.h"
 
 namespace Pipeline::SpatialNormalization {
 
@@ -13,6 +14,7 @@ std::vector<SpatialNormalizationCLIPtr> buildCLIModules() {
     modules.push_back(Standard::createCLI());
     modules.push_back(Adni::createCLI());
     modules.push_back(Rigid::createCLI());
+    modules.push_back(Seg::createCLI());
     modules.push_back(Brain::createCLI());
     modules.push_back(BrainParcellation::createCLI());
     modules.push_back(Pet::createMotionCorrectionCLI());

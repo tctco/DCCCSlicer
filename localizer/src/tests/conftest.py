@@ -3,6 +3,7 @@ import sys
 import subprocess
 from pathlib import Path
 import shutil
+import os
 
 # Import the global results list so tests can append to it
 from conftest_plugins import ACC_TEST_RESULTS, pytest_terminal_summary
@@ -17,7 +18,7 @@ def exe_path():
     """
     # User suggested: exe_path = TEST_DIR / '../install/bin/DCCCcore'
     # We handle Windows extension automatically
-    base_path = TEST_DIR / '../install/bin/DCCCcore'
+    base_path = Path(os.environ.get("DCCCCORE_TEST_EXECUTABLE", str(TEST_DIR / '../install/bin/DCCCcore')))
     
     if sys.platform == 'win32':
         exe = base_path.with_suffix('.exe')

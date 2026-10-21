@@ -1,0 +1,61 @@
+{
+  "status": "passed_network_probes_and_real_cpu_pilots",
+  "checks": [
+    {
+      "shape": [
+        1,
+        1,
+        32,
+        64,
+        32
+      ],
+      "max_absolute_error": 4.38690185546875e-05,
+      "mean_absolute_error": 2.6040572720376076e-06,
+      "argmax_agreement": 1.0,
+      "allclose_rtol_1e-3_atol_1e-4": true
+    },
+    {
+      "shape": [
+        1,
+        1,
+        64,
+        32,
+        64
+      ],
+      "max_absolute_error": 8.392333984375e-05,
+      "mean_absolute_error": 4.062231255375082e-06,
+      "argmax_agreement": 0.9999923706054688,
+      "allclose_rtol_1e-3_atol_1e-4": true
+    }
+  ],
+  "real_volume_pilots": [
+    {
+      "status": "complete",
+      "tta": false,
+      "provider": "CPUExecutionProvider",
+      "native_shape_matches": true,
+      "native_affine_matches": true,
+      "native_voxel_agreement": 0.9999887225928527,
+      "foreground_union_voxel_agreement": 0.9998054740649611,
+      "disagreement_voxels": 37,
+      "seconds": 32.50105881690979,
+      "full_tta_pilot_verified": false,
+      "visual_review": "Actual normalized input, task PET and native overlays reviewed; no evident geometric mismatch."
+    },
+    {
+      "status": "complete",
+      "tta": true,
+      "provider": "CPUExecutionProvider",
+      "native_shape_matches": true,
+      "native_affine_matches": true,
+      "native_voxel_agreement": 0.9999908561563671,
+      "foreground_union_voxel_agreement": 0.9998423608045904,
+      "disagreement_voxels": 30,
+      "seconds": 146.3200900554657,
+      "full_tta_pilot_verified": true,
+      "visual_review": "Actual normalized input, task PET and native overlays reviewed; no evident geometric mismatch."
+    }
+  ],
+  "scope": "One FDG case, CPU FP32 network, official nnU-Net half-precision accumulation; numerical differences retained. Not clinical accuracy validation.",
+  "regression_tests_passed": 4
+}

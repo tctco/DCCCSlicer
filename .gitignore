@@ -22,6 +22,8 @@ localizer/src/tests/calibrate_tracer/
 localizer/src/tests/calibrate_metrics.py
 localizer/src/build/
 localizer/src/install/
+localizer/src/build-seg/
+localizer/src/install-seg/
 
 build/
 localizer/cpp
