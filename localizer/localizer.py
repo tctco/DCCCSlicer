@@ -19,6 +19,7 @@ import qt
 from lib.image_alignment import ImageAlignmentLogic
 from lib.metric_calculator import MetricCalculatorLogic
 from lib.ai_decoupling import AIDecouplingLogic
+from lib.pet_segmentation import PetSegmentationLogic
 from lib.atlas_manager import AtlasManager
 from lib.biomarker_region_viewer import BiomarkerRegionViewer
 from lib.core_executable import dccccore_executable_path
@@ -160,6 +161,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.image_alignment = ImageAlignmentLogic()
         self.metric_calculator = MetricCalculatorLogic(self.PLUGIN_PATH)
         self.ai_decoupling = AIDecouplingLogic(self.PLUGIN_PATH)
+        self.pet_segmentation = PetSegmentationLogic(self.PLUGIN_PATH)
         self.biomarker_region_viewer = BiomarkerRegionViewer(self.PLUGIN_PATH)
 
         # Connections
@@ -190,6 +192,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             "currentNodeChanged(vtkMRMLNode*)", self.onInputVolumeChanged
         )
         self.ui.decoupleButton.connect("clicked(bool)", self.onDecoupleButton)
+        self.ui.segButton.connect("clicked(bool)", self.onSegButton)
 
         # Metric selector change updates tracer selector state
         try:
@@ -346,6 +349,9 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
         Called when the application closes and the module widget is destroyed.
         """
+        if hasattr(self, "pet_segmentation"):
+            self.pet_segmentation.cancel()
+            self._close_busy_dialog("_seg_busy_dialog")
         self.removeObservers()
         self.cleanupShortcuts()
 
@@ -379,6 +385,10 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
         Called just before the scene is closed.
         """
+        if hasattr(self, "pet_segmentation"):
+            self.pet_segmentation.cancel()
+            self._close_busy_dialog("_seg_busy_dialog")
+            self.ui.segButton.setEnabled(True)
         # Parameter node will be reset, do not use it anymore
         MarkupManager.remove_specific_markups(["AC", "PC", "Left", "Right"])
         self.setParameterNode(None)
@@ -681,6 +691,27 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         slicer.util.infoDisplay(
             f"Semi-quantitative calculation finished:\n{additionalInformation}\n{result_text}"
         )
+
+    def onSegButton(self) -> None:
+        node = self._checkCurrentVolume()
+        if not node:
+            return
+        mode = ("freesurfer", "training", "neurosegmenter")[self.ui.segModeSelector.currentIndex]
+        self.ui.segButton.setEnabled(False)
+        self._show_busy_dialog("_seg_busy_dialog", "Segmenting PET, please wait...")
+        try:
+            self.pet_segmentation.segment_async(
+                node, mode=mode, tta=self.ui.segTTACheckBox.isChecked(),
+                callback=self._on_seg_finished)
+        except Exception as exc:
+            self._on_seg_finished(False, None, str(exc))
+
+    def _on_seg_finished(self, success, labelmap, error):
+        self._close_busy_dialog("_seg_busy_dialog")
+        self.ui.segButton.setEnabled(True)
+        if not success:
+            slicer.util.errorDisplay(error)
+
 
     def onLoadAtlasButton(self) -> None:
         """处理加载Atlas按钮点击事件"""
