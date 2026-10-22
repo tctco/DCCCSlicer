@@ -36,3 +36,4 @@ localizer/templates/*.ipynb
 
 # codex
 .codex
+.superpowers/
