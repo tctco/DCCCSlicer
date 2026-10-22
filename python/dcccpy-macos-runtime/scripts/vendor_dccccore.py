@@ -14,16 +14,18 @@ from pathlib import Path
 
 
 REPO = "tctco/DCCCSlicer"
-DEFAULT_VERSION = "4.5.1-alpha"
+DEFAULT_VERSION = "4.6.0-alpha"
 DEFAULT_RELEASE_PLATFORM = "macos-latest-arm64"
 
 EXCLUDE_PROFILES = {
-    "full": (),
+    "full": ("assets/models/seg/",),
     "no-fast-and-acc": (
+        "assets/models/seg/",
         "assets/configs/config.fast_and_acc.toml",
         "assets/models/registration/affine_voxelmorph.fast_and_acc.onnx",
     ),
     "pypi-slim": (
+        "assets/models/seg/",
         "assets/configs/config.fast_and_acc.toml",
         "assets/models/registration/affine_voxelmorph.fast_and_acc.onnx",
         "assets/models/decouple/",

@@ -468,6 +468,10 @@ def seg(
         raise ValueError("mode must be freesurfer, training, or neurosegmenter")
     if isinstance(threads, bool) or not isinstance(threads, int) or threads < 1:
         raise ValueError("threads must be a positive integer")
+    if bundle is None and config is None:
+        from .segmentation import default_seg_bundle
+        executable = dccccore_path(executable=executable)
+        bundle = default_seg_bundle(executable)
     args: list[object] = ["--mode", mode, "--threads", threads]
     if not tta:
         args.append("--no-tta")

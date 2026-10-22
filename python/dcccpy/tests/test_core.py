@@ -21,6 +21,11 @@ from dcccpy.runtime import (
 
 
 def make_fake_dccccore(tmp_path: Path) -> Path:
+    bundle = tmp_path / "assets/models/seg"
+    bundle.mkdir(parents=True, exist_ok=True)
+    for name in ("dccc_seg.onnx", "manifest.json", "grid.json", "plans.json", "dataset.json",
+                 "labels.json", "neurosegmenter_mapping.json", "validation.json"):
+        (bundle / name).write_bytes(b"test runtime resource")
     exe = tmp_path / "DCCCcore"
     exe.write_text(
         "#!/usr/bin/env sh\n"
@@ -79,7 +84,7 @@ def test_seg_rejects_bad_options(kwargs):
 
 
 def test_seg_preserves_native_failure(tmp_path):
-    exe = tmp_path / "DCCCcore"
+    exe = make_fake_dccccore(tmp_path)
     exe.write_text("#!/bin/sh\nprintf 'invalid segmentation model' >&2\nexit 7\n")
     exe.chmod(0o755)
     result = dcccpy.seg("pet.nii", check=False, executable=exe)
@@ -89,6 +94,22 @@ def test_seg_preserves_native_failure(tmp_path):
     with pytest.raises(subprocess.CalledProcessError) as error:
         dcccpy.seg("pet.nii", executable=exe)
     assert error.value.returncode == 7
+
+
+def test_seg_custom_config_does_not_provision_or_override_model(tmp_path, monkeypatch):
+    exe = make_fake_dccccore(tmp_path)
+    (tmp_path / "assets/models/seg/dccc_seg.onnx").unlink()
+    args_file = tmp_path / "args.txt"
+    monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(args_file))
+    monkeypatch.setenv("DCCCPY_AUTO_DOWNLOAD", "0")
+    monkeypatch.setenv("DCCCPY_CACHE_DIR", str(tmp_path / "empty-cache"))
+    config = tmp_path / "custom.toml"
+    config.write_text('[models]\nseg = "offline/custom/dccc_seg.onnx"\n')
+    result = dcccpy.seg("pet.nii", config=config, executable=exe)
+    assert result.returncode == 0
+    args = args_file.read_text().splitlines()
+    assert args[args.index("--config") + 1] == str(config)
+    assert "--bundle" not in args
 
 
 def test_centiloid_omits_output_by_creating_temp_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -187,7 +208,7 @@ def test_dccccore_path_can_disable_auto_download(tmp_path: Path, monkeypatch: py
 
 
 def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    asset_root = tmp_path / "asset" / "DCCCcore-4.5.1-alpha-ubuntu-latest-x64"
+    asset_root = tmp_path / "asset" / "DCCCcore-4.6.0-alpha-ubuntu-latest-x64"
     asset_root.mkdir(parents=True)
     exe = asset_root / "DCCCcore"
     exe.write_text("#!/usr/bin/env sh\nprintf 'fake dccccore\\n'\n")
@@ -195,7 +216,7 @@ def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pyte
 
     archive = tmp_path / "DCCCcore.zip"
     with zipfile.ZipFile(archive, "w") as zf:
-        zf.write(exe, "DCCCcore-4.5.1-alpha-ubuntu-latest-x64/DCCCcore")
+        zf.write(exe, "DCCCcore-4.6.0-alpha-ubuntu-latest-x64/DCCCcore")
 
     monkeypatch.delenv("DCCCPY_DCCCCORE", raising=False)
     monkeypatch.setenv("DCCCPY_AUTO_DOWNLOAD", "1")
@@ -220,7 +241,7 @@ def test_find_existing_dccccore_checks_macos_runtime_package(
     exe.write_text("#!/usr/bin/env sh\n")
     exe.chmod(0o755)
 
-    module = types.SimpleNamespace(DCCCCORE_VERSION="4.5.1-alpha", dccccore_root=lambda: root)
+    module = types.SimpleNamespace(DCCCCORE_VERSION="4.6.0-alpha", dccccore_root=lambda: root)
     monkeypatch.setitem(sys.modules, "dcccpy_macos_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 
@@ -231,10 +252,10 @@ def test_linux_arm64_release_platform() -> None:
     assert release_platform("linux-arm64") == "ubuntu-latest-arm64"
 
 
-def test_default_release_targets_dccccore_450_alpha() -> None:
-    assert DCCCCORE_VERSION == "4.5.1-alpha"
+def test_default_release_targets_dccccore_460_alpha() -> None:
+    assert DCCCCORE_VERSION == "4.6.0-alpha"
     assert release_url(platform_name="ubuntu-latest-x64").endswith(
-        "/releases/download/v4.5.1-alpha/DCCCcore-4.5.1-alpha-ubuntu-latest-x64.zip"
+        "/releases/download/v4.6.0-alpha/DCCCcore-4.6.0-alpha-ubuntu-latest-x64.zip"
     )
 
 
@@ -265,7 +286,7 @@ def test_find_existing_dccccore_checks_linux_arm64_runtime_package(
     exe.write_text("#!/usr/bin/env sh\n")
     exe.chmod(0o755)
 
-    module = types.SimpleNamespace(DCCCCORE_VERSION="4.5.1-alpha", dccccore_root=lambda: root)
+    module = types.SimpleNamespace(DCCCCORE_VERSION="4.6.0-alpha", dccccore_root=lambda: root)
     monkeypatch.setitem(sys.modules, "dcccpy_linux_arm64_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 

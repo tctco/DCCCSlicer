@@ -20,8 +20,11 @@ from .core import (
     suvr,
 )
 from .runtime import DCCCCORE_VERSION, DCCCcoreDownloadError, DCCCcoreNotFoundError, download_dccccore
+from .segmentation import SegModelDownloadError, download_seg_model
 
 __all__ = [
+    "SegModelDownloadError",
+    "download_seg_model",
     "DCCCResult",
     "DCCCCORE_VERSION",
     "DCCCcoreDownloadError",

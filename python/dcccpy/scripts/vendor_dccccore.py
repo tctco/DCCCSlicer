@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 REPO = "tctco/DCCCSlicer"
-DEFAULT_VERSION = "4.5.1-alpha"
+DEFAULT_VERSION = "4.6.0-alpha"
 DEFAULT_RELEASE_PLATFORM = "ubuntu-latest-x64"
 DEFAULT_VENDOR_PLATFORM = "linux-x86_64"
 
@@ -65,7 +65,8 @@ def main() -> int:
             print(f"Expected exactly one top-level directory in {archive}, found {len(roots)}.", file=sys.stderr)
             return 3
 
-        shutil.copytree(roots[0], dest)
+        shutil.copytree(roots[0], dest, ignore=lambda directory, names:
+                        ["seg"] if Path(directory).parts[-2:] == ("assets", "models") else [])
 
     exe = dest / ("DCCCcore.exe" if os.name == "nt" else "DCCCcore")
     if exe.exists() and os.name != "nt":
