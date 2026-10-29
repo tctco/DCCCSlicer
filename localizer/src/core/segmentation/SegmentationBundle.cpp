@@ -36,7 +36,9 @@ Bundle::Bundle(const std::filesystem::path& path) : directory(path) {
             "tensor dtype");
     require(manifest.at("output").at("channels") == 96 && labels.at("num_output_channels") == 96,
             "class count");
-    require(manifest.at("mirroring_axes") == nlohmann::json::array({0, 1, 2}), "mirror axes");
+    require(manifest.at("mirroring_axes") == nlohmann::json::array(), "mirror axes must be empty");
+    require(manifest.contains("default_tta") && manifest.at("default_tta") == false,
+            "default TTA must be false");
     require(plans.at("transpose_forward") == nlohmann::json::array({0, 1, 2}) &&
                 plans.at("transpose_backward") == nlohmann::json::array({0, 1, 2}),
             "axis order");

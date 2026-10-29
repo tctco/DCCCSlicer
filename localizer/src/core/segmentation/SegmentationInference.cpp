@@ -30,7 +30,7 @@ std::vector<short> predict(const std::vector<float>& normalized, const std::arra
         pad[d] = (size[d] - crop[d]) / 2;
     }
     const size_t count = size_t(size[0]) * size[1] * size[2];
-    std::vector<float> padded(count, 0), input(count);
+    std::vector<float> padded(count, 0);
     for (int z = 0; z < crop[2]; ++z)
         for (int y = 0; y < crop[1]; ++y)
             for (int x = 0; x < crop[0]; ++x)
@@ -64,40 +64,17 @@ std::vector<short> predict(const std::vector<float>& normalized, const std::arra
     auto memory = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
     const char* inputNames[] = {"image"};
     const char* outputNames[] = {"logits"};
-    std::vector<float> sum;
-    // itertools.combinations order in nnU-Net: D,H,W,DH,DW,HW,DHW.
-    const int masks[] = {0, 1, 2, 4, 3, 5, 6, 7};
-    const int passes = options.tta ? 8 : 1;
-    for (int pass = 0; pass < passes; ++pass) {
-        const int mask = masks[pass];
-        std::cout << "[seg] ONNX mirror " << pass + 1 << "/" << passes << std::endl;
-        for (int z = 0; z < size[2]; ++z)
-            for (int y = 0; y < size[1]; ++y)
-                for (int x = 0; x < size[0]; ++x)
-                    input[offset(x, y, z, size)] = padded[offset(
-                        mask & 4 ? size[0] - 1 - x : x, mask & 2 ? size[1] - 1 - y : y,
-                        mask & 1 ? size[2] - 1 - z : z, size)];
-        auto value = Ort::Value::CreateTensor<float>(memory, input.data(), count, shape.data(),
-                                                     shape.size());
-        auto output = session.Run(Ort::RunOptions{nullptr}, inputNames, &value, 1, outputNames, 1);
-        const std::vector<int64_t> expected{1, 96, size[2], size[1], size[0]};
-        if (output[0].GetTensorTypeAndShapeInfo().GetShape() != expected)
-            throw std::runtime_error("Unexpected segmentation logits shape");
-        const auto* logits = output[0].GetTensorData<float>();
-        if (pass == 0) sum.resize(count * 96, 0);
-        for (int c = 0; c < 96; ++c)
-            for (int z = 0; z < size[2]; ++z)
-                for (int y = 0; y < size[1]; ++y)
-                    for (int x = 0; x < size[0]; ++x) {
-                        const auto i = offset(x, y, z, size);
-                        const float v = logits[size_t(c) * count +
-                                               offset(mask & 4 ? size[0] - 1 - x : x,
-                                                      mask & 2 ? size[1] - 1 - y : y,
-                                                      mask & 1 ? size[2] - 1 - z : z, size)];
-                        if (!std::isfinite(v)) throw std::runtime_error("Nonfinite network logits");
-                        sum[size_t(c) * count + i] += v;
-                    }
-    }
+    // This checkpoint was trained without flips. Never mirror or ensemble it.
+    std::cout << "[seg] ONNX prediction 1/1" << std::endl;
+    auto value = Ort::Value::CreateTensor<float>(memory, padded.data(), count, shape.data(),
+                                                shape.size());
+    auto output = session.Run(Ort::RunOptions{nullptr}, inputNames, &value, 1, outputNames, 1);
+    const std::vector<int64_t> expected{1, 96, size[2], size[1], size[0]};
+    if (output[0].GetTensorTypeAndShapeInfo().GetShape() != expected)
+        throw std::runtime_error("Unexpected segmentation logits shape");
+    const auto* logits = output[0].GetTensorData<float>();
+    for (size_t i = 0; i < count * 96; ++i)
+        if (!std::isfinite(logits[i])) throw std::runtime_error("Nonfinite network logits");
     // scipy gaussian_filter(delta) is separable; normalization cancels kernel
     // constants. Match its FP16 scaling and minimum nonzero replacement.
     std::vector<float> gaussian(count);
@@ -126,7 +103,7 @@ std::vector<short> predict(const std::vector<float>& normalized, const std::arra
                     // torch: prediction (FP32) *= gaussian (FP16), += into FP16
                     // accumulator, then div(..., out=FP16). Preserve rounding and ties.
                     const float value = half(
-                        half((sum[size_t(c) * count + i] / passes) * gaussian[i]) / gaussian[i]);
+                        half(logits[size_t(c) * count + i] * gaussian[i]) / gaussian[i]);
                     if (!std::isfinite(value))
                         throw std::runtime_error("Nonfinite accumulated logits");
                     if (value > best) {

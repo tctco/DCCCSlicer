@@ -16,16 +16,35 @@ def load_adapter():
     return module.PetSegmentationLogic
 
 
-def test_seg_command_preserves_path_arguments_and_tta_default(tmp_path):
+def test_seg_command_preserves_path_arguments_without_flip_options(tmp_path):
     logic = load_adapter()(tmp_path)
     command = logic.command("input pet.nii.gz", "output labels.nii.gz")
     assert command[1:] == ["seg", "--input", "input pet.nii.gz", "--output",
                            "output labels.nii.gz", "--mode", "freesurfer", "--threads", "4"]
-    command = logic.command("in", "out", mode="training", tta=False)
-    assert command[-1] == "--no-tta"
+    command = logic.command("in", "out", mode="training")
     assert command[command.index("--mode") + 1] == "training"
     with pytest.raises(ValueError):
         logic.command("in", "out", mode="wrong")
+
+
+@pytest.mark.parametrize("tta", [True, False])
+def test_seg_adapter_rejects_legacy_tta_keyword(tmp_path, monkeypatch, tta):
+    logic = load_adapter()(tmp_path)
+    with pytest.raises(TypeError, match="tta"):
+        logic.command("in", "out", tta=tta)
+    monkeypatch.setitem(sys.modules, "qt", types.SimpleNamespace())
+    monkeypatch.setitem(sys.modules, "slicer", types.SimpleNamespace())
+    with pytest.raises(TypeError, match="tta"):
+        logic.segment_async(None, tta=tta, callback=lambda *args: None)
+
+
+def test_seg_ui_has_no_flip_control():
+    import xml.etree.ElementTree as ET
+    path = Path(__file__).resolve().parents[2] / "Resources/UI/localizer.ui"
+    ui = ET.parse(path)
+    controls = ui.findall(".//widget[@class='QCheckBox']")
+    assert not any("tta" in c.attrib.get("name", "").lower() or
+                   "flip" in c.attrib.get("name", "").lower() for c in controls)
 
 
 def test_label_names_are_mode_specific_and_pons_unavailable(tmp_path):

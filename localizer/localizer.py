@@ -701,7 +701,7 @@ class localizerWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._show_busy_dialog("_seg_busy_dialog", "Segmenting PET, please wait...")
         try:
             self.pet_segmentation.segment_async(
-                node, mode=mode, tta=self.ui.segTTACheckBox.isChecked(),
+                node, mode=mode,
                 callback=self._on_seg_finished)
         except Exception as exc:
             self._on_seg_finished(False, None, str(exc))

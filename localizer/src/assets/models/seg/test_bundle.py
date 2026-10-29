@@ -4,10 +4,44 @@ from pathlib import Path
 import nibabel as nib
 import numpy as np
 import pytest
+import inspect
+import json
+import subprocess
+import sys
 
 spec = importlib.util.spec_from_file_location('dccc_seg', Path(__file__).with_name('dccc_seg.py'))
 m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
+
+
+@pytest.mark.parametrize('tta', [True, False])
+def test_reference_interfaces_do_not_accept_tta(tta):
+    for function, args in [(m.make_predictor, [Path('.')]),
+                           (m.segment, ['input', 'output', Path('.'), 'work'])]:
+        with pytest.raises(TypeError, match='tta'):
+            inspect.signature(function).bind(*args, tta=tta)
+
+
+@pytest.mark.parametrize('flag', ['--tta', '--no-tta', '--flip'])
+def test_reference_cli_rejects_flip_flags(flag, tmp_path):
+    result = subprocess.run([sys.executable, str(Path(m.__file__)), '--input', 'missing.nii',
+        '--output', str(tmp_path/'out.nii'), '--bundle', str(tmp_path), '--work-dir',
+        str(tmp_path/'work'), '--rigid-header', 'missing.nii', flag], capture_output=True, text=True)
+    assert result.returncode == 2
+    assert 'unrecognized arguments' in result.stderr
+    assert flag in result.stderr
+
+
+@pytest.mark.parametrize('manifest', [
+    {'mirroring_axes': [0], 'default_tta': False},
+    {'mirroring_axes': [], 'default_tta': True},
+    {'mirroring_axes': [], 'default_tta': 'false'},
+    {'mirroring_axes': []},
+])
+def test_reference_rejects_incompatible_manifest_before_session(tmp_path, manifest):
+    (tmp_path/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match='no-flip'):
+        m.make_predictor(tmp_path)
 
 
 def test_label_mapping_and_brainstem_limitation():

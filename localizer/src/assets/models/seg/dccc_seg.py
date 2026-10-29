@@ -75,8 +75,12 @@ def restore_native(task, native, rigid_affine):
     return result
 
 
-def make_predictor(bundle, provider='CPUExecutionProvider', threads=4, tta=True):
-    """Reuse official Gaussian sliding windows, mirroring, and accumulation."""
+def make_predictor(bundle, provider='CPUExecutionProvider', threads=4):
+    """Reuse official Gaussian sliding windows and accumulation, without flips."""
+    bundle = Path(bundle)
+    manifest = read(bundle/'manifest.json')
+    if manifest.get('mirroring_axes') != [] or manifest.get('default_tta') is not False:
+        raise ValueError('This no-flip model requires empty mirroring axes and default_tta=false')
     os.environ['nnUNet_compile'] = 'false'
     import onnxruntime as ort
     import torch
@@ -95,9 +99,8 @@ def make_predictor(bundle, provider='CPUExecutionProvider', threads=4, tta=True)
             return torch.from_numpy(output)
     plans = PlansManager(read(bundle/'plans.json'))
     config = plans.get_configuration('3d_fullres')
-    manifest = read(bundle/'manifest.json')
     predictor = nnUNetPredictor(device=torch.device('cpu'), perform_everything_on_device=False,
-                               use_mirroring=tta, tile_step_size=0.5, use_gaussian=True,
+                               use_mirroring=False, tile_step_size=0.5, use_gaussian=True,
                                verbose=False, allow_tqdm=True)
     predictor.manual_initialization(Network(), plans, config, [{}], read(bundle/'dataset.json'),
                                     manifest['trainer_name'], tuple(manifest['mirroring_axes']))
@@ -106,7 +109,7 @@ def make_predictor(bundle, provider='CPUExecutionProvider', threads=4, tta=True)
 
 def segment(input_path, output_path, bundle, work_dir, rigid_header=None,
             rigid_checkpoint=None, repo=None, mode='freesurfer',
-            provider='CPUExecutionProvider', threads=4, tta=True):
+            provider='CPUExecutionProvider', threads=4):
     """Segment one 3-D native PET. Exactly one rigid source is mandatory.
 
     rigid_header must be an index-preserving, two-iteration DCCC rigid result
@@ -161,12 +164,12 @@ def segment(input_path, output_path, bundle, work_dir, rigid_header=None,
                             mode='constant', cval=0)
     task_path = work_dir/'pet_task_0000.nii.gz'; nib.save(task, task_path)
     LOG.info('Materialized training grid; running official preprocessing')
-    predictor = make_predictor(bundle, provider, threads, tta)
+    predictor = make_predictor(bundle, provider, threads)
     data, _, properties = DefaultPreprocessor(verbose=False).run_case(
         [str(task_path)], None, predictor.plans_manager,
         predictor.configuration_manager, predictor.dataset_json)
     np.save(work_dir/'preprocessed_input.npy', data)
-    LOG.info('Predicting %s with ONNX (%s), TTA=%s', data.shape, provider, tta)
+    LOG.info('Predicting %s with ONNX (%s), one unflipped prediction', data.shape, provider)
     logits = predictor.predict_logits_from_preprocessed_data(torch.from_numpy(data))
     if not torch.isfinite(logits).all():
         raise RuntimeError('Nonfinite network logits')
@@ -189,7 +192,7 @@ def segment(input_path, output_path, bundle, work_dir, rigid_header=None,
                'output': str(Path(output_path).resolve()), 'mode': mode,
                'native_shape': list(native.shape), 'native_affine': native.affine.tolist(),
                'rigid_affine': rigid_affine.tolist(), 'task_grid': grid,
-               'provider': provider, 'tta': tta, 'tile_step_size': 0.5,
+               'provider': provider, 'tta': False, 'tile_step_size': 0.5,
                'neurosegmenter_limitations': mapping['limitations'] if mode == 'neurosegmenter' else [],
                'completed_unix': time.time()}
     (work_dir/'receipt.json').write_text(json.dumps(receipt, indent=2)+'\n')
@@ -210,13 +213,12 @@ def main():
     parser.add_argument('--mode', choices=['freesurfer', 'training', 'neurosegmenter'], default='freesurfer')
     parser.add_argument('--provider', default='CPUExecutionProvider')
     parser.add_argument('--threads', type=int, default=4)
-    parser.add_argument('--no-tta', action='store_true', help='Faster, changes inference protocol')
     args = parser.parse_args()
     if args.threads < 1: parser.error('--threads must be positive')
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
     os.umask(0o077)
     segment(args.input, args.output, args.bundle, args.work_dir, args.rigid_header,
-            args.rigid_checkpoint, args.repo, args.mode, args.provider, args.threads, not args.no_tta)
+            args.rigid_checkpoint, args.repo, args.mode, args.provider, args.threads)
 
 
 if __name__ == '__main__':

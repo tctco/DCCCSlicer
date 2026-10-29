@@ -22,7 +22,6 @@ def main():
     parser.add_argument("--bundle", required=True, type=Path)
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--work-dir", required=True, type=Path)
-    parser.add_argument("--no-tta", action="store_true")
     parser.add_argument("--threads", type=int, default=4)
     args = parser.parse_args()
     args.work_dir.mkdir(parents=True, exist_ok=False, mode=0o700)
@@ -30,8 +29,6 @@ def main():
     command = [str(args.core.resolve()), "seg", "--input", str(args.input.resolve()),
                "--output", str(native_output.resolve()), "--bundle", str(args.bundle.resolve()),
                "--threads", str(args.threads), "--debug"]
-    if args.no_tta:
-        command.append("--no-tta")
     start = time.monotonic()
     subprocess.run(command, check=True)
     cpp_seconds = time.monotonic() - start
@@ -54,7 +51,7 @@ def main():
     start = time.monotonic()
     reference.segment(args.input, args.work_dir / "reference.nii.gz", args.bundle,
                       args.work_dir / "reference_work", rigid_header=reference_header,
-                      threads=args.threads, tta=not args.no_tta)
+                      threads=args.threads)
     reference_seconds = time.monotonic() - start
     native = nib.load(args.input)
     actual = nib.load(native_output)
@@ -72,7 +69,8 @@ def main():
     union = (a != 0) | (b != 0)
     import onnxruntime
     import torch
-    report = {"input": str(args.input), "tta": not args.no_tta, "threads": args.threads,
+    assert receipt["tta"] is False
+    report = {"input": str(args.input), "tta": False, "threads": args.threads,
               "parity_scope": "downstream segmentation conditioned on the C++ rigid header",
               "native_rigid_predictions": len(rigid_steps),
               "rigid_header_transport": "NIfTI-2 carrying the exact JSON affine",

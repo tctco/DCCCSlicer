@@ -3,14 +3,10 @@
   "dataset": "Dataset618_DCCC_FineDKT_1p5mm_Fold0",
   "fold": 0,
   "checkpoint": "checkpoint_final.pth",
-  "checkpoint_size": 256180253,
-  "checkpoint_mtime_ns": 1792544763072898194,
+  "checkpoint_size": 256174229,
+  "checkpoint_mtime_ns": 1793008086309204242,
   "trainer_name": "nnUNetTrainer",
-  "mirroring_axes": [
-    0,
-    1,
-    2
-  ],
+  "mirroring_axes": [],
   "input": {
     "name": "image",
     "dtype": "float32",
@@ -34,5 +30,12 @@
   "torch_version": "2.14.0+cu130",
   "onnx_version": "1.22.0",
   "onnxruntime_version": "1.29.0",
-  "export_unix": 1792604506.6864262
+  "export_unix": 1793261170.7893426,
+  "training_protocol": "no-flip final1000 fold0",
+  "default_tta": false,
+  "precision": "fp16_storage",
+  "comparison_scope": "FP32 versus FP16 storage; ONNX is deployment format only",
+  "network_arithmetic": "float32",
+  "external_io": "float32",
+  "validated_internal_scans": 633
 }

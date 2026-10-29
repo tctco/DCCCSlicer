@@ -2,6 +2,8 @@
 import json
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 
 import pytest
 
@@ -10,9 +12,31 @@ def test_seg_help_describes_native_labels(run_subprocess):
     result = run_subprocess(["seg", "--help"])
     assert result.returncode == 0
     assert "--mode" in result.stdout
-    assert "--no-tta" in result.stdout
+    assert "--no-tta" not in result.stdout
+    assert "--tta" not in result.stdout
+    assert "--flip" not in result.stdout
     assert "--rigid-header" in result.stdout
     assert "pons" in result.stdout.lower()
+
+
+@pytest.mark.parametrize("flag", ["--tta", "--no-tta", "--flip", "--no-flip"])
+def test_seg_rejects_removed_flip_switches(run_subprocess, tmp_path, flag):
+    result = run_subprocess(["seg", "--input", "missing.nii", "--output",
+                             str(tmp_path / "out.nii.gz"), flag])
+    assert result.returncode != 0
+    assert flag in result.stderr
+    assert "unknown" in result.stderr.lower() or "unrecognized" in result.stderr.lower()
+
+
+@pytest.mark.parametrize("flag", ["--tta", "--no-tta", "--flip"])
+def test_parity_cli_rejects_flip_switches(tmp_path, flag):
+    script = Path(__file__).resolve().parents[3] / "scripts/validate-seg-parity.py"
+    result = subprocess.run([sys.executable, str(script), "--core", "missing-core",
+        "--bundle", "missing-bundle", "--input", "missing.nii", "--work-dir",
+        str(tmp_path / "parity-work"), flag], capture_output=True, text=True)
+    assert result.returncode == 2
+    assert "unrecognized arguments" in result.stderr
+    assert flag in result.stderr
 
 
 @pytest.mark.parametrize("args, message", [
@@ -74,18 +98,24 @@ def test_seg_rejects_invalid_images(run_subprocess, tmp_path, kind, message):
 
 
 @pytest.mark.parametrize("kind, message", [("count", "class count"),
-    ("dataset", "dataset label mapping"), ("region", "regional label mapping")])
+    ("dataset", "dataset label mapping"), ("region", "regional label mapping"),
+    ("axes", "mirror axes"), ("tta", "default TTA"),
+    ("missing_tta", "default TTA"), ("malformed_tta", "default TTA")])
 def test_seg_rejects_inconsistent_bundle(run_subprocess, tmp_path, kind, message):
     source = Path(__file__).parents[1] / "assets/models/seg"
     bundle = tmp_path / "bundle"
     bundle.mkdir()
     for path in source.glob("*.json"):
         shutil.copyfile(path, bundle / path.name)
-    filename = {"count": "manifest.json", "dataset": "dataset.json", "region": "neurosegmenter_mapping.json"}[kind]
+    filename = {"dataset": "dataset.json", "region": "neurosegmenter_mapping.json"}.get(kind, "manifest.json")
     metadata = json.loads((bundle / filename).read_text())
     if kind == "count": metadata["output"]["channels"] = 95
     if kind == "dataset": metadata["labels"]["background"] = 99
     if kind == "region": del metadata["raw_to_neuro"]["17"]
+    if kind == "axes": metadata["mirroring_axes"] = [0, 1, 2]
+    if kind == "tta": metadata["default_tta"] = True
+    if kind == "missing_tta": metadata.pop("default_tta", None)
+    if kind == "malformed_tta": metadata["default_tta"] = "false"
     (bundle / filename).write_text(json.dumps(metadata))
     (bundle / "dccc_seg.onnx").touch()
     result = run_subprocess(["seg", "--input", "missing.nii", "--output", str(tmp_path / "out.nii"), "--bundle", str(bundle)])
@@ -103,6 +133,9 @@ def constant_bundle(tmp_path_factory):
     source = Path(__file__).parents[1] / "assets/models/seg"
     for path in source.glob("*.json"):
         shutil.copyfile(path, directory / path.name)
+    manifest = json.loads((directory / "manifest.json").read_text())
+    manifest.update(mirroring_axes=[], default_tta=False)
+    (directory / "manifest.json").write_text(json.dumps(manifest))
     biases = np.zeros((1, 96, 1, 1, 1), dtype=np.float32)
     biases[0, 13] = 1
     graph = helper.make_graph([helper.make_node("Expand", ["bias", "shape"], ["logits"])],
@@ -114,9 +147,9 @@ def constant_bundle(tmp_path_factory):
     return directory
 
 
-@pytest.mark.parametrize("mode, label, tta", [("training", 13, False),
-    ("freesurfer", 17, True), ("neurosegmenter", 47, False)])
-def test_seg_oblique_native_geometry_and_labels(run_subprocess, tmp_path, constant_bundle, mode, label, tta):
+@pytest.mark.parametrize("mode, label", [("training", 13),
+    ("freesurfer", 17), ("neurosegmenter", 47)])
+def test_seg_oblique_native_geometry_and_labels(run_subprocess, tmp_path, constant_bundle, mode, label):
     import numpy as np
     import nibabel as nib
     from nibabel.processing import resample_from_to
@@ -130,7 +163,6 @@ def test_seg_oblique_native_geometry_and_labels(run_subprocess, tmp_path, consta
     nib.save(nib.Nifti1Image(data, rigid_affine), header)
     args = ["seg", "--input", str(source), "--output", str(output), "--rigid-header", str(header),
             "--bundle", str(constant_bundle), "--mode", mode, "--debug"]
-    if not tta: args += ["--no-tta"]
     result = run_subprocess(args)
     assert result.returncode == 0, result.stdout + result.stderr
     actual = nib.load(output)
@@ -151,5 +183,33 @@ def test_seg_oblique_native_geometry_and_labels(run_subprocess, tmp_path, consta
     debug_task = nib.load(tmp_path / "labels.nii_pet_task.nii.gz")
     np.testing.assert_allclose(debug_task.get_fdata(), task.get_fdata(), atol=1e-3)
     receipt = json.loads((tmp_path / "labels.nii_receipt.json").read_text())
-    assert receipt["tta"] is tta
+    assert receipt["tta"] is False
+    assert result.stdout.count("[seg] ONNX prediction 1/1") == 1
     np.testing.assert_allclose(receipt["native_affine"], nib.load(source).affine, atol=1e-5)
+
+
+def test_seg_single_pass_preserves_asymmetric_labels(run_subprocess, tmp_path, constant_bundle):
+    import numpy as np
+    import nibabel as nib
+    import onnx
+    from onnx import helper, numpy_helper
+    bundle = tmp_path / "asymmetric-bundle"
+    shutil.copytree(constant_bundle, bundle)
+    model = onnx.load(bundle / "dccc_seg.onnx")
+    # A spatially asymmetric real graph detects any hidden mirror averaging:
+    # mirroring makes the left/right class scores tie instead of preserving them.
+    biases = np.zeros((1, 96, 1, 1, 128), dtype=np.float32)
+    biases[0, 13, :, :, :64] = 2
+    biases[0, 1, :, :, 64:] = 2
+    model.graph.initializer[0].CopyFrom(numpy_helper.from_array(biases, "bias"))
+    onnx.save(model, bundle / "dccc_seg.onnx")
+    grid = json.loads((bundle / "grid.json").read_text())
+    data = np.ones(tuple(grid["shape"]), dtype=np.float32)
+    source, output = tmp_path / "pet.nii.gz", tmp_path / "labels.nii.gz"
+    nib.save(nib.Nifti1Image(data, np.array(grid["affine"])), source)
+    result = run_subprocess(["seg", "--input", str(source), "--rigid-header", str(source),
+                             "--output", str(output), "--bundle", str(bundle), "--mode", "training"])
+    assert result.returncode == 0, result.stdout + result.stderr
+    labels = nib.load(output).get_fdata()
+    assert np.all(labels[:64] == 13)
+    assert np.all(labels[64:] == 1)

@@ -23,12 +23,6 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="segTTACheckBox">
-        <property name="text"><string>Mirror TTA (8 predictions)</string></property>
-        <property name="checked"><bool>true</bool></property>
-       </widget>
-      </item>
-      <item>
        <widget class="QLabel" name="segLimitationLabel">
         <property name="text"><string>Native PET labels. NeuroSegmenter IDs 45/46 are unavailable; pons SUVR is unsupported.</string></property>
         <property name="wordWrap"><bool>true</bool></property>

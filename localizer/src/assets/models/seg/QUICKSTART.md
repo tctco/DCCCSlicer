@@ -1,39 +1,23 @@
-# DCCC Seg integration quick start
+# DCCC no-flip nnU-Net CPU integration bundle
 
-Complete model + scripts + controls:
-`/mnt/TOSHIBA-MG09-A/dccc-eval-private-cheng/dccc_seg_onnx_20261022`
+Selected model: FP16; final1000 fold0; 96 mutually exclusive classes.
 
-Use the repository's `.venv` (Python 3.12; nnunetv2 2.8.1). Copy the entire bundle
-for handoff. The segmentation checkpoint is not needed at inference time.
+FP16 means binary16 weight storage with FP32 network computation. It reduces the network file size; no runtime speed or memory improvement is claimed. The full held-out internal633 study used GPU with FP32 arithmetic in both arms and changed only weight rounding. The actual CPU deployment artifacts additionally passed FDG/CFT/APN input, geometry and native-output checks. Small precision/environment differences are retained in validation.json. This is a two-arm FP32/FP16 comparison, not an additional ONNX study.
+
+## Run
+
+Use the existing DCCC Python environment with nnunetv2, torch, onnxruntime, nibabel, numpy and SimpleITK. This bundle uses CPUExecutionProvider and no inference mirroring by default and requires no segmentation training checkpoint.
 
 ```bash
-python /path/to/bundle/dccc_seg.py \
-  --bundle /path/to/bundle \
-  --input pet_native.nii.gz \
-  --rigid-header pet_after_two_rigid_iterations.nii.gz \
-  --output seg_native.nii.gz \
-  --work-dir /hdd/private/new_case_work \
-  --mode freesurfer
+python /path/to/bundle/dccc_seg.py --bundle /path/to/bundle \
+  --input /path/to/native_pet.nii.gz \
+  --rigid-header /path/to/its_index_preserving_two_iteration_rigid_pet.nii.gz \
+  --output /path/to/new_native_labels.nii.gz \
+  --work-dir /hdd/private/new_work_directory --mode freesurfer
 ```
 
-- The rigid header must preserve the original PET voxel array and belong to the
-  same PET. The script materializes the actual training grid before official
-  nnU-Net preprocessing. Do not pass an already resampled aligned image here.
-- `freesurfer`: default, original DKT/aseg IDs; `training`: class IDs 0–95;
-  `neurosegmenter`: official regional aggregation with **no brainstem/pons split**.
-  NeuroSegmenter IDs 45/46 are unavailable; pons SUVR is unsupported.
-- Output NIfTI has the native PET shape and affine. Spatial restoration uses
-  nearest-neighbor sampling through the recorded rigid/task grids.
-- Network: FP32 `image` [1,1,128,192,128] -> `logits` [1,96,128,192,128],
-  using official preprocessed axis order. Default mirror TTA is enabled.
-- `labels.json` defines all reversible classes; `neurosegmenter_mapping.json`
-  defines aggregated labels and limitations. `dccc_seg.py` exposes `segment()`
-  and `map_labels()` for integration; see README.md for Python examples.
-- Existing outputs are never overwritten. Work directory must be new, private,
-  and on HDD. Inspect a representative pilot again after integration changes.
+The native PET and rigid-header PET must have identical voxel arrays. The rigid header must belong to this input and record the accepted two-iteration DCCC rigid mapping. The wrapper materializes the verified 1.5mm training lattice before official nnU-Net preprocessing, then returns categorical labels to native PET space by nearest-neighbor interpolation through the recorded grids. Do not pass an already resampled PET as a rigid header and do not apply rigid normalization twice. Existing outputs are refused. Store private work assets on HDD.
 
-See `validation.json` for measured checks and `README.md` for full contracts.
+The importable segment() API has the same arguments; tta=False is the default for this no-flip checkpoint. Training class IDs0-95 are mapped losslessly to the original FreeSurfer/DKT IDs by default. Optional NeuroSegmenter aggregation is anatomically partial: whole brainstem is not split into pons, labels45/46 are unavailable and pons SUVR normalization is unsupported.
 
-Verified on one real FDG CPU case with default TTA: 99.99909% native voxel
-agreement with PyTorch, 30 differing voxels; native shape/affine preserved.
-Four regression tests pass. GPU/provider changes require a fresh pilot.
+The ONNX graph contains the segmentation network only, with float32 external image/logits I/O. Plans, training grid and label controls are included. CPU/GPU changes require a representative visual pilot. No patient images or patient source paths are included.

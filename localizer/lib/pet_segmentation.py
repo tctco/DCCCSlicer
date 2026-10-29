@@ -14,13 +14,11 @@ class PetSegmentationLogic:
         self._work = None
         self._callback = None
 
-    def command(self, input_path, output_path, *, mode="freesurfer", tta=True):
+    def command(self, input_path, output_path, *, mode="freesurfer"):
         if mode not in ("freesurfer", "training", "neurosegmenter"):
             raise ValueError("Unknown segmentation mode")
         args = [str(self.executable), "seg", "--input", str(input_path),
                 "--output", str(output_path), "--mode", mode, "--threads", "4"]
-        if not tta:
-            args.append("--no-tta")
         return args
 
     def label_names(self, mode):
@@ -58,7 +56,7 @@ class PetSegmentationLogic:
                 slicer.mrmlScene.RemoveNode(colors)
             raise
 
-    def segment_async(self, input_node, *, mode="freesurfer", tta=True, callback):
+    def segment_async(self, input_node, *, mode="freesurfer", callback):
         import qt
         import slicer
         if self.process is not None:
@@ -80,7 +78,7 @@ class PetSegmentationLogic:
             if not slicer.util.saveNode(clone, str(directory / "pet.nii.gz")):
                 raise RuntimeError("Cannot export PET volume")
             self._source_id, self._source_name, self._mode = input_node.GetID(), input_node.GetName(), mode
-            command = self.command(directory / "pet.nii.gz", directory / "labels.nii.gz", mode=mode, tta=tta)
+            command = self.command(directory / "pet.nii.gz", directory / "labels.nii.gz", mode=mode)
             self._callback = callback
             self.process = qt.QProcess()
             self.process.setWorkingDirectory(str(self.executable.parent))

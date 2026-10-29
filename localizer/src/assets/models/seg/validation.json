@@ -1,61 +1,494 @@
 {
-  "status": "passed_network_probes_and_real_cpu_pilots",
-  "checks": [
+  "cpu_numerical_audit": [
     {
-      "shape": [
-        1,
-        1,
-        32,
-        64,
-        32
-      ],
-      "max_absolute_error": 4.38690185546875e-05,
-      "mean_absolute_error": 2.6040572720376076e-06,
-      "argmax_agreement": 1.0,
-      "allclose_rtol_1e-3_atol_1e-4": true
+      "tracer": "FDG",
+      "cpu_fp32_fp16_disagreement_voxels": 71,
+      "arms": {
+        "fp32": {
+          "gpu_cpu_disagreement_voxels": 54,
+          "preprocessed_max_absolute_difference": 0.0,
+          "common50": {
+            "cpu": 0.7273165528642979,
+            "gpu": 0.7273734172427183,
+            "cpu_minus_gpu": -5.6864378420451445e-05
+          },
+          "fine95": {
+            "cpu": 0.7118551817924033,
+            "gpu": 0.7120770556647531,
+            "cpu_minus_gpu": -0.00022187387234984257
+          }
+        },
+        "fp16": {
+          "gpu_cpu_disagreement_voxels": 36,
+          "preprocessed_max_absolute_difference": 0.0,
+          "common50": {
+            "cpu": 0.7273452465550868,
+            "gpu": 0.7273398093952511,
+            "cpu_minus_gpu": 5.437159835697258e-06
+          },
+          "fine95": {
+            "cpu": 0.7119402957123165,
+            "gpu": 0.7119068017948627,
+            "cpu_minus_gpu": 3.349391745388619e-05
+          }
+        }
+      }
     },
     {
-      "shape": [
-        1,
-        1,
-        64,
-        32,
-        64
-      ],
-      "max_absolute_error": 8.392333984375e-05,
-      "mean_absolute_error": 4.062231255375082e-06,
-      "argmax_agreement": 0.9999923706054688,
-      "allclose_rtol_1e-3_atol_1e-4": true
-    }
-  ],
-  "real_volume_pilots": [
-    {
-      "status": "complete",
-      "tta": false,
-      "provider": "CPUExecutionProvider",
-      "native_shape_matches": true,
-      "native_affine_matches": true,
-      "native_voxel_agreement": 0.9999887225928527,
-      "foreground_union_voxel_agreement": 0.9998054740649611,
-      "disagreement_voxels": 37,
-      "seconds": 32.50105881690979,
-      "full_tta_pilot_verified": false,
-      "visual_review": "Actual normalized input, task PET and native overlays reviewed; no evident geometric mismatch."
+      "tracer": "CFT",
+      "cpu_fp32_fp16_disagreement_voxels": 102,
+      "arms": {
+        "fp32": {
+          "gpu_cpu_disagreement_voxels": 64,
+          "preprocessed_max_absolute_difference": 0.0,
+          "common50": {
+            "cpu": 0.6825289955919,
+            "gpu": 0.6826803355253133,
+            "cpu_minus_gpu": -0.0001513399334133192
+          },
+          "fine95": {
+            "cpu": 0.6591505196596644,
+            "gpu": 0.6593331839499762,
+            "cpu_minus_gpu": -0.00018266429031177367
+          }
+        },
+        "fp16": {
+          "gpu_cpu_disagreement_voxels": 67,
+          "preprocessed_max_absolute_difference": 0.0,
+          "common50": {
+            "cpu": 0.6825394084781968,
+            "gpu": 0.682646713945655,
+            "cpu_minus_gpu": -0.00010730546745818526
+          },
+          "fine95": {
+            "cpu": 0.6592713594495915,
+            "gpu": 0.659340671558609,
+            "cpu_minus_gpu": -6.931210901750529e-05
+          }
+        }
+      }
     },
     {
-      "status": "complete",
-      "tta": true,
-      "provider": "CPUExecutionProvider",
-      "native_shape_matches": true,
-      "native_affine_matches": true,
-      "native_voxel_agreement": 0.9999908561563671,
-      "foreground_union_voxel_agreement": 0.9998423608045904,
-      "disagreement_voxels": 30,
-      "seconds": 146.3200900554657,
-      "full_tta_pilot_verified": true,
-      "visual_review": "Actual normalized input, task PET and native overlays reviewed; no evident geometric mismatch."
+      "tracer": "APN",
+      "cpu_fp32_fp16_disagreement_voxels": 115,
+      "arms": {
+        "fp32": {
+          "gpu_cpu_disagreement_voxels": 70,
+          "preprocessed_max_absolute_difference": 0.0,
+          "common50": {
+            "cpu": 0.6303009333779063,
+            "gpu": 0.6304195871096163,
+            "cpu_minus_gpu": -0.00011865373171005
+          },
+          "fine95": {
+            "cpu": 0.6241466200730095,
+            "gpu": 0.6242246141037101,
+            "cpu_minus_gpu": -7.799403070063438e-05
+          }
+        },
+        "fp16": {
+          "gpu_cpu_disagreement_voxels": 68,
+          "preprocessed_max_absolute_difference": 0.0,
+          "common50": {
+            "cpu": 0.6303357343876663,
+            "gpu": 0.63037346929604,
+            "cpu_minus_gpu": -3.7734908373665554e-05
+          },
+          "fine95": {
+            "cpu": 0.6241381654214235,
+            "gpu": 0.6241853277325158,
+            "cpu_minus_gpu": -4.716231109225255e-05
+          }
+        }
+      }
     }
   ],
-  "scope": "One FDG case, CPU FP32 network, official nnU-Net half-precision accumulation; numerical differences retained. Not clinical accuracy validation.",
-  "regression_tests_passed": 4
+  "status": "complete",
+  "cases": 633,
+  "comparison": {
+    "rows": [
+      {
+        "group": "All",
+        "endpoint": "common50",
+        "scans": 633,
+        "patients": 386,
+        "supported_rois": 50,
+        "predefined_rois": 50,
+        "fp32": 0.7155193903695909,
+        "fp16": 0.7155311891154785,
+        "delta": 1.1798745887636741e-05,
+        "fp32_ci95": [
+          0.7089517001067019,
+          0.7212067442070977
+        ],
+        "fp16_ci95": [
+          0.7089631659679488,
+          0.7212150527887445
+        ],
+        "delta_ci95": [
+          5.451596272862402e-06,
+          1.8376495584973563e-05
+        ]
+      },
+      {
+        "group": "All",
+        "endpoint": "fine95",
+        "scans": 633,
+        "patients": 386,
+        "supported_rois": 95,
+        "predefined_rois": 95,
+        "fp32": 0.6966974316708339,
+        "fp16": 0.696706979778763,
+        "delta": 9.548107929080452e-06,
+        "fp32_ci95": [
+          0.6899768167913286,
+          0.7027181473139674
+        ],
+        "fp16_ci95": [
+          0.6899853477498139,
+          0.7027310525894318
+        ],
+        "delta_ci95": [
+          3.670746480313736e-06,
+          1.6147670410893154e-05
+        ]
+      },
+      {
+        "group": "APN",
+        "endpoint": "common50",
+        "scans": 7,
+        "patients": 7,
+        "supported_rois": 50,
+        "predefined_rois": 50,
+        "fp32": 0.6349872482997344,
+        "fp16": 0.6349851729347258,
+        "delta": -2.0753650086247077e-06,
+        "fp32_ci95": [
+          0.577173977247464,
+          0.6830212671595859
+        ],
+        "fp16_ci95": [
+          0.5771726677666438,
+          0.6830606599103529
+        ],
+        "delta_ci95": [
+          -2.3707408219184044e-05,
+          2.3264218026866624e-05
+        ]
+      },
+      {
+        "group": "APN",
+        "endpoint": "fine95",
+        "scans": 7,
+        "patients": 7,
+        "supported_rois": 95,
+        "predefined_rois": 95,
+        "fp32": 0.6173993811937867,
+        "fp16": 0.6174252789697866,
+        "delta": 2.589777599992793e-05,
+        "fp32_ci95": [
+          0.5547124265592682,
+          0.6677312655191788
+        ],
+        "fp16_ci95": [
+          0.5547872959472013,
+          0.6677865036106958
+        ],
+        "delta_ci95": [
+          -3.560678214575841e-05,
+          9.788747467648905e-05
+        ]
+      },
+      {
+        "group": "AV1451",
+        "endpoint": "common50",
+        "scans": 5,
+        "patients": 5,
+        "supported_rois": 50,
+        "predefined_rois": 50,
+        "fp32": 0.6320685069749524,
+        "fp16": 0.6321120340665307,
+        "delta": 4.352709157828816e-05,
+        "fp32_ci95": [
+          0.5743903643020905,
+          0.6784779714989834
+        ],
+        "fp16_ci95": [
+          0.5744892540015788,
+          0.6784888383816327
+        ],
+        "delta_ci95": [
+          -2.4576183700109056e-05,
+          0.00010313528138916617
+        ]
+      },
+      {
+        "group": "AV1451",
+        "endpoint": "fine95",
+        "scans": 5,
+        "patients": 5,
+        "supported_rois": 95,
+        "predefined_rois": 95,
+        "fp32": 0.6184051351274156,
+        "fp16": 0.6184454552136821,
+        "delta": 4.032008626653205e-05,
+        "fp32_ci95": [
+          0.5663268421174925,
+          0.6609971710094009
+        ],
+        "fp16_ci95": [
+          0.5664136310561341,
+          0.6610081916794099
+        ],
+        "delta_ci95": [
+          2.4564594973686127e-06,
+          8.678893864155768e-05
+        ]
+      },
+      {
+        "group": "AV45",
+        "endpoint": "common50",
+        "scans": 99,
+        "patients": 89,
+        "supported_rois": 50,
+        "predefined_rois": 50,
+        "fp32": 0.6996554541588412,
+        "fp16": 0.6996637662148693,
+        "delta": 8.312056028025872e-06,
+        "fp32_ci95": [
+          0.6872588383253837,
+          0.7103828524934491
+        ],
+        "fp16_ci95": [
+          0.6872726574258335,
+          0.7103866615161633
+        ],
+        "delta_ci95": [
+          -8.398961516214997e-06,
+          2.3906972046902613e-05
+        ]
+      },
+      {
+        "group": "AV45",
+        "endpoint": "fine95",
+        "scans": 99,
+        "patients": 89,
+        "supported_rois": 95,
+        "predefined_rois": 95,
+        "fp32": 0.6849660753713344,
+        "fp16": 0.684979963293146,
+        "delta": 1.3887921811672754e-05,
+        "fp32_ci95": [
+          0.6725802101587529,
+          0.6957462382954249
+        ],
+        "fp16_ci95": [
+          0.6725923903861455,
+          0.6957580492389863
+        ],
+        "delta_ci95": [
+          -5.482033967080245e-07,
+          2.9973787554801734e-05
+        ]
+      },
+      {
+        "group": "CFT",
+        "endpoint": "common50",
+        "scans": 175,
+        "patients": 173,
+        "supported_rois": 50,
+        "predefined_rois": 50,
+        "fp32": 0.68259987314891,
+        "fp16": 0.6826125288734933,
+        "delta": 1.2655724583310324e-05,
+        "fp32_ci95": [
+          0.6733749914103518,
+          0.6891200924190792
+        ],
+        "fp16_ci95": [
+          0.6733840297160905,
+          0.6891385535062513
+        ],
+        "delta_ci95": [
+          2.8323305078625796e-06,
+          2.3395616336802093e-05
+        ]
+      },
+      {
+        "group": "CFT",
+        "endpoint": "fine95",
+        "scans": 175,
+        "patients": 173,
+        "supported_rois": 95,
+        "predefined_rois": 95,
+        "fp32": 0.6603744986778999,
+        "fp16": 0.6603827205463216,
+        "delta": 8.221868421753875e-06,
+        "fp32_ci95": [
+          0.6508167656673105,
+          0.6672090547501529
+        ],
+        "fp16_ci95": [
+          0.6508305970034636,
+          0.6672184649662113
+        ],
+        "delta_ci95": [
+          -2.0525788702430157e-06,
+          1.891297628120735e-05
+        ]
+      },
+      {
+        "group": "CIT",
+        "endpoint": "common50",
+        "scans": 32,
+        "patients": 31,
+        "supported_rois": 50,
+        "predefined_rois": 50,
+        "fp32": 0.6819557878245374,
+        "fp16": 0.6819927999118538,
+        "delta": 3.7012087316434794e-05,
+        "fp32_ci95": [
+          0.6351843201100764,
+          0.7099002539595014
+        ],
+        "fp16_ci95": [
+          0.6351958560874317,
+          0.7099582350760859
+        ],
+        "delta_ci95": [
+          8.343595021703677e-06,
+          6.855890090208536e-05
+        ]
+      },
+      {
+        "group": "CIT",
+        "endpoint": "fine95",
+        "scans": 32,
+        "patients": 31,
+        "supported_rois": 95,
+        "predefined_rois": 95,
+        "fp32": 0.6648629217461407,
+        "fp16": 0.6648961343852151,
+        "delta": 3.321263907440919e-05,
+        "fp32_ci95": [
+          0.6188631658856606,
+          0.6933041212300654
+        ],
+        "fp16_ci95": [
+          0.6188872924849802,
+          0.6933391314443813
+        ],
+        "delta_ci95": [
+          9.645192312549012e-06,
+          5.64770948961929e-05
+        ]
+      },
+      {
+        "group": "FDG",
+        "endpoint": "common50",
+        "scans": 294,
+        "patients": 289,
+        "supported_rois": 50,
+        "predefined_rois": 50,
+        "fp32": 0.7451795673865119,
+        "fp16": 0.7451885443747992,
+        "delta": 8.97698828727922e-06,
+        "fp32_ci95": [
+          0.7374473541010871,
+          0.7519493917944425
+        ],
+        "fp16_ci95": [
+          0.7374508753361102,
+          0.7519569947056016
+        ],
+        "delta_ci95": [
+          6.839453883078496e-07,
+          1.732183218537686e-05
+        ]
+      },
+      {
+        "group": "FDG",
+        "endpoint": "fine95",
+        "scans": 294,
+        "patients": 289,
+        "supported_rois": 95,
+        "predefined_rois": 95,
+        "fp32": 0.7277578598387612,
+        "fp16": 0.7277643523608642,
+        "delta": 6.4925221030520675e-06,
+        "fp32_ci95": [
+          0.7194669388561739,
+          0.7350484334552498
+        ],
+        "fp16_ci95": [
+          0.7194732605471944,
+          0.7350489285250326
+        ],
+        "delta_ci95": [
+          -2.266428207892135e-06,
+          1.5355037917325063e-05
+        ]
+      },
+      {
+        "group": "PIB",
+        "endpoint": "common50",
+        "scans": 21,
+        "patients": 20,
+        "supported_rois": 50,
+        "predefined_rois": 50,
+        "fp32": 0.6706034081679472,
+        "fp16": 0.6706348980034876,
+        "delta": 3.1489835540465805e-05,
+        "fp32_ci95": [
+          0.6581994908315799,
+          0.6823236910206877
+        ],
+        "fp16_ci95": [
+          0.6582319114538033,
+          0.6823661652719005
+        ],
+        "delta_ci95": [
+          -1.2982515057280431e-05,
+          7.097430610548127e-05
+        ]
+      },
+      {
+        "group": "PIB",
+        "endpoint": "fine95",
+        "scans": 21,
+        "patients": 20,
+        "supported_rois": 95,
+        "predefined_rois": 95,
+        "fp32": 0.6483739657575912,
+        "fp16": 0.6484011070076433,
+        "delta": 2.7141250052098442e-05,
+        "fp32_ci95": [
+          0.6347212318070785,
+          0.6618050382211578
+        ],
+        "fp16_ci95": [
+          0.6347411223131599,
+          0.661820551346548
+        ],
+        "delta_ci95": [
+          -6.878477151622819e-06,
+          6.035796912781666e-05
+        ]
+      }
+    ],
+    "accepted_accuracy": true,
+    "comparison": "FP16 weight storage minus FP32; same FP32 network arithmetic",
+    "hypothesis_tests": false,
+    "cases": 633
+  },
+  "selected_precision": "fp16",
+  "cpu_pilot_tracers": [
+    "FDG",
+    "CFT",
+    "APN"
+  ],
+  "cpu_actual_preprocessed_input_matches_GPU": true,
+  "native_geometry_verified": true,
+  "no_mirroring": true,
+  "cpu_gpu_bitwise_equivalence_claimed": false
 }

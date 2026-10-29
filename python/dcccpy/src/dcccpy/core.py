@@ -449,7 +449,6 @@ def seg(
     *,
     mode: str = "freesurfer",
     threads: int = 4,
-    tta: bool = True,
     bundle: str | os.PathLike[str] | None = None,
     rigid_header: str | os.PathLike[str] | None = None,
     debug: bool = False,
@@ -461,7 +460,8 @@ def seg(
 
     ``freesurfer`` emits raw DKT/aseg IDs, ``training`` IDs 0–95, and
     ``neurosegmenter`` a partial aggregation without brainstem/pons IDs 45/46.
-    Mirror TTA is enabled by default. ``rigid_header``, when supplied, must
+    This no-flip model runs exactly one unflipped prediction; no TTA option is
+    available. ``rigid_header``, when supplied, must
     retain the input's voxel values after exactly two rigid predictions.
     """
     if mode not in ("freesurfer", "training", "neurosegmenter"):
@@ -473,8 +473,6 @@ def seg(
         executable = dccccore_path(executable=executable)
         bundle = default_seg_bundle(executable)
     args: list[object] = ["--mode", mode, "--threads", threads]
-    if not tta:
-        args.append("--no-tta")
     if debug:
         args.append("--debug")
     for flag, path in (("--bundle", bundle), ("--rigid-header", rigid_header),

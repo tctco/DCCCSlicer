@@ -64,7 +64,7 @@ def test_seg_defaults_and_explicit_options(tmp_path, monkeypatch):
     assert "--no-tta" not in args
     assert result.output.exists()
     result = dcccpy.seg("pet.nii", tmp_path / "labels.nii.gz", mode="training",
-                        threads=2, tta=False, bundle="model bundle",
+                        threads=2, bundle="model bundle",
                         rigid_header="rigid header.nii.gz", config="config.toml",
                         debug=True, executable=fake_exe)
     args = fake_args.read_text().splitlines()
@@ -73,7 +73,17 @@ def test_seg_defaults_and_explicit_options(tmp_path, monkeypatch):
     assert args[args.index("--bundle") + 1] == str(Path("model bundle").resolve())
     assert args[args.index("--rigid-header") + 1] == str(Path("rigid header.nii.gz").resolve())
     assert args[args.index("--config") + 1] == str(Path("config.toml").resolve())
-    assert "--debug" in args and "--no-tta" in args
+    assert "--debug" in args and "--no-tta" not in args
+
+
+@pytest.mark.parametrize("tta", [True, False])
+def test_seg_rejects_legacy_tta_keyword_before_execution(tmp_path, monkeypatch, tta):
+    exe = make_fake_dccccore(tmp_path)
+    args_file = tmp_path / "never-spawned.txt"
+    monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(args_file))
+    with pytest.raises(TypeError, match="tta"):
+        dcccpy.seg("pet.nii", tta=tta, executable=exe)
+    assert not args_file.exists()
 
 
 @pytest.mark.parametrize("kwargs", [{"mode": "bogus"}, {"threads": 0},

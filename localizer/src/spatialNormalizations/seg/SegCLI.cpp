@@ -26,10 +26,6 @@ class CLI final : public ISpatialNormalizationCLI {
             .default_value(4)
             .scan<'i', int>()
             .help("Positive CPU thread count (default 4)");
-        p.add_argument("--no-tta")
-            .default_value(false)
-            .implicit_value(true)
-            .help("Disable default 8-way mirror TTA; changes inference protocol");
         p.add_argument("--bundle")
             .default_value(std::string{})
             .help("Override installed segmentation bundle directory");
@@ -44,7 +40,6 @@ class CLI final : public ISpatialNormalizationCLI {
             Segmentation::Options options;
             options.mode = p.get<std::string>("--mode");
             options.threads = p.get<int>("--threads");
-            options.tta = !p.get<bool>("--no-tta");
             options.rigidHeader = p.get<std::string>("--rigid-header");
             if (options.mode != "freesurfer" && options.mode != "training" &&
                 options.mode != "neurosegmenter")

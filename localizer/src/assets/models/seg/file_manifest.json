@@ -1,0 +1,54 @@
+{
+  "files": [
+    {
+      "name": "manifest.json",
+      "bytes": 1128
+    },
+    {
+      "name": "QUICKSTART.md",
+      "bytes": 2363
+    },
+    {
+      "name": "dccc_seg.onnx",
+      "bytes": 62438751
+    },
+    {
+      "name": "dataset.json",
+      "bytes": 3559
+    },
+    {
+      "name": "validation.json",
+      "bytes": 12843
+    },
+    {
+      "name": "test_bundle.py",
+      "bytes": 2724
+    },
+    {
+      "name": "labels.json",
+      "bytes": 7016
+    },
+    {
+      "name": "README.md",
+      "bytes": 2363
+    },
+    {
+      "name": "plans.json",
+      "bytes": 10483
+    },
+    {
+      "name": "dccc_seg.py",
+      "bytes": 11606
+    },
+    {
+      "name": "neurosegmenter_mapping.json",
+      "bytes": 11877
+    },
+    {
+      "name": "grid.json",
+      "bytes": 487
+    }
+  ],
+  "created_ns": 1793262583616422692,
+  "precision": "fp16"
+}

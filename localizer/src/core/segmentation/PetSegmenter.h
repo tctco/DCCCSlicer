@@ -10,7 +10,6 @@ using LabelImage = itk::Image<short, 3>;
 struct Options {
     std::string mode = "freesurfer";
     int threads = 4;
-    bool tta = true;
     std::string rigidHeader;
     std::string debugPrefix;
 };

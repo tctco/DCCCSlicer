@@ -226,7 +226,7 @@ LabelImage::Pointer PetSegmenter::segment(const std::string& input, const Bundle
                                   {"crop_shape_xyz", crop},
                                   {"normalization_mean", mean},
                                   {"normalization_std", deviation},
-                                  {"tta", options.tta},
+                                  {"tta", false},
                                   {"tile_step_size", 0.5},
                                   {"threads", options.threads},
                                   {"mode", options.mode},
