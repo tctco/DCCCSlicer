@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import hashlib
 import subprocess
 from pathlib import Path
 import sys
@@ -20,7 +21,10 @@ from dcccpy.runtime import (
 )
 
 
-def make_fake_dccccore(tmp_path: Path) -> Path:
+def make_fake_dccccore(tmp_path: Path, monkeypatch=None) -> Path:
+    if monkeypatch is not None:
+        import dcccpy.segmentation as model
+        monkeypatch.setattr(model, "SEG_MODEL_SHA256", hashlib.sha256(b"test runtime resource").hexdigest())
     bundle = tmp_path / "assets/models/seg"
     bundle.mkdir(parents=True, exist_ok=True)
     for name in ("dccc_seg.onnx", "manifest.json", "grid.json", "plans.json", "dataset.json",
@@ -54,7 +58,7 @@ def test_parse_metrics() -> None:
 
 def test_seg_defaults_and_explicit_options(tmp_path, monkeypatch):
     fake_args = tmp_path / "args.txt"
-    fake_exe = make_fake_dccccore(tmp_path)
+    fake_exe = make_fake_dccccore(tmp_path, monkeypatch)
     monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(fake_args))
     result = dcccpy.seg("pet.nii", executable=fake_exe)
     args = fake_args.read_text().splitlines()
@@ -93,8 +97,8 @@ def test_seg_rejects_bad_options(kwargs):
         dcccpy.seg("pet.nii", **kwargs)
 
 
-def test_seg_preserves_native_failure(tmp_path):
-    exe = make_fake_dccccore(tmp_path)
+def test_seg_preserves_native_failure(tmp_path, monkeypatch):
+    exe = make_fake_dccccore(tmp_path, monkeypatch)
     exe.write_text("#!/bin/sh\nprintf 'invalid segmentation model' >&2\nexit 7\n")
     exe.chmod(0o755)
     result = dcccpy.seg("pet.nii", check=False, executable=exe)
@@ -218,7 +222,7 @@ def test_dccccore_path_can_disable_auto_download(tmp_path: Path, monkeypatch: py
 
 
 def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    asset_root = tmp_path / "asset" / "DCCCcore-4.6.0-alpha-ubuntu-latest-x64"
+    asset_root = tmp_path / "asset" / "DCCCcore-4.6.1-alpha-ubuntu-latest-x64"
     asset_root.mkdir(parents=True)
     exe = asset_root / "DCCCcore"
     exe.write_text("#!/usr/bin/env sh\nprintf 'fake dccccore\\n'\n")
@@ -226,7 +230,7 @@ def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pyte
 
     archive = tmp_path / "DCCCcore.zip"
     with zipfile.ZipFile(archive, "w") as zf:
-        zf.write(exe, "DCCCcore-4.6.0-alpha-ubuntu-latest-x64/DCCCcore")
+        zf.write(exe, "DCCCcore-4.6.1-alpha-ubuntu-latest-x64/DCCCcore")
 
     monkeypatch.delenv("DCCCPY_DCCCCORE", raising=False)
     monkeypatch.setenv("DCCCPY_AUTO_DOWNLOAD", "1")
@@ -251,7 +255,7 @@ def test_find_existing_dccccore_checks_macos_runtime_package(
     exe.write_text("#!/usr/bin/env sh\n")
     exe.chmod(0o755)
 
-    module = types.SimpleNamespace(DCCCCORE_VERSION="4.6.0-alpha", dccccore_root=lambda: root)
+    module = types.SimpleNamespace(DCCCCORE_VERSION="4.6.1-alpha", dccccore_root=lambda: root)
     monkeypatch.setitem(sys.modules, "dcccpy_macos_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 
@@ -262,10 +266,10 @@ def test_linux_arm64_release_platform() -> None:
     assert release_platform("linux-arm64") == "ubuntu-latest-arm64"
 
 
-def test_default_release_targets_dccccore_460_alpha() -> None:
-    assert DCCCCORE_VERSION == "4.6.0-alpha"
+def test_default_release_targets_dccccore_461_alpha() -> None:
+    assert DCCCCORE_VERSION == "4.6.1-alpha"
     assert release_url(platform_name="ubuntu-latest-x64").endswith(
-        "/releases/download/v4.6.0-alpha/DCCCcore-4.6.0-alpha-ubuntu-latest-x64.zip"
+        "/releases/download/v4.6.1-alpha/DCCCcore-4.6.1-alpha-ubuntu-latest-x64.zip"
     )
 
 
@@ -296,7 +300,7 @@ def test_find_existing_dccccore_checks_linux_arm64_runtime_package(
     exe.write_text("#!/usr/bin/env sh\n")
     exe.chmod(0o755)
 
-    module = types.SimpleNamespace(DCCCCORE_VERSION="4.6.0-alpha", dccccore_root=lambda: root)
+    module = types.SimpleNamespace(DCCCCORE_VERSION="4.6.1-alpha", dccccore_root=lambda: root)
     monkeypatch.setitem(sys.modules, "dcccpy_linux_arm64_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 

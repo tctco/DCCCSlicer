@@ -13,14 +13,17 @@ The signed integer output matches the input PET's native shape and geometry.
 The default `mode="freesurfer"` returns raw DKT/aseg IDs; `mode="training"`
 returns IDs 0–95. `mode="neurosegmenter"` provides partial regional compatibility:
 brainstem/pons IDs 45/46 are unavailable, so pons SUVR is unsupported.
-Mirror TTA is enabled by default; `tta=False` explicitly changes that protocol.
+The bound no-flip-trained model always runs one unflipped prediction. There is
+no TTA/flip option; legacy calls passing `tta=` raise `TypeError`.
 Use `threads=4` to select the CPU thread count, `bundle=...` to override the model
 directory, and `debug=True` to save intermediate grids and a transform receipt.
-The approximately 120 MB segmentation model is excluded from PyPI wheels.
+The approximately 62.4 MB segmentation model is excluded from PyPI wheels.
 With a slim runtime, the first `seg()` call downloads the separately published
-`DCCCseg-4.6.0-alpha.zip` Release asset, verifies the model SHA-256 and caches it
+`DCCCseg-4.6.1-alpha.zip` Release asset, verifies the model SHA-256 and caches it
 under the dcccpy cache directory. A full native installation reuses its bundled
-model. Existing `DCCCPY_AUTO_DOWNLOAD=0` disables implicit downloads; provision
+model after checking its bound checkpoint hash. An older incompatible native
+checkpoint is rejected rather than silently reused. Existing
+`DCCCPY_AUTO_DOWNLOAD=0` disables implicit downloads; provision
 offline use with `dcccpy.download_seg_model()` or pass `bundle=` pointing to
 the extracted `seg` directory. `DCCCPY_SEG_MODEL_URL` selects a mirror while
 retaining checksum verification.
@@ -211,7 +214,7 @@ the calculation again.
 Release wheels should vendor the matching `DCCCcore` runtime tree before build:
 
 ```bash
-python scripts/vendor_dccccore.py --version 4.6.0-alpha --release-platform ubuntu-latest-x64
+python scripts/vendor_dccccore.py --version 4.6.1-alpha --release-platform ubuntu-latest-x64
 python -m build --wheel
 ```
 
@@ -219,7 +222,7 @@ The Linux ARM64 runtime package uses the corresponding release asset:
 
 ```bash
 cd python/dcccpy-linux-arm64-runtime
-python scripts/vendor_dccccore.py --version 4.6.0-alpha --release-platform ubuntu-latest-arm64
+python scripts/vendor_dccccore.py --version 4.6.1-alpha --release-platform ubuntu-latest-arm64
 python -m build --wheel
 ```
 
@@ -237,7 +240,7 @@ The preferred distribution layout is:
 
 ## Packaging note
 
-The current optional runtime wheels use a PyPI-size profile for DCCCcore version 4.6.0-alpha. They omit the
+The current optional runtime wheels use a PyPI-size profile for DCCCcore version 4.6.1-alpha. They omit the
 `fast_and_acc` registration model/config and the ADAD decoupler ONNX ensemble,
 while keeping the default spatial normalization model and assets needed by
 common Centiloid/CenTauR/CenTauRz workflows.

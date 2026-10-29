@@ -22,7 +22,7 @@ def package_model(bundle: Path, destination: Path, version: str) -> Path:
     archive = destination / f"DCCCseg-{version}.zip"
     with zipfile.ZipFile(archive, "x", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as output:
         for name in (*MODEL_FILES, "README.md", "QUICKSTART.md", "dccc_seg.py",
-                     "test_bundle.py", "export_onnx.py", "validate_pilot.py"):
+                     "test_bundle.py", "file_manifest.json"):
             source = bundle / name
             if source.is_file():
                 output.write(source, "seg/" + name)

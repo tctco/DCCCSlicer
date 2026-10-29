@@ -27,9 +27,12 @@ The software provides a command-line interface with multiple subcommands for dif
 
 `seg` uses the bundled DCCC Seg 96-class ONNX model. It performs exactly two
 rigid predictions, samples the verified 1.5 mm training grid, applies nnU-Net
-cropping/Z-score normalization and Gaussian inference with 8-way mirror TTA,
+cropping/Z-score normalization and one unflipped Gaussian prediction,
 then restores signed 16-bit categorical labels to the original PET geometry.
 The production command does not require Python, PyTorch or nnU-Net.
+The bound model was trained without flips. No TTA or flip option is exposed;
+legacy switches are rejected rather than ignored. FP16 weights use FP32
+network arithmetic and float32 input/output tensors.
 
 | Option | Meaning |
 | --- | --- |
@@ -37,7 +40,6 @@ The production command does not require Python, PyTorch or nnU-Net.
 | `--mode training` | Contiguous training IDs 0–95 |
 | `--mode neurosegmenter` | Partial regional aggregation; no IDs 45/46 or pons SUVR |
 | `--threads 4` | CPU thread count; must be positive |
-| `--no-tta` | Disable mirror TTA, explicitly changing inference protocol |
 | `--bundle DIRECTORY` | Override `assets/models/seg` next to the executable |
 | `--rigid-header FILE` | Two-step rigid header with exactly the input's voxel values; skips internal rigid |
 | `--debug` | Save rigid header, task PET, normalized crop, task training IDs and JSON receipt |

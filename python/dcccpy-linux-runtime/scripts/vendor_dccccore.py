@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 REPO = "tctco/DCCCSlicer"
-DEFAULT_VERSION = "4.6.0-alpha"
+DEFAULT_VERSION = "4.6.1-alpha"
 DEFAULT_RELEASE_PLATFORM = "ubuntu-latest-x64"
 
 EXCLUDE_PROFILES = {

@@ -6,7 +6,7 @@
     },
     {
       "name": "QUICKSTART.md",
-      "bytes": 2363
+      "bytes": 2463
     },
     {
       "name": "dccc_seg.onnx",
@@ -22,7 +22,7 @@
     },
     {
       "name": "test_bundle.py",
-      "bytes": 2724
+      "bytes": 4127
     },
     {
       "name": "labels.json",
@@ -30,7 +30,7 @@
     },
     {
       "name": "README.md",
-      "bytes": 2363
+      "bytes": 2463
     },
     {
       "name": "plans.json",
@@ -38,7 +38,7 @@
     },
     {
       "name": "dccc_seg.py",
-      "bytes": 11606
+      "bytes": 11706
     },
     {
       "name": "neurosegmenter_mapping.json",
@@ -50,5 +50,6 @@
     }
   ],
   "created_ns": 1793262583616422692,
-  "precision": "fp16"
+  "precision": "fp16",
+  "integration_contract": "DCCCcore 4.6.1-alpha: no TTA/flip selectors in shipped reference APIs/CLI; integrated script/tests/docs sizes updated, network and provenance unchanged."
 }

@@ -14,7 +14,7 @@ import zipfile
 from .runtime import DCCCCORE_VERSION, RELEASE_REPO, auto_download_enabled, cache_root
 
 
-SEG_MODEL_SHA256 = "8ea46dc8eff44e7a6c55b93ec9a353eb676692741d56a47b04c755a3c956faf6"
+SEG_MODEL_SHA256 = "a60ad8bcd4f6c6e1fd0fc739784da392ff5d65eafeed1e6091c4608ef28db81e"
 MODEL_FILES = ("dccc_seg.onnx", "manifest.json", "grid.json", "plans.json", "dataset.json",
                "labels.json", "neurosegmenter_mapping.json", "validation.json")
 
@@ -112,7 +112,12 @@ def download_seg_model(*, version: str = DCCCCORE_VERSION, force: bool = False) 
 
 def default_seg_bundle(executable: Path) -> Path | None:
     """Return None for a full native installation, otherwise provision its model."""
-    if _complete(Path(executable).resolve().parent / "assets/models/seg"):
+    native_bundle = Path(executable).resolve().parent / "assets/models/seg"
+    if _complete(native_bundle):
+        if not _verified(native_bundle):
+            raise SegModelDownloadError(
+                "Installed native segmentation model is incompatible with this dcccpy release; "
+                f"install DCCCcore {DCCCCORE_VERSION} or its matching runtime package")
         return None
     destination = seg_model_dir()
     if _verified(destination):
