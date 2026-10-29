@@ -58,12 +58,12 @@
 **Interfaces:** Consumes validated commit and all build assets. Produces prerelease v4.6.1-alpha, standalone model plus native/Slicer ZIPs, four runtime wheels and wrapper alpha.
 
 - [x] Fresh whole-branch review; address important findings with RED/GREEN tests and record decisions.
-- [ ] Push dev and dispatch cross-compile.yml with release_version=4.6.1-alpha; verify dispatch commit.
-- [ ] At half-hour cloud checks, inspect failures or successful five-platform release; no repeated fast polling.
-- [ ] Verify core ZIP checksums/model hash and Slicer inventories. Build runtime wheels from official ZIPs in clean Docker staging; verify tags, sizes <100 MB, versions and absence of seg assets.
-- [ ] Upload runtime wheels first, then wrapper wheel/sdist using mounted PyPI credentials without logging them.
-- [ ] Compare published PyPI file hashes and perform a fresh public-PyPI Linux install, dependency check, public model download and native-space inference without any flip selector.
-- [ ] Update this plan with URLs/results and commit/push evidence.
+- [x] Push dev and dispatch cross-compile.yml with release_version=4.6.1-alpha; verify dispatch commit.
+- [x] At half-hour cloud checks, inspect failures or successful five-platform release; no repeated fast polling.
+- [x] Verify core ZIP checksums/model hash and Slicer inventories. Build runtime wheels from official ZIPs in clean Docker staging; verify tags, sizes <100 MB, versions and absence of seg assets.
+- [x] Upload runtime wheels first, then wrapper wheel/sdist using mounted PyPI credentials without logging them.
+- [x] Compare published PyPI file hashes and perform a fresh public-PyPI Linux install, dependency check, public model download and native-space inference without any flip selector.
+- [x] Update this plan with URLs/results and commit/push evidence.
 
 ## Local verification before cloud dispatch
 
@@ -77,3 +77,82 @@
 - Fresh whole-branch review found one Important config/bundle override bypass. Six RED→GREEN regressions now enforce the exact bound core version on every seg call. Explicit config/model resolution is retained.
 - Deferred minor: the optional Python reference script may perform rigid work before rejecting an invalid custom bundle; segmentation ONNX still cannot run with invalid no-flip metadata. Native validation and main dcccpy paths are protected.
 - No interactive Slicer pilot, clinical study replication or independent rigid checkpoint parity is claimed. Non-Linux execution of the actual new model is gated by the added CI smoke test.
+
+## Cloud checkpoint
+
+- `dev` pushed through `6a847faed5e5524e9f6c5041251bbda74e2eb9f6`.
+- Dispatched 2026-10-29 10:07 UTC:
+  https://github.com/tctco/DCCCSlicer/actions/runs/40855070837
+- Confirmed workflow head matches the intended commit. At 10:08 UTC it was in
+  progress; next ordinary cloud inspection is no earlier than 10:38 UTC.
+- PyPI upload is pending successful five-platform release assets; no alpha has
+  been uploaded yet. Final wrapper wheel is 16,040 bytes and contains the
+  mandatory native-version guard, with no ONNX files.
+
+### First attempt and scoped retry
+
+At 11:09 UTC the four primary platforms succeeded. macOS 15 failed only the
+unchanged motion-correction synthetic alignment test: MSE ratio ~0.491 against
+the unchanged <0.35 threshold. All segmentation tests, including the actual
+FP16-storage network and asymmetric no-mirroring test, passed there.
+
+ITK 5.3 REGULAR metric sampling includes random within-voxel perturbations and
+an implicit seed. Six identical-input Docker repetitions varied from MSE ratio
+~0.00062 to ~0.249. This establishes stochastic variability, not a segmentation
+regression. The failed job was retried once on the same unchanged source SHA;
+no motion code, model code, test threshold or platform coverage was changed.
+No PyPI files have been uploaded; public-release verification remains mandatory.
+
+## Completed public release
+
+- All five platform jobs and Create Release succeeded on attempt 2 of
+  https://github.com/tctco/DCCCSlicer/actions/runs/40855070837 .
+  The unchanged motion test passed on the one retry; segmentation passed on
+  both macOS 15 attempts. No test threshold or coverage was weakened.
+- Published prerelease:
+  https://github.com/tctco/DCCCSlicer/releases/tag/v4.6.1-alpha
+  at `6a847faed5e5524e9f6c5041251bbda74e2eb9f6`, published 2026-10-29 12:13 UTC.
+- Independent model ZIP: 57,891,911 bytes. Actual dcccpy download from the public
+  Release URL verified the bound ONNX SHA-256.
+- All four primary core Actions ZIPs exactly matched public Release
+  SHA256SUMS before PyPI upload; actual contained model hash was verified.
+  All five Slicer ZIP inventories had the correct new 62,438,751-byte model
+  and matching CRC, with obsolete pilot script absent.
+- Runtime wheels `0.2.0a4` were published before wrapper `0.3.0a5`:
+
+  | Distribution | Published bytes |
+  | --- | ---: |
+  | dcccpy wheel | 16,040 |
+  | dcccpy sdist | 25,466 |
+  | Linux x64 runtime | 93,445,042 |
+  | Linux ARM64 runtime | 92,754,691 |
+  | Windows x64 runtime | 87,307,625 |
+  | macOS ARM64 runtime | 90,247,851 |
+
+- Main package: https://pypi.org/project/dcccpy/0.3.0a5/ .
+  Every published file size and SHA-256 matched its validated local artifact.
+  No wheel includes segmentation assets; all runtime wheels are below 100 MB
+  and have the correct platform tags and core version.
+- A fresh isolated Docker venv installed `dcccpy[runtime]==0.3.0a5` from
+  `https://pypi.org/simple`; pip check found no broken requirements.
+  With core auto-download disabled and the separately downloaded public model
+  cache, the installed PyPI runtime completed actual native-space segmentation
+  at `(192,192,89)`, `int16`, original affine preserved, exactly one prediction.
+  Both legacy boolean TTA keywords were rejected before execution.
+- Release notes explicitly document the removed alpha interfaces, exact native
+  version binding, model storage/arithmetic distinction, provenance limits and
+  the pre-existing stochastic motion-test observation.
+
+## Integration decisions and remaining limits
+
+The user-authorized dev/in-place workflow and approved short design were kept;
+existing user untracked files were preserved. Publication was gated on real
+artifact verification rather than static review alone. Exact seg runtime
+binding means SDK/native upgrades must be matched. Non-Linux actual-network
+execution is now verified by CI. No interactive Slicer GUI pilot, independent
+rigid-checkpoint comparison or clinical-study replication is claimed.
+
+One reviewed minor remains deferred: the optional reference script can perform
+rigid work before rejecting invalid custom model metadata, wasting time but not
+allowing segmentation mirroring. Existing stochastic motion alignment variability
+was not changed in this model release; it is recorded above rather than hidden.
