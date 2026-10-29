@@ -33,11 +33,11 @@
 
 **Interfaces:** Consumes approved empty-axis manifest. Produces seg(input, output, mode, threads, bundle, rigid_header, debug, config, check, executable), with no tta keyword; Slicer command/segment_async have no tta keyword; Options has no tta member. Receipt tta is always false.
 
-- [ ] Add failing tests: CLI has no switches and rejects --tta/--no-tta/--flip; Python/Slicer reject either legacy boolean; bundle rejects axes and enabled default; geometry test requires receipt false and a single prediction.
-- [ ] Run tests in Docker against current implementation; expect the new assertions to fail.
-- [ ] Remove selectors, mirror inference branch and mirrored indexing; enforce empty axes/default_tta=false. Preserve one-pass Gaussian rounding and restoration.
-- [ ] Run native build and targeted tests in Docker; expect all pass. Run wrapper suite; expect no failures.
-- [ ] Commit the contract change with its tests.
+- [x] Add failing tests: CLI has no switches and rejects --tta/--no-tta/--flip; Python/Slicer reject either legacy boolean; bundle rejects axes and enabled default; geometry test requires receipt false and a single prediction.
+- [x] Run tests in Docker against current implementation; expect the new assertions to fail.
+- [x] Remove selectors, mirror inference branch and mirrored indexing; enforce empty axes/default_tta=false. Preserve one-pass Gaussian rounding and restoration.
+- [x] Run native build and targeted tests in Docker; expect all pass. Run wrapper suite; expect no failures.
+- [x] Commit the contract change with its tests.
 
 ### Task 2: Import the model and bind new distribution versions
 
@@ -45,11 +45,11 @@
 
 **Interfaces:** Consumes no-selector API. Produces validated no-flip bundle, core 4.6.1-alpha, wrapper 0.3.0a5, runtime 0.2.0a4; downloads DCCCseg-4.6.1-alpha.zip into a version-specific verified cache.
 
-- [ ] Import reviewed archive data and network; remove obsolete export/pilot entrypoints from shipped bundle. Adapt supplied reference functions to have no TTA parameters or CLI switch.
-- [ ] Add/run RED tests that the reference API rejects legacy options and that old model bytes cannot satisfy the new cache contract.
-- [ ] Update reference API, pin checksum and versions; keep all PyPI model exclusions. Include upstream file manifest in standalone ZIP with accurate integrated sizes.
-- [ ] Docker: run complete native, wrapper and bundle suites; compile/install; validate actual CPU model against reference on shared index-preserving rigid header, output shape/affine/dtype and modes. No claim of independent rigid-checkpoint parity.
-- [ ] Run actionlint and release metadata/ZIP checks; commit validated changes.
+- [x] Import reviewed archive data and network; remove obsolete export/pilot entrypoints from shipped bundle. Adapt supplied reference functions to have no TTA parameters or CLI switch.
+- [x] Add/run RED tests that the reference API rejects legacy options and that old model bytes cannot satisfy the new cache contract.
+- [x] Update reference API, pin checksum and versions; keep all PyPI model exclusions. Include upstream file manifest in standalone ZIP with accurate integrated sizes.
+- [x] Docker: run complete native, wrapper and bundle suites; compile/install; validate actual CPU model against reference on shared index-preserving rigid header, output shape/affine/dtype and modes. No claim of independent rigid-checkpoint parity.
+- [x] Run actionlint and release metadata/ZIP checks; commit validated changes.
 
 ### Task 3: Publish and verify
 
@@ -57,10 +57,23 @@
 
 **Interfaces:** Consumes validated commit and all build assets. Produces prerelease v4.6.1-alpha, standalone model plus native/Slicer ZIPs, four runtime wheels and wrapper alpha.
 
-- [ ] Fresh whole-branch review; address important findings with RED/GREEN tests and record decisions.
+- [x] Fresh whole-branch review; address important findings with RED/GREEN tests and record decisions.
 - [ ] Push dev and dispatch cross-compile.yml with release_version=4.6.1-alpha; verify dispatch commit.
 - [ ] At half-hour cloud checks, inspect failures or successful five-platform release; no repeated fast polling.
 - [ ] Verify core ZIP checksums/model hash and Slicer inventories. Build runtime wheels from official ZIPs in clean Docker staging; verify tags, sizes <100 MB, versions and absence of seg assets.
 - [ ] Upload runtime wheels first, then wrapper wheel/sdist using mounted PyPI credentials without logging them.
 - [ ] Compare published PyPI file hashes and perform a fresh public-PyPI Linux install, dependency check, public model download and native-space inference without any flip selector.
 - [ ] Update this plan with URLs/results and commit/push evidence.
+
+## Local verification before cloud dispatch
+
+- Source model SHA-256 verified: `a60ad8bcd4f6c6e1fd0fc739784da392ff5d65eafeed1e6091c4608ef28db81e`; 62,438,751 bytes, ONNX IR 8/opset 17, 100 FP16-storage initializers and float32 external I/O.
+- Complete native suite: 168 passed, 8 skipped, 613.07 seconds. Added real installed-model smoke subsequently passed in native/UI suite: 37 passed, 28.52 seconds. All native production code is unchanged since the complete run.
+- Whole Python/reference suite after review fix: 65 passed, 1 skipped (opt-in TestPyPI).
+- Actual PET shared-rigid-geometry parity: 3,280,896 native voxels, zero differing labels, original shape `(192,192,89)` and affine preserved. C++10.28s/reference11.67s on the local CPU environment; these are observations, not cross-platform speed claims.
+- Native rigid header preserves values through exactly two predictions; independent rigid checkpoint parity remains unavailable.
+- Installed wheel + slim runtime + auto-provisioned model passed actual native-space int16 inference. Main wheel/sdist passed Twine checks; package does not carry ONNX files. All intended alpha versions were unused on PyPI at preparation.
+- actionlint and release-metadata validation passed; all three AGENTS.md version files agree.
+- Fresh whole-branch review found one Important config/bundle override bypass. Six RED→GREEN regressions now enforce the exact bound core version on every seg call. Explicit config/model resolution is retained.
+- Deferred minor: the optional Python reference script may perform rigid work before rejecting an invalid custom bundle; segmentation ONNX still cannot run with invalid no-flip metadata. Native validation and main dcccpy paths are protected.
+- No interactive Slicer pilot, clinical study replication or independent rigid checkpoint parity is claimed. Non-Linux execution of the actual new model is gated by the added CI smoke test.
