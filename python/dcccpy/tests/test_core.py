@@ -21,7 +21,7 @@ from dcccpy.runtime import (
 )
 
 
-def make_fake_dccccore(tmp_path: Path, monkeypatch=None) -> Path:
+def make_fake_dccccore(tmp_path: Path, monkeypatch=None, *, version=DCCCCORE_VERSION) -> Path:
     if monkeypatch is not None:
         import dcccpy.segmentation as model
         monkeypatch.setattr(model, "SEG_MODEL_SHA256", hashlib.sha256(b"test runtime resource").hexdigest())
@@ -33,6 +33,7 @@ def make_fake_dccccore(tmp_path: Path, monkeypatch=None) -> Path:
     exe = tmp_path / "DCCCcore"
     exe.write_text(
         "#!/usr/bin/env sh\n"
+        f"if [ \"$1\" = '--version' ]; then printf '%s\\n' '{version}'; exit 0; fi\n"
         "printf '%s\\n' \"$@\" > \"$DCCCPY_FAKE_ARGS\"\n"
         "out=''\n"
         "while [ \"$#\" -gt 0 ]; do\n"
@@ -90,6 +91,18 @@ def test_seg_rejects_legacy_tta_keyword_before_execution(tmp_path, monkeypatch, 
     assert not args_file.exists()
 
 
+@pytest.mark.parametrize("override", ["config", "bundle"])
+@pytest.mark.parametrize("version", ["4.6.0-alpha", "4.6.2-alpha", "unknown-version"])
+def test_seg_requires_bound_native_version_even_with_model_overrides(tmp_path, monkeypatch, override, version):
+    exe = make_fake_dccccore(tmp_path, version=version)
+    args_file = tmp_path / "must-not-run-seg.txt"
+    monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(args_file))
+    kwargs = {override: tmp_path / "custom", "executable": exe}
+    with pytest.raises(dcccpy.SegModelDownloadError, match="4.6.1-alpha"):
+        dcccpy.seg("pet.nii", **kwargs)
+    assert not args_file.exists()
+
+
 @pytest.mark.parametrize("kwargs", [{"mode": "bogus"}, {"threads": 0},
                                     {"threads": 1.5}, {"threads": True}])
 def test_seg_rejects_bad_options(kwargs):
@@ -99,7 +112,8 @@ def test_seg_rejects_bad_options(kwargs):
 
 def test_seg_preserves_native_failure(tmp_path, monkeypatch):
     exe = make_fake_dccccore(tmp_path, monkeypatch)
-    exe.write_text("#!/bin/sh\nprintf 'invalid segmentation model' >&2\nexit 7\n")
+    exe.write_text("#!/bin/sh\nif [ \"$1\" = '--version' ]; then printf '4.6.1-alpha\\n'; exit 0; fi\n"
+                   "printf 'invalid segmentation model' >&2\nexit 7\n")
     exe.chmod(0o755)
     result = dcccpy.seg("pet.nii", check=False, executable=exe)
     assert result.returncode == 7

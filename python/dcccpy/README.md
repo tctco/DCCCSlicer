@@ -15,6 +15,8 @@ returns IDs 0–95. `mode="neurosegmenter"` provides partial regional compatibil
 brainstem/pons IDs 45/46 are unavailable, so pons SUVR is unsupported.
 The bound no-flip-trained model always runs one unflipped prediction. There is
 no TTA/flip option; legacy calls passing `tta=` raise `TypeError`.
+Every `seg()` call requires matching DCCCcore `4.6.1-alpha`, including explicit
+`config=` or `bundle=` calls; older native versions are rejected before segmentation.
 Use `threads=4` to select the CPU thread count, `bundle=...` to override the model
 directory, and `debug=True` to save intermediate grids and a transform receipt.
 The approximately 62.4 MB segmentation model is excluded from PyPI wheels.

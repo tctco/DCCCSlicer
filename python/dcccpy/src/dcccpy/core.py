@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from .runtime import DCCCcoreNotFoundError, dccccore_path
+from .runtime import DCCCCORE_VERSION, DCCCcoreNotFoundError, dccccore_path
 
 
 _NUMBER_RE = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
@@ -468,9 +468,16 @@ def seg(
         raise ValueError("mode must be freesurfer, training, or neurosegmenter")
     if isinstance(threads, bool) or not isinstance(threads, int) or threads < 1:
         raise ValueError("threads must be a positive integer")
+    from .segmentation import SegModelDownloadError, default_seg_bundle
+    # Check independently of config/bundle overrides: an older core could
+    # otherwise silently run its original mirrored checkpoint/protocol.
+    executable = dccccore_path(executable=executable).resolve()
+    version = run(["--version"], check=False, executable=executable)
+    if version.returncode != 0 or version.stdout.strip() != DCCCCORE_VERSION:
+        detail = version.stderr.strip() or version.stdout.strip() or "unknown native version"
+        raise SegModelDownloadError(
+            f"seg requires matching no-flip DCCCcore {DCCCCORE_VERSION}; found: {detail}")
     if bundle is None and config is None:
-        from .segmentation import default_seg_bundle
-        executable = dccccore_path(executable=executable)
         bundle = default_seg_bundle(executable)
     args: list[object] = ["--mode", mode, "--threads", threads]
     if debug:

@@ -70,6 +70,23 @@ def test_seg_legacy_configuration_keeps_installed_bundle_default(run_subprocess,
     assert "missing.nii" in result.stderr
 
 
+def test_seg_installed_model_executes_once_in_native_space(run_subprocess, tmp_path, test_files):
+    """Execute the actual bound FP16-storage network on every release CI platform."""
+    import numpy as np
+    import nibabel as nib
+    output = tmp_path / "real-model.nii.gz"
+    result = run_subprocess(["seg", "--input", str(test_files["input"]), "--output", str(output), "--debug"])
+    assert result.returncode == 0, result.stdout + result.stderr
+    original, labels = nib.load(test_files["input"]), nib.load(output)
+    assert labels.shape == original.shape
+    assert labels.get_data_dtype() == np.dtype("int16")
+    np.testing.assert_allclose(labels.affine, original.affine, atol=1e-5)
+    assert np.any(labels.get_fdata() != 0)
+    assert result.stdout.count("[seg] ONNX prediction 1/1") == 1
+    receipt = json.loads((tmp_path / "real-model.nii_receipt.json").read_text())
+    assert receipt["tta"] is False
+
+
 @pytest.mark.parametrize("kind, message", [("4d", "3-d"), ("empty", "positive"),
     ("nan", "finite"), ("inf64", "finite"), ("bad_rigid", "voxel indexing")])
 def test_seg_rejects_invalid_images(run_subprocess, tmp_path, kind, message):
