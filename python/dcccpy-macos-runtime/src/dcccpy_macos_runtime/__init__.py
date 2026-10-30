@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-DCCCCORE_VERSION = "4.6.1-alpha"
+DCCCCORE_VERSION = "4.6.2-alpha"
 
 
 def dccccore_root() -> Path:

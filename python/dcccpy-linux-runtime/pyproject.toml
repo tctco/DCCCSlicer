@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dcccpy-linux-runtime"
-version = "0.2.0a4"
+version = "0.2.0a5"
 description = "Linux DCCCcore runtime package for dcccpy"
 readme = "README.md"
 requires-python = ">=3.9"

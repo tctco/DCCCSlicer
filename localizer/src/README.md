@@ -243,14 +243,20 @@ use `_Coreg.nii`, `_Coreg_Avg.nii`, and `_ADNI_style.nii` respectively.
 `--tracer abeta`, `--tracer tau`, `--tracer fdg`, or `--tracer dat`. Aβ and tau
 use cerebellar gray normalization. DAT follows the PPMI-style workflow and uses
 the occipital lobe as its Level 3 intensity reference. The bundled reference
-mask uses the MNI152 2 mm grid. FDG first scales the entire image to mean 1, then repeatedly
-excludes voxels below 0.5 and rescales the retained voxels to mean 1 until the
-excluded voxel count stops changing. Motion TSV translations are in millimetres and
-Euler rotations are in radians.
+mask uses the MNI152 2 mm grid. FDG uses a SCAN-inspired reference: the
+mean of the highest 50% of PET intensities within a combined pons/cerebellar
+vermis mask (ceil(N/2) voxels). This replaces the previous iterative global
+mean normalization. The divisor is measured in spatially normalized PET and
+applied to the existing rigid-aligned ADNI-grid output; rigid registration,
+motion correction, and Level 1/2 exports retain their existing behavior.
+Motion TSV translations are in millimetres and Euler rotations are in radians.
 
-ADNI example DICOMs are close to, but not exact fixed points of, the published
-FDG iteration. Small systematic intensity differences are therefore expected;
-see the [ADNI FDG compatibility note](../../docs/adni-fdg-preprocessing-validation.md).
+The bundled FDG mask combines Clinica's eroded pons with AAL2 vermis labels
+on DCCC's padded MNI 2 mm grid. It approximates the SCAN reference, rather
+than reproducing Berkeley's hand-drawn mask or full SCAN pipeline. Override
+`masks.fdg_pons_vermis_ref` in a custom configuration to use another binary
+MNI-space reference. See [mask provenance](assets/nii/FDG/README.md) and the
+[FDG compatibility note](../../docs/adni-fdg-preprocessing-validation.md).
 
 #### ADAD Analysis
 Run the ADAD decoupling-based metric:

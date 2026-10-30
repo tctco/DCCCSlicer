@@ -35,7 +35,7 @@ def distribution(tmp_path, monkeypatch):
 def test_model_download_is_cached_outside_package(distribution):
     model, archive = distribution
     directory = model.download_seg_model()
-    assert directory.name == "4.6.1-alpha"
+    assert directory.name == "4.6.2-alpha"
     assert (directory / "dccc_seg.onnx").read_bytes() == b"model"
     archive.unlink()
     assert model.download_seg_model() == directory
@@ -46,7 +46,7 @@ def test_model_download_verifies_the_bound_noflip_bundle(tmp_path, monkeypatch):
     root = Path(__file__).resolve().parents[3]
     bundle = root / "localizer/src/assets/models/seg"
     packer = import_script(root / "scripts/package-seg-model.py")
-    archive = packer.package_model(bundle, tmp_path / "release", "4.6.1-alpha")
+    archive = packer.package_model(bundle, tmp_path / "release", "4.6.2-alpha")
     cache = tmp_path / "cache"
     old = cache / "models/seg/4.6.0-alpha"
     old.mkdir(parents=True)
@@ -54,7 +54,7 @@ def test_model_download_verifies_the_bound_noflip_bundle(tmp_path, monkeypatch):
     monkeypatch.setenv("DCCCPY_CACHE_DIR", str(cache))
     monkeypatch.setenv("DCCCPY_SEG_MODEL_URL", archive.as_uri())
     downloaded = model.download_seg_model()
-    assert downloaded == cache / "models/seg/4.6.1-alpha"
+    assert downloaded == cache / "models/seg/4.6.2-alpha"
     assert hashlib.sha256((downloaded / "dccc_seg.onnx").read_bytes()).hexdigest() == (
         "a60ad8bcd4f6c6e1fd0fc739784da392ff5d65eafeed1e6091c4608ef28db81e")
     assert (old / "dccc_seg.onnx").read_bytes() == b"older release; must never be reused or altered"

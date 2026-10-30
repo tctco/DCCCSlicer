@@ -14,7 +14,7 @@ on:
         description: 'Release version without v (must match source version)'
         type: string
         required: true
-        default: '4.6.1-alpha'
+        default: '4.6.2-alpha'
 
 jobs:
   build:

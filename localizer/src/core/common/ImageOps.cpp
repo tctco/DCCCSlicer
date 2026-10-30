@@ -1,4 +1,5 @@
 #include "ImageOps.h"
+#include "FdgReferenceStatistics.h"
 
 #include <itkImageFileWriter.h>
 #include <itkImageRegionConstIterator.h>
@@ -8,10 +9,9 @@
 #include <itkResampleImageFilter.h>
 #include <itkWarpImageFilter.h>
 
-#include <cmath>
 #include <iostream>
-#include <limits>
 #include <stdexcept>
+#include <utility>
 
 namespace Common::image {
 
@@ -23,56 +23,26 @@ void divideVoxelsByValue(ImageType::Pointer image, float divisor) {
     }
 }
 
-void normalizeFdgIterativeGlobalMean(ImageType::Pointer image) {
-    if (!image) {
-        throw std::invalid_argument("FDG global mean normalization requires an image");
+double calculateFdgTopHalfMeanInMask(ImageType::Pointer image,
+                                     ImageType::Pointer mask) {
+    if (!image || !mask) {
+        throw std::invalid_argument("FDG reference normalization requires an image and mask");
     }
-
-    const auto region = image->GetLargestPossibleRegion();
-    const auto voxelCount = region.GetNumberOfPixels();
-    if (voxelCount == 0) {
-        throw std::invalid_argument("FDG global mean normalization requires a non-empty image");
+    if (image->GetLargestPossibleRegion() != mask->GetLargestPossibleRegion() ||
+        image->GetOrigin() != mask->GetOrigin() ||
+        image->GetSpacing() != mask->GetSpacing() ||
+        image->GetDirection() != mask->GetDirection()) {
+        throw std::invalid_argument("FDG reference image and mask must use the same grid");
     }
-
-    double globalSum = 0.0;
-    itk::ImageRegionConstIterator<ImageType> inputIt(image, region);
-    for (inputIt.GoToBegin(); !inputIt.IsAtEnd(); ++inputIt) {
-        globalSum += static_cast<double>(inputIt.Get());
-    }
-    const double globalMean = globalSum / static_cast<double>(voxelCount);
-    if (!std::isfinite(globalMean) || globalMean <= 0.0) {
-        throw std::runtime_error("Invalid whole-image mean for FDG normalization");
-    }
-    divideVoxelsByValue(image, static_cast<float>(globalMean));
-
-    std::size_t previousMaskedCount = std::numeric_limits<std::size_t>::max();
-    while (true) {
-        std::size_t retainedCount = 0;
-        double retainedSum = 0.0;
-        itk::ImageRegionConstIterator<ImageType> it(image, region);
-        for (it.GoToBegin(); !it.IsAtEnd(); ++it) {
-            const double value = static_cast<double>(it.Get());
-            if (value >= 0.5) {
-                retainedSum += value;
-                ++retainedCount;
-            }
+    std::vector<float> samples;
+    itk::ImageRegionConstIterator<ImageType> imageIt(image, image->GetLargestPossibleRegion());
+    itk::ImageRegionConstIterator<ImageType> maskIt(mask, mask->GetLargestPossibleRegion());
+    for (imageIt.GoToBegin(), maskIt.GoToBegin(); !imageIt.IsAtEnd(); ++imageIt, ++maskIt) {
+        if (maskIt.Get() > 0.0f) {
+            samples.push_back(imageIt.Get());
         }
-
-        const std::size_t maskedCount = voxelCount - retainedCount;
-        if (maskedCount == previousMaskedCount) {
-            break;
-        }
-        if (retainedCount == 0) {
-            throw std::runtime_error("FDG normalization mask contains no voxels at or above 0.5");
-        }
-
-        const double retainedMean = retainedSum / static_cast<double>(retainedCount);
-        if (!std::isfinite(retainedMean) || retainedMean <= 0.0) {
-            throw std::runtime_error("Invalid masked mean for FDG normalization");
-        }
-        divideVoxelsByValue(image, static_cast<float>(retainedMean));
-        previousMaskedCount = maskedCount;
     }
+    return fdgTopHalfMean(std::move(samples));
 }
 
 double calculateMeanInMask(ImageType::Pointer image,

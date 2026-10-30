@@ -99,27 +99,24 @@ ImageType::Pointer SpatialNormalizationService::prepareAdniPetCoreImage(ImageTyp
     }
 
     ImageType::Pointer adniStyle = Common::image::resampleToMatch(adniTemplate, rigidImage);
-    if (tracer == "fdg") {
-        Common::image::normalizeFdgIterativeGlobalMean(adniStyle);
-        return adniStyle;
-    }
-
+    const bool useFdgReference = tracer == "fdg";
     const bool useOccipitalReference = tracer == "dat";
     const std::string referenceMaskName =
-        useOccipitalReference ? "dat_occipital_ref" : "cerebral_gray";
+        useFdgReference ? "fdg_pons_vermis_ref" :
+        (useOccipitalReference ? "dat_occipital_ref" : "cerebral_gray");
     ImageType::Pointer referenceMask =
         Common::nifti::loadImage(config_->getMaskPath(referenceMaskName));
     if (!referenceMask) {
-        throw std::runtime_error(
-            useOccipitalReference
-                ? "Failed to load DAT occipital reference mask"
-                : "Failed to load cerebellar gray mask");
+        throw std::runtime_error("Failed to load intensity reference mask: " +
+                                 referenceMaskName);
     }
 
     ImageType::Pointer resampled =
         Common::image::resampleToMatch(referenceMask, normalizedImage);
     const double referenceMean =
-        Common::image::calculateMeanInMask(resampled, referenceMask);
+        useFdgReference
+            ? Common::image::calculateFdgTopHalfMeanInMask(resampled, referenceMask)
+            : Common::image::calculateMeanInMask(resampled, referenceMask);
     if (referenceMean <= 0.0) {
         throw std::runtime_error(
             useOccipitalReference

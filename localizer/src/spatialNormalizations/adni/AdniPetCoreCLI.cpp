@@ -442,7 +442,7 @@ public:
     }
 
     std::string getDescription() const override {
-        return "Run ADNI PET Core compliant spatial normalization";
+        return "Run ADNI-style PET preprocessing with tracer-specific intensity references";
     }
 
     void configureArguments(argparse::ArgumentParser& parser) override {
@@ -453,7 +453,8 @@ public:
             .help("Normalization method")
             .default_value("rigid_voxelmorph");
         parser.add_argument("--tracer")
-            .help("PET tracer class (abeta, tau, fdg, or dat); DAT uses "
+            .help("PET tracer class (abeta, tau, fdg, or dat); FDG uses "
+                  "SCAN-inspired top-50% pons/vermis normalization; DAT uses "
                   "PPMI-style occipital normalization")
             .required()
             .choices("abeta", "tau", "fdg", "dat");

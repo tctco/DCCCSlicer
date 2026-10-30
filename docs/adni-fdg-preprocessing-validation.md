@@ -1,4 +1,25 @@
-# ADNI FDG preprocessing compatibility note
+# FDG preprocessing compatibility note
+
+## Current default
+
+`adni-pet-core --tracer fdg` now uses a SCAN-inspired intensity reference:
+Clinica eroded pons plus AAL2 cerebellar vermis. The normalization divisor is
+the mean of the highest ceil(N/2) voxel intensities within their binary union,
+measured on spatially normalized PET. The existing rigid-aligned ADNI-grid
+output is divided by that scalar. Motion correction, rigid registration,
+and export levels are unchanged.
+
+This is an atlas approximation, not the unavailable Berkeley hand-drawn mask.
+It does not reproduce SCAN's full spatial processing or establish numerical
+agreement with published SCAN SUVRs. See the [mask provenance and rebuild
+instructions](../localizer/src/assets/nii/FDG/README.md).
+
+Reference: [UC Berkeley SCAN FDG methods, May 2024](https://files.alz.washington.edu/scan/UCBerkeley_SCAN_FDG_Methods_20240529.pdf).
+
+## Historical validation of the previous global-mean default
+
+The results below describe the former algorithm only; they do not validate
+the current pons/vermis reference normalization.
 
 DCCCcore 4.4 adds tracer-aware `adni-pet-core` preprocessing. The command now
 requires `--tracer abeta`, `--tracer tau`, `--tracer fdg`, or `--tracer dat`.

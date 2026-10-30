@@ -35,6 +35,7 @@ whole_cerebral = "assets/nii/voi_WhlCbl_2mm.nii"
 centaur_voi = "assets/nii/CenTauR.nii"
 centaur_ref = "assets/nii/voi_CerebGry_tau_2mm.nii"
 dat_occipital_ref = "assets/nii/DAT/DAT_Occipital_Ref.nii"
+fdg_pons_vermis_ref = "assets/nii/FDG/FDG_Pons_Vermis_Ref.nii.gz"
 padded_brain = "assets/nii/padded_brain_mask.nii.gz"
 padded_aparc_aseg = "assets/nii/adni_regions/padded_aparc_aseg.nii.gz"
 
