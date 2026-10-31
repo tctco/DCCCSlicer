@@ -260,9 +260,9 @@ levels and batch/BIDS controls are supported. The SCAN batch Level 3 suffix is
 ./DCCCcore scan-pet-core --input fdg_pet.nii --output scan_fdg.nii --tracer fdg
 ```
 
-The split is an unreleased source change: the published `4.6.2-alpha` package
-still puts the SCAN-inspired FDG reference on `adni-pet-core` and has no
-`scan-pet-core` command. The next release will expose the separate interfaces.
+The split is available from `4.6.3-alpha`. The superseded `4.6.2-alpha` package
+put the SCAN-inspired FDG reference on `adni-pet-core` and had no
+`scan-pet-core` command. Upgrade to restore legacy ADNI behavior.
 
 Motion TSV translations are in millimetres and Euler rotations are in radians.
 

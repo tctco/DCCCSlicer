@@ -1,6 +1,6 @@
 # FDG preprocessing compatibility note
 
-## Current source interfaces (unreleased)
+## Interfaces from 4.6.3-alpha
 
 - `adni-pet-core --tracer fdg` restores the ADNI iterative global-mean algorithm
   described below. Its reference mask is not used for FDG.
@@ -17,7 +17,7 @@ See the [mask provenance](../localizer/src/assets/nii/FDG/README.md).
 
 The published `4.6.2-alpha` release temporarily replaced ADNI FDG normalization
 with the SCAN-inspired reference and did not expose `scan-pet-core`. The split
-above restores legacy ADNI behavior in current source; it is not in that release.
+above restores legacy ADNI behavior in `4.6.3-alpha`; upgrade to that release.
 
 Reference: [UC Berkeley SCAN FDG methods, May 2024](https://files.alz.washington.edu/scan/UCBerkeley_SCAN_FDG_Methods_20240529.pdf).
 

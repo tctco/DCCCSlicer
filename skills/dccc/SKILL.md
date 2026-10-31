@@ -22,7 +22,7 @@ print(r.output)
   `level=1` 为动态帧配准（需 4D），`2` 为均值，`3` 为标准化输出；可传列表。
   当前源码的 ADNI FDG 已恢复迭代全脑均值；`scan_pet_core(..., tracer="fdg")`
   单独使用脑桥＋小脑蚓联合区最高 50% 强度均值，rigid 行为不变。
-  此拆分尚未发布：`0.3.0a6`/`4.6.2-alpha` 仍只有采用参比区策略的 ADNI 入口，需用当前源码及匹配 core。
+  此拆分从 `dcccpy 0.3.0a7` / core `4.6.3-alpha` 起提供；避免使用改变了 ADNI 语义的 `0.3.0a6`/`4.6.2-alpha`。
 - 配准用 `rigid` / `normalize`；指标用 `centiloid`、`centaurz`、`suvr` 等，
   读取 `r.metrics`。仅在输入已符合目标模板空间时使用 `skip_normalization=True`。
 - 原生空间分割用 `seg`，默认返回 FreeSurfer/DKT 标签。模型可能首次联网下载；

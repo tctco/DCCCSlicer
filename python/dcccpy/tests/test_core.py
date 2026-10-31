@@ -92,13 +92,13 @@ def test_seg_rejects_legacy_tta_keyword_before_execution(tmp_path, monkeypatch, 
 
 
 @pytest.mark.parametrize("override", ["config", "bundle"])
-@pytest.mark.parametrize("version", ["4.6.1-alpha", "4.6.3-alpha", "unknown-version"])
+@pytest.mark.parametrize("version", ["4.6.2-alpha", "4.6.4-alpha", "unknown-version"])
 def test_seg_requires_bound_native_version_even_with_model_overrides(tmp_path, monkeypatch, override, version):
     exe = make_fake_dccccore(tmp_path, version=version)
     args_file = tmp_path / "must-not-run-seg.txt"
     monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(args_file))
     kwargs = {override: tmp_path / "custom", "executable": exe}
-    with pytest.raises(dcccpy.SegModelDownloadError, match="4.6.2-alpha"):
+    with pytest.raises(dcccpy.SegModelDownloadError, match="4.6.3-alpha"):
         dcccpy.seg("pet.nii", **kwargs)
     assert not args_file.exists()
 
@@ -112,7 +112,7 @@ def test_seg_rejects_bad_options(kwargs):
 
 def test_seg_preserves_native_failure(tmp_path, monkeypatch):
     exe = make_fake_dccccore(tmp_path, monkeypatch)
-    exe.write_text("#!/bin/sh\nif [ \"$1\" = '--version' ]; then printf '4.6.2-alpha\\n'; exit 0; fi\n"
+    exe.write_text("#!/bin/sh\nif [ \"$1\" = '--version' ]; then printf '4.6.3-alpha\\n'; exit 0; fi\n"
                    "printf 'invalid segmentation model' >&2\nexit 7\n")
     exe.chmod(0o755)
     result = dcccpy.seg("pet.nii", check=False, executable=exe)
@@ -236,7 +236,7 @@ def test_dccccore_path_can_disable_auto_download(tmp_path: Path, monkeypatch: py
 
 
 def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    asset_root = tmp_path / "asset" / "DCCCcore-4.6.2-alpha-ubuntu-latest-x64"
+    asset_root = tmp_path / "asset" / "DCCCcore-4.6.3-alpha-ubuntu-latest-x64"
     asset_root.mkdir(parents=True)
     exe = asset_root / "DCCCcore"
     exe.write_text("#!/usr/bin/env sh\nprintf 'fake dccccore\\n'\n")
@@ -244,7 +244,7 @@ def test_dccccore_path_auto_downloads_to_cache(tmp_path: Path, monkeypatch: pyte
 
     archive = tmp_path / "DCCCcore.zip"
     with zipfile.ZipFile(archive, "w") as zf:
-        zf.write(exe, "DCCCcore-4.6.2-alpha-ubuntu-latest-x64/DCCCcore")
+        zf.write(exe, "DCCCcore-4.6.3-alpha-ubuntu-latest-x64/DCCCcore")
 
     monkeypatch.delenv("DCCCPY_DCCCCORE", raising=False)
     monkeypatch.setenv("DCCCPY_AUTO_DOWNLOAD", "1")
@@ -269,7 +269,7 @@ def test_find_existing_dccccore_checks_macos_runtime_package(
     exe.write_text("#!/usr/bin/env sh\n")
     exe.chmod(0o755)
 
-    module = types.SimpleNamespace(DCCCCORE_VERSION="4.6.2-alpha", dccccore_root=lambda: root)
+    module = types.SimpleNamespace(DCCCCORE_VERSION="4.6.3-alpha", dccccore_root=lambda: root)
     monkeypatch.setitem(sys.modules, "dcccpy_macos_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 
@@ -281,9 +281,9 @@ def test_linux_arm64_release_platform() -> None:
 
 
 def test_default_release_targets_dccccore_461_alpha() -> None:
-    assert DCCCCORE_VERSION == "4.6.2-alpha"
+    assert DCCCCORE_VERSION == "4.6.3-alpha"
     assert release_url(platform_name="ubuntu-latest-x64").endswith(
-        "/releases/download/v4.6.2-alpha/DCCCcore-4.6.2-alpha-ubuntu-latest-x64.zip"
+        "/releases/download/v4.6.3-alpha/DCCCcore-4.6.3-alpha-ubuntu-latest-x64.zip"
     )
 
 
@@ -314,7 +314,7 @@ def test_find_existing_dccccore_checks_linux_arm64_runtime_package(
     exe.write_text("#!/usr/bin/env sh\n")
     exe.chmod(0o755)
 
-    module = types.SimpleNamespace(DCCCCORE_VERSION="4.6.2-alpha", dccccore_root=lambda: root)
+    module = types.SimpleNamespace(DCCCCORE_VERSION="4.6.3-alpha", dccccore_root=lambda: root)
     monkeypatch.setitem(sys.modules, "dcccpy_linux_arm64_runtime", module)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
 
