@@ -17,7 +17,8 @@ private:
     ImageType::Pointer loadInput(const std::string& inputPath) const;
     ImageType::Pointer prepareAdniPetCoreImage(ImageType::Pointer rigidImage,
                                                ImageType::Pointer normalizedImage,
-                                               const std::string& tracer) const;
+                                               const std::string& tracer,
+                                               bool useScanReference) const;
 };
 
 } // namespace Pipeline

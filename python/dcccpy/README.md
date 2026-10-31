@@ -113,7 +113,8 @@ Common helpers mirror `DCCCcore` subcommands:
 dcccpy.centiloid("amyloid.nii", suvr=True)
 dcccpy.centaurz("tau.nii", report_detailed_regions=True)
 dcccpy.fillstates("fdg.nii", tracer="fdg")
-dcccpy.adni_pet_core("fdg.nii", tracer="fdg")
+dcccpy.adni_pet_core("fdg.nii", tracer="fdg")  # ADNI iterative global mean
+dcccpy.scan_pet_core("fdg.nii", tracer="fdg")  # SCAN-inspired pons/vermis
 dcccpy.normalize("pet.nii", iterative=True)
 dcccpy.pet_motion_correct(
     "dynamic_pet.nii.gz",
@@ -140,6 +141,7 @@ Each helper returns `DCCCResult` with:
 dcccpy --help
 dcccpy centiloid --input amyloid_pet.nii --output result.nii
 dcccpy adni-pet-core --input fdg.nii --output fdg_adni.nii --tracer fdg
+dcccpy scan-pet-core --input fdg.nii --output fdg_scan.nii --tracer fdg
 ```
 
 The Python helper accepts the same staged exports. Pass one integer or a
@@ -165,13 +167,23 @@ spatial transforms are estimated from the original PET before the privacy mask
 is applied, so the flag does not change the estimated alignment.
 
 `adni_pet_core` deliberately has no default tracer. Use `abeta`, `tau`, `fdg`,
-or `dat`; FDG selects SCAN-inspired top-50% pons/vermis reference normalization,
+or `dat`; FDG uses the restored ADNI iterative global-mean normalization,
 DAT selects PPMI-style occipital-reference normalization, and Aβ/tau retain
 cerebellar gray normalization.
 
-The bundled FDG reference combines Clinica pons and AAL2 vermis masks; it is
+`scan_pet_core(..., tracer="fdg")` selects SCAN-inspired top-50% pons/vermis
+normalization instead. It currently accepts only FDG and shares export levels,
+registration, motion correction, batch/BIDS, and defacing with `adni_pet_core`.
+Its batch Level 3 suffix is `_SCAN_style.nii`.
+
+The bundled SCAN FDG reference combines Clinica pons and AAL2 vermis masks; it is
 an approximation of the SCAN reference. Rigid alignment is unchanged. See the repository's
 [ADNI FDG compatibility note](../../docs/adni-fdg-preprocessing-validation.md).
+
+The interface split is an unreleased source change. Published `dcccpy 0.3.0a6`
+and core `4.6.2-alpha` still expose only `adni_pet_core`, with pons/vermis
+normalization. Use the current wrapper source and matching locally built core
+for the split interfaces until the next release.
 
 ## Runtime lookup
 

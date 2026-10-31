@@ -4,6 +4,7 @@
 namespace Pipeline::SpatialNormalization::Adni {
 
 SpatialNormalizationCLIPtr createCLI();
+SpatialNormalizationCLIPtr createScanCLI();
 
 } // namespace Pipeline::SpatialNormalization::Adni
 

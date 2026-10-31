@@ -36,7 +36,7 @@ Source copyright, atlas attribution and licensing notices are retained in
 Rolls, Joliot & Tzourio-Mazoyer (2015), and the WFU PickAtlas references
 listed there for the pons mask. This is a modified derived mask.
 
-The FDG divisor is the mean of the highest ceil(N/2) PET intensities in this
+`scan-pet-core --tracer fdg` uses this reference. The FDG divisor is the mean of the highest ceil(N/2) PET intensities in this
 combined ROI, including zeros when ranking. Non-finite reference samples,
 empty masks, and non-positive reference means are errors. The reference
 is sampled in spatially normalized PET; the divisor scales the rigid-aligned
@@ -61,7 +61,7 @@ pytest localizer/src/tests/test_fdg_reference_asset.py
 ```
 
 The CLI regression is
-`test_adad_cli.py::TestAdniPetCoreCLI::test_fdg_uses_pons_vermis_reference_normalization`.
+`test_adad_cli.py::TestAdniPetCoreCLI::test_scan_fdg_uses_pons_vermis_reference_normalization`.
 It verifies finite output and that overriding the reference changes only one
 intensity scale factor. Registration/inference assets must be available next
 to the test executable as in a normal installation.

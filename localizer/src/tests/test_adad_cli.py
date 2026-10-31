@@ -157,13 +157,13 @@ class TestAdniPetCoreCLI:
         assert "allowed options: {abeta, tau, fdg, dat}" in result.stderr
         assert not output_path.exists()
 
-    def test_fdg_uses_pons_vermis_reference_normalization(
+    def test_scan_fdg_uses_pons_vermis_reference_normalization(
         self, run_subprocess, tmp_path, test_files
     ):
         output_path = tmp_path / "adni_pet_core_fdg.nii"
         result = run_subprocess(
             [
-                "adni-pet-core",
+                "scan-pet-core",
                 "--input",
                 str(test_files["input"]),
                 "--output",
@@ -191,7 +191,7 @@ class TestAdniPetCoreCLI:
         alternate_config.write_text(config)
         alternate_output = tmp_path / "alternate_fdg.nii"
         alternate = run_subprocess([
-            "adni-pet-core", "--input", str(test_files["input"]),
+            "scan-pet-core", "--input", str(test_files["input"]),
             "--output", str(alternate_output), "--tracer", "fdg",
             "--config", str(alternate_config),
         ])
@@ -202,6 +202,31 @@ class TestAdniPetCoreCLI:
         assert ratios.size > 100
         assert not np.isclose(np.median(ratios), 1.0, atol=1e-3)
         np.testing.assert_allclose(ratios, np.median(ratios), rtol=2e-4)
+
+    def test_fdg_uses_iterative_global_mean_normalization(self, run_subprocess, tmp_path, test_files):
+        output = tmp_path / "adni_iterative_fdg.nii.gz"
+        result = run_subprocess([
+            "adni-pet-core", "--input", str(test_files["input"]),
+            "--output", str(output), "--tracer", "fdg",
+            "--config", str(test_files["config"]),
+        ])
+        assert result.returncode == 0, result.stderr
+        data, dimension = _read_nifti(output)
+        assert dimension == 3
+        retained = data[data >= 0.5]
+        assert retained.size > 0
+        assert retained.mean() == pytest.approx(1.0, abs=1e-5)
+        assert data.mean() < 0.5
+
+    def test_scan_rejects_non_fdg_tracer(self, run_subprocess, tmp_path, test_files):
+        output = tmp_path / "scan_abeta.nii"
+        result = run_subprocess([
+            "scan-pet-core", "--input", str(test_files["input"]),
+            "--output", str(output), "--tracer", "abeta",
+        ])
+        assert result.returncode != 0
+        assert "fdg" in result.stderr
+        assert not output.exists()
 
     def test_dat_ppmi_levels_one_and_two_use_four_frame_input(
         self, run_subprocess, tmp_path, test_files
@@ -321,7 +346,8 @@ class TestAdniPetCoreCLI:
         assert generated, "adni-pet-core batch run did not produce any output files."
         assert (output_dir / "batch_info.txt").exists(), "adni-pet-core batch run missing batch_info.txt"
 
-    def test_batch_mode_saves_only_selected_level(self, run_subprocess, tmp_path, test_files):
+    @pytest.mark.parametrize("command,tracer", [("adni-pet-core", "abeta"), ("scan-pet-core", "fdg")])
+    def test_batch_mode_saves_only_selected_level(self, run_subprocess, tmp_path, test_files, command, tracer):
         input_dir = tmp_path / "adni_level_batch_inputs"
         output_dir = tmp_path / "adni_level_batch_outputs"
         input_dir.mkdir()
@@ -330,11 +356,11 @@ class TestAdniPetCoreCLI:
 
         result = run_subprocess(
             [
-                "adni-pet-core",
+                command,
                 "--input", str(input_dir),
                 "--output", str(output_dir),
                 "--batch",
-                "--tracer", "abeta",
+                "--tracer", tracer,
                 "--level", "2",
                 "--config", str(tmp_path / "does-not-exist.toml"),
             ]
@@ -344,3 +370,18 @@ class TestAdniPetCoreCLI:
         assert (output_dir / "sample_Coreg_Avg.nii").exists()
         assert not (output_dir / "sample_Coreg.nii").exists()
         assert not (output_dir / "sample_ADNI_style.nii").exists()
+
+class TestScanPetCoreCLI:
+    def test_batch_uses_scan_suffix(self, run_subprocess, tmp_path, test_files):
+        inputs = tmp_path / "inputs"
+        outputs = tmp_path / "outputs"
+        inputs.mkdir()
+        shutil.copy(test_files["input"], inputs / "fdg.nii")
+        result = run_subprocess([
+            "scan-pet-core", "--input", str(inputs), "--output", str(outputs),
+            "--batch", "--tracer", "fdg", "--config", str(test_files["config"]),
+        ])
+        assert result.returncode == 0, result.stderr
+        assert (outputs / "fdg_SCAN_style.nii").exists()
+        assert not (outputs / "fdg_ADNI_style.nii").exists()
+        assert (outputs / "batch_info.txt").exists()

@@ -29,5 +29,18 @@ int main() {
     try { calculateFdgTopHalfMeanInMask(image, mask); }
     catch (const std::invalid_argument&) { rejected = true; }
     if (!rejected) throw std::runtime_error("Mismatched reference grid accepted");
+    auto legacy = createImageFromVector({0, 0, 1, 1, 2, 8}, size);
+    normalizeFdgIterativeGlobalMean(legacy);
+    extractImageData(legacy, values);
+    const std::vector<float> expected{0, 0, 0.125f, 0.125f, 0.25f, 1};
+    for (std::size_t i = 0; i < expected.size(); ++i) {
+        if (std::abs(values[i] - expected[i]) > 1e-6)
+            throw std::runtime_error("Legacy FDG iterative normalization changed");
+    }
+    auto zero = createImageFromVector({0, 0, 0, 0, 0, 0}, size);
+    rejected = false;
+    try { normalizeFdgIterativeGlobalMean(zero); }
+    catch (const std::runtime_error&) { rejected = true; }
+    if (!rejected) throw std::runtime_error("Zero legacy FDG image accepted");
     std::cout << "FDG image normalization passed\n";
 }

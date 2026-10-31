@@ -243,12 +243,27 @@ use `_Coreg.nii`, `_Coreg_Avg.nii`, and `_ADNI_style.nii` respectively.
 `--tracer abeta`, `--tracer tau`, `--tracer fdg`, or `--tracer dat`. Aβ and tau
 use cerebellar gray normalization. DAT follows the PPMI-style workflow and uses
 the occipital lobe as its Level 3 intensity reference. The bundled reference
-mask uses the MNI152 2 mm grid. FDG uses a SCAN-inspired reference: the
-mean of the highest 50% of PET intensities within a combined pons/cerebellar
-vermis mask (ceil(N/2) voxels). This replaces the previous iterative global
-mean normalization. The divisor is measured in spatially normalized PET and
-applied to the existing rigid-aligned ADNI-grid output; rigid registration,
-motion correction, and Level 1/2 exports retain their existing behavior.
+mask uses the MNI152 2 mm grid. FDG uses the restored ADNI iterative global-mean
+procedure: scale the whole image to mean 1, repeatedly exclude voxels below
+0.5 and rescale retained voxels to mean 1 until the excluded count is unchanged.
+
+`scan-pet-core --tracer fdg` selects the separate SCAN-inspired reference:
+the mean of the highest 50% of PET intensities in a pons/cerebellar-vermis
+union (ceil(N/2) voxels). The divisor is measured in spatially normalized PET
+and applied to the existing rigid-aligned ADNI-grid output. SCAN currently
+accepts only FDG. Registration, motion correction, Level 1/2 exports and defacing
+share the ADNI implementation; only the intensity strategy differs. All export
+levels and batch/BIDS controls are supported. The SCAN batch Level 3 suffix is
+`_SCAN_style.nii`.
+
+```bash
+./DCCCcore scan-pet-core --input fdg_pet.nii --output scan_fdg.nii --tracer fdg
+```
+
+The split is an unreleased source change: the published `4.6.2-alpha` package
+still puts the SCAN-inspired FDG reference on `adni-pet-core` and has no
+`scan-pet-core` command. The next release will expose the separate interfaces.
+
 Motion TSV translations are in millimetres and Euler rotations are in radians.
 
 The bundled FDG mask combines Clinica's eroded pons with AAL2 vermis labels
@@ -275,15 +290,15 @@ Run the ADAD decoupling-based metric:
 |--------|-------------|
 | `--config <file>` | Configuration file path (default: config.toml) |
 | `--debug` | Enable debug mode with intermediate outputs |
-| `--batch` | Enable batch processing mode. In batch mode, `--input` and `--output` are treated as directories, all `.nii` / `.nii.gz` files in the input directory are processed, and outputs use the input basename plus each command's preset suffix. Metric commands also generate `results.csv`, and batch-capable commands generate `batch_info.txt` in the output directory. Currently supported for `centiloid`, `centaur`, `centaurz`, `suvr`, `abetaindex`, `abetaload`, `rigid`, and `adni-pet-core`. When registration is enabled (no `--skip-normalization`), the output directory must be empty to avoid overwriting. |
+| `--batch` | Enable batch processing mode. In batch mode, `--input` and `--output` are treated as directories, all `.nii` / `.nii.gz` files in the input directory are processed, and outputs use the input basename plus each command's preset suffix. Metric commands also generate `results.csv`, and batch-capable commands generate `batch_info.txt` in the output directory. Currently supported for `centiloid`, `centaur`, `centaurz`, `suvr`, `abetaindex`, `abetaload`, `rigid`, `adni-pet-core`, and `scan-pet-core`. When registration is enabled (no `--skip-normalization`), the output directory must be empty to avoid overwriting. |
 | `--bids <regex>` | Treat `--input` as a PET-BIDS dataset root, recursively process PET NIfTI files under `pet/` whose BIDS relative path, filename, or basename matches `<regex>`, and write outputs to the `--output` directory using the original BIDS basename plus the command suffix, such as `sub-01_ses-01_pet_rigid_aligned.nii` or `sub-01_ses-01_pet_ADNI_style.nii`. |
 | `--iterative` | Use iterative rigid transformation |
 | `--manual-fov` | Enable manual field-of-view placement |
 | `--skip-normalization` | Skip spatial normalization step |
 | `--suvr` | Include SUVr values in metric outputs |
-| `--tracer <tracer>` | Required tracer type. `adni-pet-core` accepts `abeta`, `tau`, `fdg`, or `dat`; `fillstates` accepts `fbp`, `fdg`, or `ftp`. |
-| `--level <1\|2\|3> [...]` | `adni-pet-core` export levels. Accepts one or more values and defaults to Level 3. Only selected levels are saved. |
-| `--deface` | `adni-pet-core` only. Sets facial voxels to zero in every selected output after transform estimation. |
+| `--tracer <tracer>` | Required tracer type. `adni-pet-core` accepts `abeta`, `tau`, `fdg`, or `dat`; `scan-pet-core` accepts only `fdg`; `fillstates` accepts `fbp`, `fdg`, or `ftp`. |
+| `--level <1\|2\|3> [...]` | `adni-pet-core` / `scan-pet-core` export levels. Accepts one or more values and defaults to Level 3. Only selected levels are saved. |
+| `--deface` | `adni-pet-core` and `scan-pet-core`. Sets facial voxels to zero in every selected output after transform estimation. |
 | `--modality <type>` | Decoupling modality for `adad` (`abeta` or `tau`). |
 
 ## Developers

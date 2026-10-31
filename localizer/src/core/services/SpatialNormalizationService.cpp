@@ -66,7 +66,8 @@ SpatialNormalizationOutput SpatialNormalizationService::normalize(const SpatialN
         output.spatiallyNormalizedImage = prepareAdniPetCoreImage(
             output.rigidAlignedImage,
             output.spatiallyNormalizedImage,
-            request.options.adniPetTracer);
+            request.options.adniPetTracer,
+            request.options.useScanPetCore);
     }
 
     return output;
@@ -82,7 +83,8 @@ ImageType::Pointer SpatialNormalizationService::loadInput(const std::string& inp
 
 ImageType::Pointer SpatialNormalizationService::prepareAdniPetCoreImage(ImageType::Pointer rigidImage,
                                                                        ImageType::Pointer normalizedImage,
-                                                                       const std::string& tracer) const {
+                                                                       const std::string& tracer,
+                                                                       bool useScanReference) const {
     if (!rigidImage || !normalizedImage) {
         throw std::invalid_argument("ADNI PET Core preparation requires rigid and normalized images");
     }
@@ -93,13 +95,21 @@ ImageType::Pointer SpatialNormalizationService::prepareAdniPetCoreImage(ImageTyp
             "ADNI PET Core tracer must be one of: abeta, tau, fdg, dat");
     }
 
+    if (useScanReference && tracer != "fdg") {
+        throw std::invalid_argument("SCAN PET Core currently supports only fdg");
+    }
+
     ImageType::Pointer adniTemplate = Common::nifti::loadImage(config_->getTemplatePath("adni_pet_core"));
     if (!adniTemplate) {
         throw std::runtime_error("Failed to load ADNI PET Core template");
     }
 
     ImageType::Pointer adniStyle = Common::image::resampleToMatch(adniTemplate, rigidImage);
-    const bool useFdgReference = tracer == "fdg";
+    if (tracer == "fdg" && !useScanReference) {
+        Common::image::normalizeFdgIterativeGlobalMean(adniStyle);
+        return adniStyle;
+    }
+    const bool useFdgReference = useScanReference;
     const bool useOccipitalReference = tracer == "dat";
     const std::string referenceMaskName =
         useFdgReference ? "fdg_pons_vermis_ref" :

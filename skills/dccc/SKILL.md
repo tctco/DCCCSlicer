@@ -14,14 +14,15 @@ PyPI runtime 为精简版，不含 ADAD 模型；需完整 runtime 时用
 
 ```python
 import dcccpy
-r = dcccpy.adni_pet_core('fdg.nii.gz', 'fdg_preprocessed.nii.gz', tracer='fdg')
+r = dcccpy.scan_pet_core('fdg.nii.gz', 'fdg_preprocessed.nii.gz', tracer='fdg')
 print(r.output)
 ```
 
 - 预处理用 `adni_pet_core`，显式指定 `tracer='abeta'|'tau'|'fdg'|'dat'`。
   `level=1` 为动态帧配准（需 4D），`2` 为均值，`3` 为标准化输出；可传列表。
-  FDG 自 core `4.6.2-alpha` 起，以脑桥＋小脑蚓联合区最高 50% 强度均值归一化，
-  为 SCAN 风格近似；rigid 行为不变。该参考区在非线性标准空间取样，输出仍为 rigid ADNI 网格。
+  当前源码的 ADNI FDG 已恢复迭代全脑均值；`scan_pet_core(..., tracer="fdg")`
+  单独使用脑桥＋小脑蚓联合区最高 50% 强度均值，rigid 行为不变。
+  此拆分尚未发布：`0.3.0a6`/`4.6.2-alpha` 仍只有采用参比区策略的 ADNI 入口，需用当前源码及匹配 core。
 - 配准用 `rigid` / `normalize`；指标用 `centiloid`、`centaurz`、`suvr` 等，
   读取 `r.metrics`。仅在输入已符合目标模板空间时使用 `skip_normalization=True`。
 - 原生空间分割用 `seg`，默认返回 FreeSurfer/DKT 标签。模型可能首次联网下载；

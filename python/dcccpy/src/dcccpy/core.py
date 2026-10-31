@@ -421,8 +421,45 @@ def adni_pet_core(
     Coreg/Avg, and 3 exports the standardized image. Multiple levels produce
     multiple files while ``output`` identifies the deepest requested level.
     Set ``deface=True`` to zero facial voxels after transform estimation.
+    FDG uses iterative global-mean normalization; use ``scan_pet_core`` for
+    the pons/vermis reference strategy.
     """
 
+    return _pet_core_command("adni-pet-core", input, output, tracer=tracer,
+                             level=level, deface=deface, **kwargs)
+
+
+def scan_pet_core(
+    input: object,
+    output: str | os.PathLike[str] | None = None,
+    *,
+    tracer: str,
+    level: int | Sequence[int] = 3,
+    deface: bool = False,
+    **kwargs: object,
+) -> DCCCResult:
+    """Run SCAN-inspired FDG preprocessing with top-half pons/vermis scaling.
+
+    Shares registration, export levels, and defacing with ``adni_pet_core``.
+    Currently requires ``tracer="fdg"``. This uses an atlas approximation,
+    not Berkeley's hand-drawn reference mask or full SCAN pipeline.
+    """
+    if tracer != "fdg":
+        raise ValueError("scan_pet_core currently supports only tracer='fdg'")
+    return _pet_core_command("scan-pet-core", input, output, tracer=tracer,
+                             level=level, deface=deface, **kwargs)
+
+
+def _pet_core_command(
+    command: str,
+    input: object,
+    output: str | os.PathLike[str] | None,
+    *,
+    tracer: str,
+    level: int | Sequence[int],
+    deface: bool,
+    **kwargs: object,
+) -> DCCCResult:
     extra_args = list(kwargs.pop("extra_args", ()))
     extra_args.extend(["--tracer", tracer])
     levels = (level,) if isinstance(level, int) else tuple(level)
@@ -432,7 +469,7 @@ def adni_pet_core(
         extra_args.extend(["--level", *(str(value) for value in levels)])
     if deface:
         extra_args.append("--deface")
-    return _spatial_command("adni-pet-core", input, output, extra_args=extra_args, **kwargs)
+    return _spatial_command(command, input, output, extra_args=extra_args, **kwargs)
 
 
 def rigid(

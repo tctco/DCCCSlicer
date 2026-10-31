@@ -9,6 +9,7 @@ namespace Common::image {
 using ImageType = nifti::ImageType;
 
 void divideVoxelsByValue(ImageType::Pointer image, float divisor);
+void normalizeFdgIterativeGlobalMean(ImageType::Pointer image);
 double calculateFdgTopHalfMeanInMask(ImageType::Pointer image,
                                     ImageType::Pointer mask);
 double calculateMeanInMask(ImageType::Pointer image,

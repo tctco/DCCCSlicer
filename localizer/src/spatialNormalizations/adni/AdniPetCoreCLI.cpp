@@ -30,6 +30,7 @@ namespace {
 
 struct RunConfig {
     bool enableAdniPetCore = true;
+    bool scanStyle = false;
     const char* logTag = "adni-pet-core";
 };
 
@@ -76,7 +77,8 @@ OutputPaths singleOutputPaths(const NormalizeCommandOptions& options) {
 
 OutputPaths batchOutputPaths(const NormalizeCommandOptions& options,
                              const std::filesystem::path& inputFile,
-                             const std::filesystem::path& outputDir) {
+                             const std::filesystem::path& outputDir,
+                             const RunConfig& config) {
     OutputPaths paths;
     if (exportsLevel(options, 1)) {
         paths[1] = Common::fs::buildOutputPath(inputFile, outputDir, kCoregSuffix);
@@ -85,7 +87,8 @@ OutputPaths batchOutputPaths(const NormalizeCommandOptions& options,
         paths[2] = Common::fs::buildOutputPath(inputFile, outputDir, kAveragedSuffix);
     }
     if (exportsLevel(options, 3)) {
-        paths[3] = Common::fs::buildOutputPath(inputFile, outputDir, kBatchOutputSuffix);
+        paths[3] = Common::fs::buildOutputPath(inputFile, outputDir,
+            config.scanStyle ? "_SCAN_style.nii" : kBatchOutputSuffix);
     }
     return paths;
 }
@@ -218,11 +221,11 @@ int processSingleImage(const NormalizeCommandOptions& options,
             }
         } else if (inputDimension != 3) {
             throw std::invalid_argument(
-                "adni-pet-core requires a 3D or 4D PET input; received a " +
+                std::string(config.logTag) + " requires a 3D or 4D PET input; received a " +
                 std::to_string(inputDimension) + "D image.");
         } else {
             if (exportsLevel(options, 1)) {
-                throw std::invalid_argument("ADNI PET Core level 1 (Coreg) "
+                throw std::invalid_argument("PET Core level 1 (Coreg) "
                                             "requires a 4D dynamic PET input.");
             }
             if (exportsLevel(options, 2)) {
@@ -294,6 +297,7 @@ int processSingleImage(const NormalizeCommandOptions& options,
         request.options.debugOutputBasePath = debugOutputBasePath;
         request.options.enableAdniPetCore = config.enableAdniPetCore;
         request.options.adniPetTracer = options.tracer;
+        request.options.useScanPetCore = config.scanStyle;
         auto output = spatialService->normalize(request);
         if (options.deface) {
             prepareDefacer();
@@ -357,7 +361,7 @@ int runBatchNormalization(const NormalizeCommandOptions& options,
     }
     if (!Common::fs::isDirectoryEmpty(outputDir)) {
         std::cerr << "[" << config.logTag
-                  << "] Output directory must be empty for batch ADNI PET Core processing."
+                  << "] Output directory must be empty for batch PET Core processing."
                   << std::endl;
         return EXIT_FAILURE;
     }
@@ -387,7 +391,7 @@ int runBatchNormalization(const NormalizeCommandOptions& options,
 
     for (const auto& inputFile : files) {
         summary.processed++;
-        const auto outputPaths = batchOutputPaths(options, inputFile, outputDir);
+        const auto outputPaths = batchOutputPaths(options, inputFile, outputDir, config);
         const std::string inputPath = Common::path::toUtf8(inputFile);
         const std::string fileLabel = Common::path::toUtf8(inputFile.filename());
         const std::string debugBase = resolveDebugBasePath(
@@ -402,7 +406,7 @@ int runBatchNormalization(const NormalizeCommandOptions& options,
                 debugBase,
                 false);
             if (result != EXIT_SUCCESS) {
-                throw std::runtime_error("ADNI PET Core normalization failed.");
+                throw std::runtime_error("PET Core normalization failed.");
             }
 
             summary.succeeded++;
@@ -437,12 +441,16 @@ int runNormalization(const NormalizeCommandOptions& options,
 
 class AdniPetCoreCLI final : public ISpatialNormalizationCLI {
 public:
+    explicit AdniPetCoreCLI(bool scanStyle = false) : scanStyle_(scanStyle) {}
+
     std::string getSubcommandName() const override {
-        return "adni-pet-core";
+        return scanStyle_ ? "scan-pet-core" : "adni-pet-core";
     }
 
     std::string getDescription() const override {
-        return "Run ADNI-style PET preprocessing with tracer-specific intensity references";
+        return scanStyle_
+            ? "Run SCAN-inspired FDG preprocessing with top-50% pons/vermis normalization"
+            : "Run ADNI-style PET preprocessing; FDG uses iterative global-mean normalization";
     }
 
     void configureArguments(argparse::ArgumentParser& parser) override {
@@ -452,14 +460,20 @@ public:
         parser.add_argument("--method")
             .help("Normalization method")
             .default_value("rigid_voxelmorph");
-        parser.add_argument("--tracer")
-            .help("PET tracer class (abeta, tau, fdg, or dat); FDG uses "
-                  "SCAN-inspired top-50% pons/vermis normalization; DAT uses "
-                  "PPMI-style occipital normalization")
-            .required()
-            .choices("abeta", "tau", "fdg", "dat");
+        if (scanStyle_) {
+            parser.add_argument("--tracer")
+                .help("PET tracer class (fdg only); SCAN-inspired top-50% pons/vermis reference")
+                .required()
+                .choices("fdg");
+        } else {
+            parser.add_argument("--tracer")
+                .help("PET tracer class (abeta, tau, fdg, or dat); FDG uses iterative "
+                      "global-mean normalization; DAT uses PPMI-style occipital normalization")
+                .required()
+                .choices("abeta", "tau", "fdg", "dat");
+        }
         parser.add_argument("--level")
-            .help("Export one or more ADNI preprocessing levels: 1=Coreg, "
+            .help("Export one or more PET preprocessing levels: 1=Coreg, "
                   "2=Coreg Avg, 3=Coreg Avg Std Img and Vox Siz (default: 3)")
             .nargs(argparse::nargs_pattern::at_least_one)
             .append()
@@ -498,15 +512,23 @@ public:
 
         RunConfig runConfig;
         runConfig.enableAdniPetCore = true;
-        runConfig.logTag = "adni-pet-core";
+        runConfig.scanStyle = scanStyle_;
+        runConfig.logTag = scanStyle_ ? "scan-pet-core" : "adni-pet-core";
         return runNormalization(options, runConfig, fullCommand);
     }
+
+private:
+    bool scanStyle_;
 };
 
 } // namespace
 
 SpatialNormalizationCLIPtr createCLI() {
     return std::make_shared<AdniPetCoreCLI>();
+}
+
+SpatialNormalizationCLIPtr createScanCLI() {
+    return std::make_shared<AdniPetCoreCLI>(true);
 }
 
 } // namespace Pipeline::SpatialNormalization::Adni

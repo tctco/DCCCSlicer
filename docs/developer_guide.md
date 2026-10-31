@@ -90,6 +90,7 @@ These commands expose normalization without metric calculation:
 
 - `normalize`
 - `adni-pet-core`
+- `scan-pet-core` (FDG-only; shared spatial pipeline, pons/vermis intensity reference)
 
 They directly use `ISpatialNormalizationService` and `IFileService`. They do not go through a metric pipeline.
 

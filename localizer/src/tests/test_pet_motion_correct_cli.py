@@ -2,6 +2,7 @@ import gzip
 import struct
 
 import numpy as np
+import pytest
 
 
 _NIFTI_DTYPES = {
@@ -186,9 +187,10 @@ class TestPetMotionCorrectCLI:
         assert rows[1] == "0\t0\t0\t0\t0\t0\t0"
 
 
+@pytest.mark.parametrize("command", ["adni-pet-core", "scan-pet-core"])
 class TestAdniPetCoreDynamicInput:
     def test_level_one_exports_coreg_dynamic_and_skips_normalization(
-        self, run_subprocess, tmp_path
+        self, run_subprocess, tmp_path, command
     ):
         frames = np.stack([_synthetic_pet((20, 21, 22))])
         input_path = tmp_path / "dynamic.nii.gz"
@@ -196,7 +198,7 @@ class TestAdniPetCoreDynamicInput:
         _write_float_nifti(input_path, frames)
 
         result = run_subprocess([
-            "adni-pet-core",
+            command,
             "--input", str(input_path),
             "--output", str(output_path),
             "--tracer", "fdg",
@@ -211,7 +213,7 @@ class TestAdniPetCoreDynamicInput:
         assert "stopped before Level 3" in result.stdout
 
     def test_combined_levels_export_coreg_and_average_then_stop(
-        self, run_subprocess, tmp_path
+        self, run_subprocess, tmp_path, command
     ):
         frame = _synthetic_pet((20, 21, 22))
         input_path = tmp_path / "dynamic.nii.gz"
@@ -220,7 +222,7 @@ class TestAdniPetCoreDynamicInput:
         _write_float_nifti(input_path, frame[np.newaxis, ...])
 
         result = run_subprocess([
-            "adni-pet-core",
+            command,
             "--input", str(input_path),
             "--output", str(output_path),
             "--tracer", "fdg",
@@ -240,7 +242,7 @@ class TestAdniPetCoreDynamicInput:
         assert "stopped before Level 3" in result.stdout
 
     def test_level_two_accepts_an_already_averaged_3d_input(
-        self, run_subprocess, tmp_path
+        self, run_subprocess, tmp_path, command
     ):
         frame = _synthetic_pet((20, 21, 22))
         input_path = tmp_path / "average_input.nii.gz"
@@ -248,7 +250,7 @@ class TestAdniPetCoreDynamicInput:
         _write_float_nifti(input_path, frame)
 
         result = run_subprocess([
-            "adni-pet-core",
+            command,
             "--input", str(input_path),
             "--output", str(output_path),
             "--tracer", "fdg",
@@ -262,13 +264,13 @@ class TestAdniPetCoreDynamicInput:
         np.testing.assert_allclose(averaged, frame, rtol=0.0, atol=1e-6)
         assert "already averaged input" in result.stdout
 
-    def test_level_one_rejects_3d_input(self, run_subprocess, tmp_path):
+    def test_level_one_rejects_3d_input(self, run_subprocess, tmp_path, command):
         input_path = tmp_path / "static.nii.gz"
         output_path = tmp_path / "coreg.nii.gz"
         _write_float_nifti(input_path, _synthetic_pet((20, 21, 22)))
 
         result = run_subprocess([
-            "adni-pet-core",
+            command,
             "--input", str(input_path),
             "--output", str(output_path),
             "--tracer", "fdg",
@@ -279,13 +281,13 @@ class TestAdniPetCoreDynamicInput:
         assert "level 1 (Coreg) requires a 4D dynamic PET input" in result.stderr
         assert not output_path.exists()
 
-    def test_rejects_unknown_export_level(self, run_subprocess, tmp_path):
+    def test_rejects_unknown_export_level(self, run_subprocess, tmp_path, command):
         input_path = tmp_path / "dynamic.nii.gz"
         output_path = tmp_path / "output.nii.gz"
         _write_float_nifti(input_path, _synthetic_pet((20, 21, 22))[np.newaxis, ...])
 
         result = run_subprocess([
-            "adni-pet-core",
+            command,
             "--input", str(input_path),
             "--output", str(output_path),
             "--tracer", "fdg",
@@ -297,7 +299,7 @@ class TestAdniPetCoreDynamicInput:
         assert not output_path.exists()
 
     def test_single_frame_4d_runs_automatic_preprocessing(
-        self, run_subprocess, tmp_path, test_files
+        self, run_subprocess, tmp_path, test_files, command
     ):
         original = test_files["input"].read_bytes()
         dynamic_header = bytearray(original)
@@ -313,7 +315,7 @@ class TestAdniPetCoreDynamicInput:
         unrequested_average_path = tmp_path / "adni_dynamic_output_Coreg_Avg.nii"
 
         result = run_subprocess([
-            "adni-pet-core", "--input", str(dynamic_path), "--output", str(output_path),
+            command, "--input", str(dynamic_path), "--output", str(output_path),
             "--tracer", "fdg",
             "--level", "1", "3",
         ])

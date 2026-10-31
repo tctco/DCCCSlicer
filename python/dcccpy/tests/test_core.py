@@ -493,3 +493,32 @@ def test_run_adds_macos_security_hint_for_blocked_runtime(
     assert "macOS may have blocked DCCCcore" in result.stderr
     assert "xattr -dr com.apple.quarantine" in result.stderr
     assert str(exe) in result.stderr
+
+
+def test_scan_pet_core_forwards_fdg_levels_and_deface(tmp_path, monkeypatch):
+    fake_args = tmp_path / "scan_args.txt"
+    fake_exe = make_fake_dccccore(tmp_path)
+    input_path = tmp_path / "fdg.nii"
+    output_path = tmp_path / "scan.nii"
+    input_path.write_text("fake PET")
+    monkeypatch.setenv("DCCCPY_DCCCCORE", str(fake_exe))
+    monkeypatch.setenv("DCCCPY_FAKE_ARGS", str(fake_args))
+    result = dcccpy.scan_pet_core(input_path, output_path, tracer="fdg", level=(1, 3), deface=True)
+    assert result.returncode == 0
+    assert fake_args.read_text().splitlines() == [
+        "scan-pet-core", "--input", str(input_path), "--output", str(output_path),
+        "--tracer", "fdg", "--level", "1", "3", "--deface",
+    ]
+
+
+def test_scan_pet_core_requires_fdg():
+    with pytest.raises(TypeError, match="tracer"):
+        dcccpy.scan_pet_core("fdg.nii")
+    with pytest.raises(ValueError, match="fdg"):
+        dcccpy.scan_pet_core("pet.nii", tracer="abeta")
+
+
+@pytest.mark.parametrize("level", [0, 4, (), (1, 4)])
+def test_scan_pet_core_rejects_invalid_level(level):
+    with pytest.raises(ValueError, match="level"):
+        dcccpy.scan_pet_core("fdg.nii", tracer="fdg", level=level)

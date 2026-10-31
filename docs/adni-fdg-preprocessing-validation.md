@@ -1,25 +1,30 @@
 # FDG preprocessing compatibility note
 
-## Current default
+## Current source interfaces (unreleased)
 
-`adni-pet-core --tracer fdg` now uses a SCAN-inspired intensity reference:
-Clinica eroded pons plus AAL2 cerebellar vermis. The normalization divisor is
-the mean of the highest ceil(N/2) voxel intensities within their binary union,
-measured on spatially normalized PET. The existing rigid-aligned ADNI-grid
-output is divided by that scalar. Motion correction, rigid registration,
-and export levels are unchanged.
+- `adni-pet-core --tracer fdg` restores the ADNI iterative global-mean algorithm
+  described below. Its reference mask is not used for FDG.
+- `scan-pet-core --tracer fdg` uses the mean of the highest ceil(N/2) voxel
+  intensities within a Clinica eroded pons plus AAL2 cerebellar-vermis union.
+  The divisor is measured on spatially normalized PET, then applied to the
+  existing rigid-aligned ADNI-grid output.
 
-This is an atlas approximation, not the unavailable Berkeley hand-drawn mask.
-It does not reproduce SCAN's full spatial processing or establish numerical
-agreement with published SCAN SUVRs. See the [mask provenance and rebuild
-instructions](../localizer/src/assets/nii/FDG/README.md).
+Both commands share registration, motion correction, export levels, defacing,
+and batch/BIDS behavior. SCAN is FDG-only and uses `_SCAN_style.nii` for batch
+Level 3 outputs. It approximates Berkeley's reference region rather than
+reproducing the unavailable hand-drawn mask or full SCAN processing pipeline.
+See the [mask provenance](../localizer/src/assets/nii/FDG/README.md).
+
+The published `4.6.2-alpha` release temporarily replaced ADNI FDG normalization
+with the SCAN-inspired reference and did not expose `scan-pet-core`. The split
+above restores legacy ADNI behavior in current source; it is not in that release.
 
 Reference: [UC Berkeley SCAN FDG methods, May 2024](https://files.alz.washington.edu/scan/UCBerkeley_SCAN_FDG_Methods_20240529.pdf).
 
 ## Historical validation of the previous global-mean default
 
-The results below describe the former algorithm only; they do not validate
-the current pons/vermis reference normalization.
+The results below describe the iterative ADNI algorithm now restored to
+`adni-pet-core`; they do not validate the SCAN pons/vermis strategy.
 
 DCCCcore 4.4 adds tracer-aware `adni-pet-core` preprocessing. The command now
 requires `--tracer abeta`, `--tracer tau`, `--tracer fdg`, or `--tracer dat`.

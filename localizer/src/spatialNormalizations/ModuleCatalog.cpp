@@ -13,6 +13,7 @@ std::vector<SpatialNormalizationCLIPtr> buildCLIModules() {
     std::vector<SpatialNormalizationCLIPtr> modules;
     modules.push_back(Standard::createCLI());
     modules.push_back(Adni::createCLI());
+    modules.push_back(Adni::createScanCLI());
     modules.push_back(Rigid::createCLI());
     modules.push_back(Seg::createCLI());
     modules.push_back(Brain::createCLI());
