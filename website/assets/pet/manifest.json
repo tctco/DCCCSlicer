@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "vertexCount": 60004,
+  "triangleCount": 120000,
+  "cases": [
+    {
+      "actualCL": 0.357015,
+      "targetCL": 0.0,
+      "tracer": "PIB",
+      "conversion": "PiB"
+    },
+    {
+      "actualCL": 10.143,
+      "targetCL": 10.0,
+      "tracer": "AV45",
+      "conversion": "FBP"
+    },
+    {
+      "actualCL": 20.21,
+      "targetCL": 20.0,
+      "tracer": "AV45",
+      "conversion": "FBP"
+    },
+    {
+      "actualCL": 27.2108,
+      "targetCL": 30.0,
+      "tracer": "AV45",
+      "conversion": "FBP"
+    },
+    {
+      "actualCL": 41.1126,
+      "targetCL": 40.0,
+      "tracer": "AV45",
+      "conversion": "FBP"
+    },
+    {
+      "actualCL": 50.4082,
+      "targetCL": 50.0,
+      "tracer": "AV45",
+      "conversion": "FBP"
+    },
+    {
+      "actualCL": 60.5417,
+      "targetCL": 60.0,
+      "tracer": "AV45",
+      "conversion": "FBP"
+    },
+    {
+      "actualCL": 70.1599,
+      "targetCL": 70.0,
+      "tracer": "AV45",
+      "conversion": "FBP"
+    },
+    {
+      "actualCL": 81.8204,
+      "targetCL": 80.0,
+      "tracer": "AV45",
+      "conversion": "FBP"
+    },
+    {
+      "actualCL": 82.8166,
+      "targetCL": 90.0,
+      "tracer": "AV45",
+      "conversion": "FBP"
+    },
+    {
+      "actualCL": 112.574,
+      "targetCL": 100.0,
+      "tracer": "PIB",
+      "conversion": "PiB"
+    }
+  ],
+  "units": "whole-cerebellum-referenced SUVr",
+  "uptakeEncoding": "case-major uint16 little-endian; divide by 10000",
+  "surface": "Brainstorm Colin27 2016 pial, decimated to 120000 faces",
+  "surfaceSource": "https://neuroimage.usc.edu/brainstorm/Tutorials/DefaultAnatomy",
+  "surfaceSHA256": "5214d9c58873855dfba537bbe863cb7ae2e06d1f0ff526926c038c7c78b62bfb",
+  "coordinateSystem": "Colin27 RAS millimeters",
+  "normalization": {
+    "runtime": "4.6.1-alpha",
+    "wrapperExpectedVersion": "4.6.3-alpha",
+    "method": "rigid_voxelmorph, iterative rigid enabled",
+    "outputSpace": "DCCC MNI template grid"
+  },
+  "templateAlignment": "Affine Mattes MI: Colin27 T1 to padded MNI152 T1; ITK LPS transformed explicitly to RAS",
+  "colinToMNIRAS": [
+    [
+      1.000251441265401,
+      -0.003120508860878866,
+      0.0029081184784356387,
+      -2.0093036224982868
+    ],
+    [
+      0.020829663380613248,
+      1.0181175918625673,
+      0.029395542047746612,
+      0.34339707057977564
+    ],
+    [
+      0.009269129790788835,
+      -0.0007447048486689034,
+      0.9811660002252458,
+      0.19913750921778195
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "sampling": "Cortical MIP over 12 inward normal samples at 0.5\u20136.0 mm, gray-matter support > 0.25; trilinear volume sampling",
+  "graySupportFallbackFraction": 0.012315845610292647,
+  "visualization": "Continuous linear interpolation of projected SUVr between nominal 0–100 CL selection targets; whole-number presentation scale. Actual source CL values are retained separately. No synthetic clinical measurements.",
+  "displayWindowSUVr": [
+    1.1,
+    1.75
+  ],
+  "overlay": "Transparent below 1.1 SUVr; red opacity increases smoothly to 0.86 at 1.75 SUVr over a neutral anatomical surface",
+  "limitations": [
+    "Distinct participants, not longitudinal progression.",
+    "PiB and AV45 are different tracers; common SUVr colors are not a validated cross-tracer calibration.",
+    "Source actual CL values are supplied records (dcccpy 0.2.0 / runtime 4.4.0); not recalculated here.",
+    "Projection, red-overlay display thresholds and interpolation are for visual communication; not a diagnostic reference."
+  ],
+  "files": {
+    "positions.bin": {
+      "bytes": 720048,
+      "sha256": "d70896f5f2329cd334a532fc3faf3bb57b117880d1e8d1744dbab7ea5f93b67c"
+    },
+    "normals.bin": {
+      "bytes": 720048,
+      "sha256": "c8d238c65f8ff371fc79ae0fd49c063b932f139ad632dfb08010aebb19d8ec42"
+    },
+    "indices.bin": {
+      "bytes": 1440000,
+      "sha256": "a8312817cc79b14c02d9d89d046d9a7a96e911b89a636af1cb83081ba82962db"
+    },
+    "cavity.bin": {
+      "bytes": 60004,
+      "sha256": "2dc2d365358100385564b93ee5736faf38090f7abe39fafe5ed6dcebaa3d744d"
+    },
+    "uptake.bin": {
+      "bytes": 1320088,
+      "sha256": "9622216b6cbcaf48a510d26b8f71fd3dd73ac997ee087f2f36543378685ef588"
+    }
+  }
+}

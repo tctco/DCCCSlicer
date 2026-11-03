@@ -1,0 +1,31 @@
+Colin27 anatomy
+==============
+Surface derived from the Brainstorm Colin27 2016 pial cortex:
+https://neuroimage.usc.edu/brainstorm/Tutorials/DefaultAnatomy
+Colin27 gray-matter mask distributed in the Cedalion Colin27 head model.
+
+Copyright (C) 1993–2009 Louis Collins, McConnell Brain Imaging Centre, Montreal
+Neurological Institute, McGill University. Permission to use, copy, modify, and
+distribute this software and its documentation for any purpose and without fee
+is hereby granted, provided that the above copyright notice appear in all
+copies. The authors and McGill University make no representations about the
+suitability of this software for any purpose. It is provided “as is” without
+express or implied warranty. The authors are not responsible for any data loss,
+equipment damage, property loss, or injury to subjects or patients resulting
+from the use or misuse of this software package.
+
+The Colin27 segmentation was performed by Nils Harmening.
+http://www.bic.mni.mcgill.ca/ServicesAtlases/Colin27
+
+Three.js 0.176.0
+===============
+MIT license. See ../../vendor/THREE-LICENSE.txt.
+
+PET illustration
+================
+Derived cortical-MIP surface uptake values from 11 internal PET examples provided for this
+DCCC website illustration. No native NIfTI images or original source case
+identifiers are included in these assets. Supplied CL values are anchors,
+not recomputed measurements. Visual interpolation between participants does
+not model longitudinal progression or create clinical reference standards.
+See manifest.json for processing details and limitations.
