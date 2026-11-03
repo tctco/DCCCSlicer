@@ -80,3 +80,13 @@ In Namecheap: **Domain List → brain.pet → Manage → Advanced DNS → Host R
 Replace conflicting parking/redirect records for `@` and `www`; keep unrelated mail/TXT records. Do not include `/DCCCSlicer/` in the CNAME value. After DNS validation and certificate issuance, enable **Enforce HTTPS** in GitHub Pages settings. The intended canonical URL is https://brain.pet/.
 
 References: [GitHub custom domains](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site), [Namecheap GitHub Pages setup](https://www.namecheap.com/support/knowledgebase/article.aspx/9645/2208/how-do-i-link-my-domain-to-github-pages/).
+
+## Search and sharing
+
+Search metadata targets brain PET, neuroimaging, Centiloid and PET quantification. The homepage has a descriptive title/meta description, an HTTPS canonical URL, Open Graph/Twitter metadata, a 1200×630 sharing card, and server-delivered JSON-LD describing the website and software suite. Short, visible tool descriptions use the same terminology without expanding the page layout.
+
+`robots.txt` permits crawling and points to `https://brain.pet/sitemap.xml`; the sitemap lists the canonical homepage. The keywords meta tag is descriptive only: Google does not use it for ranking. No ratings, clinical efficacy claims, or rich-result eligibility are asserted.
+
+After HTTPS is active, the domain owner can add `brain.pet` to Google Search Console and submit the sitemap. Ownership verification and search indexing are separate from deployment. Keep canonical URLs, sharing URLs, JSON-LD and sitemap consistent when changing domains.
+
+References: [Google-supported metadata](https://developers.google.com/search/docs/crawling-indexing/special-tags), [Google developer SEO guide](https://developers.google.com/search/docs/fundamentals/get-started-developers), [Schema.org SoftwareApplication](https://schema.org/SoftwareApplication).

@@ -3,13 +3,139 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="DCCC is an open-source toolkit for MRI-free brain PET spatial normalization and biomarker quantification. Explore Centiloid, CenTauR and more.">
+  <meta name="description" content="MRI-free brain PET neuroimaging and Centiloid quantification for clinicians, researchers and AI agents. Explore DCCCSlicer, DCCCcore and dcccpy.">
+  <meta name="keywords" content="PET, brain PET, neuroimaging, Centiloid, PET quantification, MRI-free PET, amyloid PET, tau PET, CenTauR, SUVr, DCCCSlicer, DCCCcore, dcccpy">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://brain.pet/">
+  <link rel="sitemap" type="application/xml" href="sitemap.xml">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DCCC">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="https://brain.pet/">
+  <meta property="og:title" content="DCCC | PET Neuroimaging &amp; Centiloid Quantification">
+  <meta property="og:description" content="MRI-free brain PET neuroimaging and Centiloid quantification for clinicians, researchers and AI agents. Explore DCCCSlicer, DCCCcore and dcccpy.">
+  <meta property="og:image" content="https://brain.pet/assets/social-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="DCCC: MRI-free PET neuroimaging and Centiloid quantification, illustrated with red PET uptake on a cortical surface.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DCCC | PET Neuroimaging &amp; Centiloid Quantification">
+  <meta name="twitter:description" content="MRI-free brain PET neuroimaging and Centiloid quantification for clinicians, researchers and AI agents. Explore DCCCSlicer, DCCCcore and dcccpy.">
+  <meta name="twitter:image" content="https://brain.pet/assets/social-card.png">
+  <meta name="twitter:image:alt" content="DCCC brain PET quantification toolkit with a cortical PET illustration.">
   <meta name="theme-color" content="#f5f1e8">
-  <title>DCCC — A clearer picture of brain PET.</title>
+  <title>DCCC | PET Neuroimaging &amp; Centiloid Quantification</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
   <script type="module" src="pet-viewer.js"></script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://brain.pet/#website",
+      "url": "https://brain.pet/",
+      "name": "DCCC",
+      "alternateName": "Deep Cascaded Cerebral Calculator",
+      "inLanguage": "en",
+      "description": "MRI-free brain PET neuroimaging and Centiloid quantification for clinicians, researchers and AI agents. Explore DCCCSlicer, DCCCcore and dcccpy."
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://brain.pet/#webpage",
+      "url": "https://brain.pet/",
+      "name": "DCCC | PET Neuroimaging & Centiloid Quantification",
+      "description": "MRI-free brain PET neuroimaging and Centiloid quantification for clinicians, researchers and AI agents. Explore DCCCSlicer, DCCCcore and dcccpy.",
+      "inLanguage": "en",
+      "isPartOf": {
+        "@id": "https://brain.pet/#website"
+      },
+      "mainEntity": {
+        "@id": "https://brain.pet/#software"
+      },
+      "primaryImageOfPage": {
+        "@type": "ImageObject",
+        "url": "https://brain.pet/assets/social-card.png",
+        "width": 1200,
+        "height": 630
+      }
+    },
+    {
+      "@type": [
+        "SoftwareApplication",
+        "SoftwareSourceCode"
+      ],
+      "@id": "https://brain.pet/#software",
+      "name": "DCCC",
+      "alternateName": "Deep Cascaded Cerebral Calculator",
+      "url": "https://brain.pet/",
+      "description": "MRI-free brain PET neuroimaging and Centiloid quantification for clinicians, researchers and AI agents. Explore DCCCSlicer, DCCCcore and dcccpy.",
+      "applicationCategory": "Scientific software",
+      "applicationSubCategory": "PET neuroimaging and biomarker quantification",
+      "operatingSystem": [
+        "Windows",
+        "macOS",
+        "Linux"
+      ],
+      "codeRepository": "https://github.com/tctco/DCCCSlicer",
+      "license": "https://github.com/tctco/DCCCSlicer/blob/dev/LICENSE.md",
+      "installUrl": "https://github.com/tctco/DCCCSlicer/releases",
+      "image": "https://brain.pet/assets/social-card.png",
+      "keywords": "PET, brain PET, neuroimaging, Centiloid, PET quantification, MRI-free PET, amyloid PET, tau PET, CenTauR, SUVr, DCCCSlicer, DCCCcore, dcccpy",
+      "audience": [
+        {
+          "@type": "Audience",
+          "audienceType": "Clinicians"
+        },
+        {
+          "@type": "Audience",
+          "audienceType": "Researchers"
+        },
+        {
+          "@type": "Audience",
+          "audienceType": "AI agents"
+        }
+      ],
+      "featureList": [
+        "MRI-free brain PET spatial normalization",
+        "Centiloid amyloid PET quantification",
+        "CenTauR and CenTauRz tau PET quantification",
+        "Custom SUVr quantification",
+        "3D Slicer extension, native command-line tools and Python API"
+      ],
+      "citation": [
+        "https://doi.org/10.1016/j.neuroimage.2026.122039",
+        "https://doi.org/10.1148/radiol.252321"
+      ],
+      "hasPart": [
+        {
+          "@type": "SoftwareApplication",
+          "name": "DCCCSlicer",
+          "applicationSuite": "DCCC",
+          "description": "A 3D Slicer extension for brain PET visualization and quantification.",
+          "installUrl": "https://github.com/tctco/DCCCSlicer/releases"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "DCCCcore",
+          "applicationSuite": "DCCC",
+          "description": "A native command-line toolkit for PET spatial normalization and biomarker quantification.",
+          "installUrl": "https://github.com/tctco/DCCCSlicer/releases"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "dcccpy",
+          "applicationSuite": "DCCC",
+          "description": "A Python API for brain PET neuroimaging research using the DCCC native engine.",
+          "installUrl": "https://pypi.org/project/dcccpy/"
+        }
+      ]
+    }
+  ]
+}
+  </script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -27,9 +153,9 @@
     </div>
     <div id="toolkit" class="toolkit" aria-labelledby="toolkit-title">
       <h2 id="toolkit-title" class="eyebrow">THREE TOOLS. YOUR WAY IN.</h2>
-      <article class="tool"><span class="tool-icon" aria-hidden="true">◫</span><div><div class="tool-heading"><h3>DCCCSlicer</h3><span>VISUALIZE</span></div><p>Explore, quantify and inspect in 3D Slicer.</p><a class="tool-link" href="https://github.com/tctco/DCCCSlicer/releases">Download extension ↗</a></div></article>
-      <article class="tool"><span class="tool-icon" aria-hidden="true">&gt;_</span><div><div class="tool-heading"><h3>DCCCcore</h3><span>AUTOMATE</span></div><p>The native CLI for your PET workflows.</p><div class="tool-links"><a class="tool-link" href="https://github.com/tctco/DCCCSlicer/releases">Download core ↗</a><a href="https://github.com/tctco/DCCCSlicer/blob/dev/localizer/src/README.md">CLI guide ↗</a></div></div></article>
-      <article class="tool python-tool"><span class="tool-icon" aria-hidden="true">py</span><div><div class="tool-heading"><h3>dcccpy</h3><a href="https://github.com/tctco/DCCCSlicer/blob/dev/python/dcccpy/README.md" aria-label="Read the Python API guide">PYTHON ↗</a></div><p>Bring the same engine to your notebook.</p><div class="install"><code>pip install dcccpy</code><button id="copy-install" type="button" aria-label="Copy pip install command">Copy</button></div></div></article>
+      <article class="tool"><span class="tool-icon" aria-hidden="true">◫</span><div><div class="tool-heading"><h3>DCCCSlicer</h3><span>VISUALIZE</span></div><p>Explore and quantify brain PET in 3D Slicer.</p><a class="tool-link" href="https://github.com/tctco/DCCCSlicer/releases">Download extension ↗</a></div></article>
+      <article class="tool"><span class="tool-icon" aria-hidden="true">&gt;_</span><div><div class="tool-heading"><h3>DCCCcore</h3><span>AUTOMATE</span></div><p>Automate PET normalization and quantification.</p><div class="tool-links"><a class="tool-link" href="https://github.com/tctco/DCCCSlicer/releases">Download core ↗</a><a href="https://github.com/tctco/DCCCSlicer/blob/dev/localizer/src/README.md">CLI guide ↗</a></div></div></article>
+      <article class="tool python-tool"><span class="tool-icon" aria-hidden="true">py</span><div><div class="tool-heading"><h3>dcccpy</h3><a href="https://github.com/tctco/DCCCSlicer/blob/dev/python/dcccpy/README.md" aria-label="Read the Python API guide">PYTHON ↗</a></div><p>Python tools for PET neuroimaging research.</p><div class="install"><code>pip install dcccpy</code><button id="copy-install" type="button" aria-label="Copy pip install command">Copy</button></div></div></article>
     </div>
     <p class="handwritten overview-note">less preparation, more exploration.</p>
   </section>
