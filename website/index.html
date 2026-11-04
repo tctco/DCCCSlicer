@@ -7,6 +7,9 @@
   <meta name="keywords" content="PET, brain PET, neuroimaging, Centiloid, PET quantification, MRI-free PET, amyloid PET, tau PET, CenTauR, SUVr, DCCCSlicer, DCCCcore, dcccpy">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="canonical" href="https://brain.pet/">
+  <link rel="alternate" hreflang="en" href="https://brain.pet/">
+  <link rel="alternate" hreflang="zh-CN" href="https://brain.pet/zh/">
+  <link rel="alternate" hreflang="x-default" href="https://brain.pet/">
   <link rel="sitemap" type="application/xml" href="sitemap.xml">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="DCCC">
@@ -26,6 +29,7 @@
   <meta name="theme-color" content="#f5f1e8">
   <title>DCCC | PET Neuroimaging &amp; Centiloid Quantification</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script src="ui.js"></script>
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
   <script type="module" src="pet-viewer.js"></script>
@@ -39,7 +43,10 @@
       "url": "https://brain.pet/",
       "name": "DCCC",
       "alternateName": "Deep Cascaded Cerebral Calculator",
-      "inLanguage": "en",
+      "inLanguage": [
+        "en",
+        "zh-CN"
+      ],
       "description": "MRI-free brain PET neuroimaging and Centiloid quantification for clinicians, researchers and AI agents. Explore DCCCSlicer, DCCCcore and dcccpy."
     },
     {
@@ -142,7 +149,11 @@
 <header class="masthead">
   <a class="brand" href="#" aria-label="DCCC home"><span>DCCC<span class="brand-dot">.</span></span></a>
   <p class="masthead-note">Open science, one scan at a time.</p>
-  <a class="github" href="https://github.com/tctco/DCCCSlicer">View on GitHub <span aria-hidden="true">↗</span></a>
+  <div class="site-controls">
+    <a class="language-switch" href="zh/?lang=zh" lang="zh-CN" hreflang="zh-CN" aria-label="切换到中文">中文</a>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark theme" aria-pressed="false"><svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 14A8.7 8.7 0 0 1 10 3.6 8.7 8.7 0 1 0 20.4 14Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.8"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/></svg></button>
+    <a class="github" href="https://github.com/tctco/DCCCSlicer">GitHub <span aria-hidden="true">↗</span></a>
+  </div>
 </header>
 <main id="main" class="workspace">
   <section class="overview" aria-labelledby="intro-title">
@@ -173,8 +184,8 @@
   <aside id="research" class="research" aria-labelledby="research-title">
     <div class="research-intro"><p class="eyebrow">THE SCIENCE BEHIND IT</p><h2 id="research-title">Built on research.<br>Open for discovery.</h2></div>
     <div class="papers">
-      <a class="paper" href="https://doi.org/10.1016/j.neuroimage.2026.122039"><span class="paper-journal">NEUROIMAGE <span>2026 ↗</span></span><h3>Cascaded Deep Learning enables multimodal brain PET spatial normalization and quantification for Alzheimer’s disease</h3><span class="paper-author">Tang et al.</span><span class="paper-topic">Spatial normalization & quantification</span></a>
-      <a class="paper" href="https://doi.org/10.1148/radiol.252321"><span class="paper-journal">RADIOLOGY <span>2026 ↗</span></span><h3>Decoupling Alzheimer Disease Pathologic Abnormalities at PET with Improved Clinical Relevance by Interpretable Adversarial Decomposition Learning</h3><span class="paper-author">Tang et al.</span><span class="paper-topic">Interpretable pathology decomposition</span></a>
+      <a class="paper" href="https://doi.org/10.1016/j.neuroimage.2026.122039"><span class="paper-journal">NEUROIMAGE <span>2026 ↗</span></span><h3>Cascaded Deep Learning enables multimodal brain PET spatial normalization and quantification for Alzheimer’s disease</h3><span class="paper-author" title="Cheng Tang, Anqi Tang, Mengyu Wan, Chunyan Li, Weiwei Ruan, Fang Liu, Hanyi Fang, Yongkang Gai, Dawei Jiang, Wanye Zhou, Xiaoli Lan, Xun Sun">Cheng Tang, Anqi Tang, Mengyu Wan, Chunyan Li, Weiwei Ruan, Fang Liu, Hanyi Fang, Yongkang Gai, Dawei Jiang, Wanye Zhou, Xiaoli Lan, Xun Sun</span><span class="paper-topic">Spatial normalization & quantification</span></a>
+      <a class="paper" href="https://doi.org/10.1148/radiol.252321"><span class="paper-journal">RADIOLOGY <span>2026 ↗</span></span><h3>Decoupling Alzheimer Disease Pathologic Abnormalities at PET with Improved Clinical Relevance by Interpretable Adversarial Decomposition Learning</h3><span class="paper-author" title="Cheng Tang, Xun Sun, Anqi Tang, Weiwei Ruan, Fang Liu, Hanyi Fang, Yongkang Gai, Zhihou Liang, Ying Su, Xinggang Wang, Xiaoli Lan">Cheng Tang, Xun Sun, Anqi Tang, Weiwei Ruan, Fang Liu, Hanyi Fang, Yongkang Gai, Zhihou Liang, Ying Su, Xinggang Wang, Xiaoli Lan</span><span class="paper-topic">Interpretable pathology decomposition</span></a>
     </div>
     <a class="citation-link" href="https://github.com/tctco/DCCCSlicer#citation">Citation details & BibTeX ↗</a>
   </aside>

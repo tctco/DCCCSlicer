@@ -1,0 +1,17 @@
+Chinese web fonts
+=================
+Headings: Adobe Source Han Serif CN Light (300).
+Body: Adobe Source Han Sans CN Regular (400).
+
+Official sources:
+https://github.com/adobe-fonts/source-han-serif
+https://github.com/adobe-fonts/source-han-sans
+
+The local WOFF2 subsets are renamed DCCC Song and DCCC Hei, respectively.
+Original font copyright and license records are retained. Their SIL OFL
+licenses are included as source-han-serif-LICENSE.txt and
+source-han-sans-LICENSE.txt.
+
+Reproduce with scripts/subset-website-fonts.py using the official source
+fonts in the ignored .cache/website-fonts/ directory. Full source fonts are
+not shipped with this website.

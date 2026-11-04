@@ -12,7 +12,7 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory website
 
 Open http://localhost:8000. No npm install or build step is required.
 
-When previewing from the Windows host of WSL and localhost forwarding is unavailable, start the server with `--bind 0.0.0.0` instead of `--bind 127.0.0.1`. Run `hostname -I` inside WSL and open `http://<WSL-IP>:8000` in Windows. The WSL IP may change after a restart. This listener is reachable through the WSL network interface; use it for the local preview session. Use the local HTTP server: the 3D viewer loads binary assets using fetch, so opening index.html directly from disk is not supported. Copying the install command requires localhost or HTTPS.
+When previewing from the Windows host of WSL and localhost forwarding is unavailable, start the server with `--bind 0.0.0.0` instead of `--bind 127.0.0.1`. Run `hostname -I` inside WSL and open `http://<WSL-IP>:8000` in Windows. The WSL IP may change after a restart. This listener is reachable through the WSL network interface; use it for the local preview session. Use the local HTTP server: the 3D viewer loads binary assets using fetch, so opening index.html directly from disk is not supported. The copy button uses the Clipboard API on localhost/HTTPS and a user-initiated selection-copy fallback for the Windows-to-WSL HTTP preview. If browser policy blocks both, it selects the command and explicitly asks for manual copying.
 
 ## GitHub Pages
 
@@ -22,7 +22,7 @@ One-time repository setup:
 
 1. Open **Settings → Pages → Build and deployment → Source** and select **GitHub Actions**.
 2. If the `github-pages` environment has branch restrictions, permit `website` under **Settings → Environments → github-pages**.
-3. Push changes to `website` on GitHub. The initial push and subsequent changes to `website/` or the workflow trigger deployment. To redeploy unchanged content, use **Actions → Publish DCCC website → Run workflow**, selecting the `website` branch.
+3. Push changes to `website` on GitHub. The initial push and subsequent changes to `website/`, the locale generator, or the workflow trigger deployment. To redeploy unchanged content, use **Actions → Publish DCCC website → Run workflow**, selecting the `website` branch.
 
 Default URL: https://tctco.github.io/DCCCSlicer/ (the deployment output is authoritative).
 
@@ -90,3 +90,18 @@ Search metadata targets brain PET, neuroimaging, Centiloid and PET quantificatio
 After HTTPS is active, the domain owner can add `brain.pet` to Google Search Console and submit the sitemap. Ownership verification and search indexing are separate from deployment. Keep canonical URLs, sharing URLs, JSON-LD and sitemap consistent when changing domains.
 
 References: [Google-supported metadata](https://developers.google.com/search/docs/crawling-indexing/special-tags), [Google developer SEO guide](https://developers.google.com/search/docs/fundamentals/get-started-developers), [Schema.org SoftwareApplication](https://schema.org/SoftwareApplication).
+
+## Languages and themes
+
+English is served at `/`; Simplified Chinese at `/zh/`. Header controls switch language and light/dark themes. The first visit follows the operating system's color scheme; a manual theme choice is saved locally. The language choice is saved too; `/` returns to Chinese when previously selected, and `/?lang=en` explicitly selects English. Both choices work without an account. If browser storage is unavailable, the current URL and system theme still work.
+
+`ui.js` applies preferences before CSS paints, translates dynamic viewer/copy messages, and emits theme updates for the existing 3D renderer. Changing theme updates shader colors without reloading PET arrays or resetting the slider. Chinese headings use a self-hosted Source Han Serif CN Light (300) subset; body copy uses Source Han Sans CN Regular (400). The renamed WOFF2 subsets are DCCC Song and DCCC Hei, with source details and SIL OFL licenses in `fonts/`. Rebuild subsets with `scripts/subset-website-fonts.py` (fonttools and brotli required) after changing Chinese copy.
+
+After changing English page content or translations, run:
+
+```sh
+python3 scripts/build-website-locales.py
+python3 scripts/build-website-locales.py --check
+```
+
+The generated Chinese page shares root scripts, CSS and 3D assets, has its own title/description/canonical, and is linked with reciprocal hreflang entries. The sitemap lists both pages. The Pages workflow regenerates the localized page before deployment. Both language pages and themes are published together by the website workflow.

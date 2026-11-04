@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.min.js';
+const { t } = window.DCCCUI;
 
 const stage = document.querySelector('#pet-stage');
 const canvas = document.querySelector('#pet-canvas');
@@ -47,7 +48,9 @@ async function initialize() {
   let azimuth = 2.9, elevation = .19;
   const uniforms = {
     blend: { value: 0 },
-    overlayWindow: { value: new THREE.Vector2(...manifest.displayWindowSUVr) }
+    overlayWindow: { value: new THREE.Vector2(...manifest.displayWindowSUVr) },
+    anatomyColor: { value: new THREE.Vector3(.86, .85, .78) },
+    pigmentColor: { value: new THREE.Vector3(.72, .23, .18) }
   };
   const material = new THREE.ShaderMaterial({
     uniforms,
@@ -73,6 +76,8 @@ async function initialize() {
       varying float vCavity;
       varying float vUptake;
       uniform vec2 overlayWindow;
+      uniform vec3 anatomyColor;
+      uniform vec3 pigmentColor;
       void main() {
         vec3 n = normalize(vNormal);
         float diffuse = max(dot(n, normalize(vec3(-.4, .65, 1.))), 0.);
@@ -85,18 +90,17 @@ async function initialize() {
         shade += (noise - .5) * .025;
         // Low uptake is transparent in the pigment layer. Anatomy remains
         // opaque, so sulci and the far hemisphere do not show through it.
-        vec3 anatomy = vec3(.86, .85, .78);
-        vec3 pigment = vec3(.72, .23, .18);
         float opacity = .86 * smoothstep(overlayWindow.x, overlayWindow.y, vUptake);
-        vec3 color = mix(anatomy, pigment, opacity) * shade;
+        vec3 color = mix(anatomyColor, pigmentColor, opacity) * shade;
         gl_FragColor = vec4(color, 1.);
       }`
   });
   scene.add(new THREE.Mesh(geometry, material));
   const outlineMaterial = new THREE.ShaderMaterial({
     side: THREE.BackSide,
+    uniforms: { outlineColor: { value: new THREE.Vector3(.27, .31, .23) } },
     vertexShader: `void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position + normal * .33, 1.); }`,
-    fragmentShader: `void main() { gl_FragColor = vec4(.27, .31, .23, 1.); }`
+    fragmentShader: `uniform vec3 outlineColor; void main() { gl_FragColor = vec4(outlineColor, 1.); }`
   });
   scene.add(new THREE.Mesh(geometry, outlineMaterial));
   const data = new Uint16Array(uptake);
@@ -105,6 +109,14 @@ async function initialize() {
   let contextLost = false;
 
   function render() { renderer.render(scene, camera); }
+  function applyTheme() {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    uniforms.anatomyColor.value.set(...(dark ? [.73, .75, .72] : [.86, .85, .78]));
+    uniforms.pigmentColor.value.set(...(dark ? [.84, .31, .26] : [.72, .23, .18]));
+    outlineMaterial.uniforms.outlineColor.value.set(...(dark ? [.14, .19, .16] : [.27, .31, .23]));
+    render();
+  }
+  document.addEventListener('dccc:themechange', applyTheme);
   function updateCamera(renderNow = true) {
     const horizontal = 450 * Math.cos(elevation);
     camera.position.set(center.x + horizontal * Math.cos(azimuth), center.y + horizontal * Math.sin(azimuth), center.z + 450 * Math.sin(elevation));
@@ -144,7 +156,7 @@ async function initialize() {
     value.replaceChildren(document.createTextNode(`${Math.round(cl)} `));
     const unit = document.createElement('small'); unit.textContent = 'CL'; value.append(unit);
     slider.style.setProperty('--progress', `${100 * (cl - Number(slider.min)) / (Number(slider.max) - Number(slider.min))}%`);
-    slider.setAttribute('aria-valuetext', `${Math.round(cl)} CL on the illustrative scale, visually blended PET examples`);
+    slider.setAttribute('aria-valuetext', t('sliderValue', { value: Math.round(cl) }));
     stage.dataset.lowerAnchor = a.actualCL;
     stage.dataset.upperAnchor = b.actualCL;
     stage.dataset.blend = fraction.toFixed(5);
@@ -158,7 +170,7 @@ async function initialize() {
   function setRotation(enabled) {
     rotating = enabled;
     rotateButton.setAttribute('aria-pressed', String(rotating));
-    const label = rotating ? 'Pause brain rotation' : 'Resume brain rotation';
+    const label = t(rotating ? 'rotationPause' : 'rotationResume');
     rotateButton.setAttribute('aria-label', label);
     rotateButton.title = label;
     if (rotating) viewButtons.forEach(button => button.setAttribute('aria-pressed', 'false'));
@@ -168,7 +180,7 @@ async function initialize() {
   function stop() {
     playing = false;
     play.textContent = '▶';
-    play.setAttribute('aria-label', 'Play uptake transition');
+    play.setAttribute('aria-label', t('uptakePlay'));
     play.setAttribute('aria-pressed', 'false');
   }
   function animate(time) {
@@ -200,7 +212,7 @@ async function initialize() {
     elapsed = (Number(slider.value) - Number(slider.min)) / (Number(slider.max) - Number(slider.min)) * 20000;
     previousTime = performance.now();
     play.textContent = 'Ⅱ';
-    play.setAttribute('aria-label', 'Pause uptake transition');
+    play.setAttribute('aria-label', t('uptakePause'));
     play.setAttribute('aria-pressed', 'true');
     schedule();
   });
@@ -261,12 +273,12 @@ async function initialize() {
     cancelAnimationFrame(frame); frame = 0;
     loading.hidden = false;
     loading.classList.add('error');
-    loadingLabel.textContent = '3D view interrupted. Reload to restore the surface.';
+    loadingLabel.textContent = t('interrupted');
     slider.disabled = play.disabled = rotateButton.disabled = true;
     viewButtons.forEach(button => { button.disabled = true; });
   });
   new ResizeObserver(resize).observe(stage);
-  setBurden(); resize();
+  applyTheme(); setBurden(); resize();
   loading.hidden = true;
   stage.setAttribute('aria-busy', 'false');
   stage.dataset.ready = 'true';
@@ -279,8 +291,8 @@ initialize().catch(error => {
   loading.hidden = false;
   loading.classList.add('error');
   loadingLabel.textContent = location.protocol === 'file:'
-    ? 'Open this preview at http://localhost:8000 to load the 3D surface.'
-    : 'The 3D surface could not load. Try reloading or enabling WebGL.';
+    ? t('localPreview')
+    : t('loadError');
   slider.disabled = true;
   play.disabled = true;
   rotateButton.disabled = true;

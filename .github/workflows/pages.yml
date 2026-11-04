@@ -6,6 +6,7 @@ on:
     paths:
       - 'website/**'
       - '.github/workflows/pages.yml'
+      - 'scripts/build-website-locales.py'
   workflow_dispatch:
 
 permissions:
@@ -27,6 +28,8 @@ jobs:
     steps:
       - name: Checkout website branch
         uses: actions/checkout@v6
+      - name: Generate Chinese homepage
+        run: python3 scripts/build-website-locales.py
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload static website
