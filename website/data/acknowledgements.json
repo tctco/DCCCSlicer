@@ -1,0 +1,529 @@
+{
+  "sources": {
+    "readme": {
+      "label": {
+        "en": "Project README",
+        "zh": "项目 README"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer#acknowledgements"
+    },
+    "radiology": {
+      "label": {
+        "en": "Radiology · p. 12",
+        "zh": "Radiology · 第 12 页"
+      },
+      "url": "https://doi.org/10.1148/radiol.252321",
+      "page": 12
+    },
+    "issue1": {
+      "label": {
+        "en": "Issue #1",
+        "zh": "Issue #1"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/1"
+    },
+    "issue2": {
+      "label": {
+        "en": "Issue #2",
+        "zh": "Issue #2"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/2"
+    },
+    "issue3": {
+      "label": {
+        "en": "Issue #3",
+        "zh": "Issue #3"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/3"
+    },
+    "issue4": {
+      "label": {
+        "en": "Issue #4",
+        "zh": "Issue #4"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/4"
+    },
+    "issue18": {
+      "label": {
+        "en": "Issue #18",
+        "zh": "Issue #18"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/18"
+    },
+    "issue19": {
+      "label": {
+        "en": "Issue #19",
+        "zh": "Issue #19"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/19"
+    },
+    "issue22": {
+      "label": {
+        "en": "Issue #22",
+        "zh": "Issue #22"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/22"
+    },
+    "issue23": {
+      "label": {
+        "en": "Issue #23",
+        "zh": "Issue #23"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/23"
+    },
+    "issue24": {
+      "label": {
+        "en": "Issue #24",
+        "zh": "Issue #24"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/24"
+    },
+    "issue37": {
+      "label": {
+        "en": "Issue #37",
+        "zh": "Issue #37"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/37"
+    },
+    "miao-report": {
+      "label": {
+        "en": "Issue #4 comment",
+        "zh": "Issue #4 评论"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/4#issuecomment-3491400522"
+    },
+    "fanglan-report": {
+      "label": {
+        "en": "Issue #1 comment",
+        "zh": "Issue #1 评论"
+      },
+      "url": "https://github.com/tctco/DCCCSlicer/issues/1#issuecomment-2916399441"
+    }
+  },
+  "institutions": {
+    "xiangya": {
+      "name": {
+        "en": "Xiangya Hospital, Central South University",
+        "zh": "中南大学湘雅医院"
+      },
+      "city": {
+        "en": "Changsha, China",
+        "zh": "中国 · 长沙"
+      },
+      "url": "https://www.xiangya.com.cn/",
+      "logo": "assets/acknowledgements/xiangya.jpg",
+      "logoSource": "https://upload.wikimedia.org/wikipedia/zh/f/fc/%E6%B9%98%E9%9B%85%E5%8C%BB%E9%99%A2%E9%99%A2%E5%BE%BD.jpg"
+    },
+    "renji": {
+      "name": {
+        "en": "Renji Hospital, Shanghai Jiao Tong University School of Medicine",
+        "zh": "上海交通大学医学院附属仁济医院"
+      },
+      "city": {
+        "en": "Shanghai, China",
+        "zh": "中国 · 上海"
+      },
+      "url": "https://www.renji.com/",
+      "logo": "assets/acknowledgements/renji.ico",
+      "logoSource": "https://www.renji.com/assets/img/favicon.ico"
+    },
+    "zhejiang-second": {
+      "name": {
+        "en": "The Second Affiliated Hospital, Zhejiang University School of Medicine",
+        "zh": "浙江大学医学院附属第二医院"
+      },
+      "city": {
+        "en": "Hangzhou, China",
+        "zh": "中国 · 杭州"
+      },
+      "url": "https://www.z2hospital.com/",
+      "logo": "assets/acknowledgements/zhejiang-second.png",
+      "logoSource": "https://www.z2hospital.com/images/logo.png"
+    },
+    "west-china": {
+      "name": {
+        "en": "West China Hospital, Sichuan University",
+        "zh": "四川大学华西医院"
+      },
+      "city": {
+        "en": "Chengdu, China",
+        "zh": "中国 · 成都"
+      },
+      "url": "https://www.wchscu.cn/",
+      "logo": "assets/acknowledgements/west-china.png",
+      "logoSource": "https://www.wchscu.cn/Public/static/themes_yq/image/wmy/logo.png"
+    },
+    "guangzhou-first": {
+      "name": {
+        "en": "The First Affiliated Hospital of Guangzhou Medical University",
+        "zh": "广州医科大学附属第一医院"
+      },
+      "city": {
+        "en": "Guangzhou, China",
+        "zh": "中国 · 广州"
+      },
+      "url": "https://www.gyfyyy.cn/",
+      "logo": "assets/acknowledgements/guangzhou-first.gif",
+      "logoSource": "https://www.gyfyyy.cn/html/images/logo1.gif"
+    },
+    "qingdao-municipal": {
+      "name": {
+        "en": "Qingdao Municipal Hospital",
+        "zh": "青岛市市立医院"
+      },
+      "city": {
+        "en": "Qingdao, China",
+        "zh": "中国 · 青岛"
+      },
+      "url": "https://www.qdslyy.cn/",
+      "logo": "assets/acknowledgements/qingdao-municipal.png",
+      "logoSource": "https://www.qdslyy.cn/images/logo.jpg?v=2025"
+    },
+    "ustc-first": {
+      "name": {
+        "en": "The First Affiliated Hospital of USTC (Anhui Provincial Hospital)",
+        "zh": "中国科学技术大学附属第一医院（安徽省立医院）"
+      },
+      "city": {
+        "en": "Hefei, China",
+        "zh": "中国 · 合肥"
+      },
+      "url": "https://www.ahslyy.com.cn/",
+      "logo": "assets/acknowledgements/ustc-first.png",
+      "logoSource": "https://www.ahslyy.com.cn/cn/images/ydy_logo.png"
+    },
+    "sun-yat-sen-seventh": {
+      "name": {
+        "en": "The Seventh Affiliated Hospital, Sun Yat-sen University",
+        "zh": "中山大学附属第七医院"
+      },
+      "city": {
+        "en": "Shenzhen, China",
+        "zh": "中国 · 深圳"
+      },
+      "url": "https://www.sysush.com/",
+      "logo": "assets/acknowledgements/sun-yat-sen-seventh.svg",
+      "logoSource": "https://www.sysush.com/themes/sysush_cn/images/logo.svg"
+    },
+    "wuhan-union": {
+      "name": {
+        "en": "Union Hospital, Tongji Medical College, Huazhong University of Science and Technology",
+        "zh": "华中科技大学同济医学院附属协和医院"
+      },
+      "city": {
+        "en": "Wuhan, China",
+        "zh": "中国 · 武汉"
+      },
+      "url": "https://www.whuh.com/",
+      "logo": "assets/acknowledgements/wuhan-union.png",
+      "logoSource": "https://www.whuh.com/images/logo.png"
+    },
+    "ruijin": {
+      "name": {
+        "en": "Ruijin Hospital, Shanghai Jiao Tong University School of Medicine",
+        "zh": "上海交通大学医学院附属瑞金医院"
+      },
+      "city": {
+        "en": "Shanghai, China",
+        "zh": "中国 · 上海"
+      },
+      "url": "https://www.rjh.com.cn/",
+      "logo": "assets/acknowledgements/ruijin.jpg",
+      "logoSource": "https://www.rjh.com.cn/2018RJPortal/main/static/images/head_bg.jpg"
+    }
+  },
+  "contributors": [
+    {
+      "name": "Yulai Li",
+      "institution": "xiangya",
+      "contributions": [
+        {
+          "text": {
+            "en": "Provided the SV2A dataset.",
+            "zh": "提供 SV2A 数据集。"
+          },
+          "sources": [
+            "readme"
+          ]
+        },
+        {
+          "text": {
+            "en": "Reported a CenTauRz command-line compatibility issue.",
+            "zh": "反馈 CenTauRz 命令行参数兼容问题。"
+          },
+          "sources": [
+            "issue24"
+          ]
+        },
+        {
+          "text": {
+            "en": "Completed the survey for the Radiology study.",
+            "zh": "参与 Radiology 研究的问卷调查。"
+          },
+          "sources": [
+            "radiology"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Chenpeng Zhang",
+      "institution": "renji",
+      "contributions": [
+        {
+          "text": {
+            "en": "Shared a rigid-registration failure case that informed the manual-FOV rescue workflow.",
+            "zh": "提供刚性配准失败案例，帮助完善手动 FOV 补救流程。"
+          },
+          "sources": [
+            "readme",
+            "issue1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Daoyan Hu",
+      "institution": "zhejiang-second",
+      "contributions": [
+        {
+          "text": {
+            "en": "Provided testing feedback involving SPM.",
+            "zh": "提供与 SPM 相关的测试反馈。"
+          },
+          "sources": [
+            "readme"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Fanglan Li",
+      "institution": "west-china",
+      "contributions": [
+        {
+          "text": {
+            "en": "Shared rigid-registration failure cases.",
+            "zh": "提供刚性配准失败案例。"
+          },
+          "sources": [
+            "readme",
+            "fanglan-report"
+          ]
+        },
+        {
+          "text": {
+            "en": "Completed the survey for the Radiology study.",
+            "zh": "参与 Radiology 研究的问卷调查。"
+          },
+          "sources": [
+            "radiology"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Zhiqiang Tan",
+      "institution": "guangzhou-first",
+      "contributions": [
+        {
+          "text": {
+            "en": "Reported bugs in v4.2.4 and external-process startup failures during Centiloid calculation.",
+            "zh": "反馈 v4.2.4 的问题，以及 Centiloid 计算时外部进程无法启动的故障。"
+          },
+          "sources": [
+            "readme",
+            "issue37"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Yuanfei Dong",
+      "institution": "qingdao-municipal",
+      "contributions": [
+        {
+          "text": {
+            "en": "Reported an executable-permission error on Windows 10.",
+            "zh": "反馈 Windows 10 下的可执行文件权限问题。"
+          },
+          "sources": [
+            "issue23"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ming Ni",
+      "institution": "ustc-first",
+      "contributions": [
+        {
+          "text": {
+            "en": "Reported a configuration-file reading failure.",
+            "zh": "反馈配置文件无法读取的问题。"
+          },
+          "sources": [
+            "issue22"
+          ]
+        },
+        {
+          "text": {
+            "en": "Completed the survey for the Radiology study.",
+            "zh": "参与 Radiology 研究的问卷调查。"
+          },
+          "sources": [
+            "radiology"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Xiaofeng Lin",
+      "institution": "sun-yat-sen-seventh",
+      "contributions": [
+        {
+          "text": {
+            "en": "Reported the missing module-load prompt after installation on Windows 10.",
+            "zh": "反馈 Windows 10 安装扩展后缺少模块加载提示的问题。"
+          },
+          "sources": [
+            "issue4"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Hanyi Fang",
+      "institution": "wuhan-union",
+      "contributions": [
+        {
+          "text": {
+            "en": "Reported stale input-volume selection and patient-name mismatches when switching scans.",
+            "zh": "反馈切换扫描后输入影像未更新，以及患者名称不匹配的问题。"
+          },
+          "sources": [
+            "issue2",
+            "issue3"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Chunyan Li",
+      "institution": "wuhan-union",
+      "contributions": [
+        {
+          "text": {
+            "en": "Completed the survey for the Radiology study.",
+            "zh": "参与 Radiology 研究的问卷调查。"
+          },
+          "sources": [
+            "radiology"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Xin Mei",
+      "institution": "renji",
+      "sourceName": "Mei Xin",
+      "contributions": [
+        {
+          "text": {
+            "en": "Completed the survey for the Radiology study.",
+            "zh": "参与 Radiology 研究的问卷调查。"
+          },
+          "sources": [
+            "radiology"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Miao Zhang",
+      "institution": "ruijin",
+      "contributions": [
+        {
+          "text": {
+            "en": "Also reported the missing module-load prompt after installation.",
+            "zh": "反馈安装扩展后缺少模块加载提示的问题。"
+          },
+          "sources": [
+            "miao-report"
+          ]
+        }
+      ]
+    }
+  ],
+  "community": [
+    {
+      "name": "Angie-27",
+      "url": "https://github.com/Angie-27",
+      "contributions": [
+        {
+          "text": {
+            "en": "Raised the need to load a custom atlas.",
+            "zh": "提出加载自定义图谱的需求。"
+          },
+          "sources": [
+            "issue19"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Wandream",
+      "url": "https://github.com/Wandream",
+      "contributions": [
+        {
+          "text": {
+            "en": "Requested batch quantification.",
+            "zh": "提出批量计算功能需求。"
+          },
+          "sources": [
+            "issue18"
+          ]
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "adni",
+      "name": "ADNI",
+      "title": {
+        "en": "Alzheimer’s Disease Neuroimaging Initiative",
+        "zh": "阿尔茨海默病神经影像学计划"
+      },
+      "url": "https://adni.loni.usc.edu/",
+      "description": {
+        "en": "Research data used in the Radiology study. We thank the investigators and study participants.",
+        "zh": "为 Radiology 研究提供数据。感谢研究团队及参与者的支持。"
+      },
+      "creditUrl": "https://adni.loni.usc.edu/wp-content/uploads/how_to_apply/ADNI_Acknowledgement_List.pdf",
+      "logo": "assets/acknowledgements/adni.png",
+      "logoSource": "https://adni.loni.usc.edu/wp-content/themes/adni_2023/images/adni-logo.png"
+    },
+    {
+      "id": "aibl",
+      "name": "AIBL",
+      "title": {
+        "en": "Australian Imaging, Biomarkers and Lifestyle Study of Ageing",
+        "zh": "澳大利亚影像、生物标志物与生活方式衰老研究"
+      },
+      "url": "https://aibl.org.au/",
+      "description": {
+        "en": "Research data used in the Radiology study. We thank the AIBL researchers and study participants.",
+        "zh": "为 Radiology 研究提供数据。感谢 AIBL 研究团队及参与者的支持。"
+      },
+      "creditUrl": "https://aibl.org.au/about/governance/",
+      "logo": "assets/acknowledgements/aibl.svg",
+      "logoSource": "https://aibl.org.au/wp-content/uploads/2022/12/AIBL-logo_colour-RGB.svg"
+    }
+  ],
+  "provenanceNotes": [
+    "Xin Mei is credited as Mei Xin in the Radiology PDF; display name and Renji affiliation were confirmed by the project owner on 2026-11-09.",
+    "Chunyan Li affiliation was confirmed by the project owner and by the author affiliation in PMID 42250835.",
+    "Corporate funders listed in the ADNI acknowledgement are not presented as direct DCCC sponsors."
+  ]
+}

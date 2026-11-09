@@ -7,6 +7,7 @@ on:
       - 'website/**'
       - '.github/workflows/pages.yml'
       - 'scripts/build-website-locales.py'
+      - 'scripts/website_acknowledgements.py'
   workflow_dispatch:
 
 permissions:

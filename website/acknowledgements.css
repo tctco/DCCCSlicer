@@ -1,0 +1,46 @@
+body.acknowledgements-page{display:block;height:auto;min-height:100svh;overflow:visible;padding:0 4vw}.acknowledgements-page .masthead{max-width:1320px;margin:auto;min-height:88px}.ack-main{max-width:1160px;margin:0 auto;padding:54px 0 30px}.back-home{font-size:12px;color:var(--muted)}.ack-intro .eyebrow{margin-top:40px}.ack-intro h1{font-size:clamp(46px,6vw,84px);font-family:var(--serif);font-weight:300;line-height:1.1;margin:18px 0 24px;letter-spacing:-1px}.ack-lead{max-width:640px;font-size:17px;line-height:1.9;color:var(--muted);margin-bottom:46px}.institution-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}.institution{border-top:1px solid var(--ink);padding:22px 0 12px}.logo-plate{height:98px;background:#fff;border-radius:3px;display:flex;align-items:center;justify-content:center;padding:16px;margin:0 0 22px}.logo-plate img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}.institution h2{font-family:var(--sans);font-size:15px;line-height:1.65;font-weight:500;margin:0 0 23px}.city{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:0 0 5px}.person{margin:20px 0}.ack-main h3{font-family:'Libre Caslon Display',Georgia,serif;font-size:27px;font-weight:400;line-height:1.3;margin:0 0 9px}.ack-main ul{list-style:none;padding:0;margin:0}.ack-main li{font-size:13px;line-height:1.8;margin:9px 0;color:var(--muted)}.sources{display:block;font-size:10px;line-height:1.8;color:var(--soft-ink)}.sources a:hover,.back-home:hover{color:var(--rust)}.ack-section{margin-top:64px;border-top:1px solid var(--line);padding-top:28px}.ack-section>h2{font-family:var(--serif);font-size:36px;font-weight:300;line-height:1.3;margin:0 0 30px}.community-grid,.resource-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:36px}.resource p{color:var(--muted);font-size:13px;max-width:450px}.resource .logo-plate{max-width:330px}.ack-provenance{font-size:11px;color:var(--muted);margin:64px 0 20px;max-width:850px;line-height:1.9}.ack-footer{max-width:1320px;margin:0 auto;display:flex;gap:24px;justify-content:space-between;border-top:1px solid var(--line);padding:24px 0 32px;font-size:11px;color:var(--muted)}:lang(zh-CN) .ack-intro h1{font-size:64px;font-weight:300;letter-spacing:.07em}:lang(zh-CN) .ack-section>h2{font-weight:300;font-size:30px}.acknowledgements-page a:focus-visible{outline:2px solid var(--rust);outline-offset:4px}@media(max-width:950px){.institution-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ack-main{padding-top:35px}}@media(max-width:600px){body.acknowledgements-page{padding:0 6vw}.acknowledgements-page .masthead{min-height:74px}.institution-grid{grid-template-columns:1fr;gap:20px}.ack-intro h1{font-size:46px;overflow-wrap:anywhere}.ack-lead{font-size:15px}.logo-plate{max-width:350px}.community-grid,.resource-grid{grid-template-columns:1fr;gap:24px}.ack-footer{flex-wrap:wrap;gap:12px}.ack-footer span{order:3;width:100%}.ack-section{margin-top:40px}}
+/* Official white wordmarks retain their original colors on a dark plate. */
+.logo-zhejiang-second,.logo-west-china,.logo-ustc-first,.logo-wuhan-union{background:#344b41}.acknowledgements-page .skip-link{position:absolute;left:12px;top:-80px;z-index:10;padding:8px 14px;background:var(--paper)}.acknowledgements-page .skip-link:focus{top:8px}
+body:has(.home-screen){display:block;height:auto;overflow:auto}.home-screen{height:100svh;display:grid;grid-template-rows:76px minmax(0,1fr) 43px;scroll-snap-align:start}.thanks-screen{height:100svh;overflow:auto;scroll-snap-align:start;padding:0 5vw}.thanks-screen .ack-main{padding-top:36px}.thanks-screen .ack-intro h1{font-size:48px}.thanks-screen .ack-lead{margin-bottom:24px}.thanks-screen .ack-intro .eyebrow{margin-top:12px}html:has(.home-screen){scroll-snap-type:y mandatory;scroll-behavior:smooth}@media(max-width:999px){.home-screen{height:auto;min-height:100svh;display:block}.thanks-screen{height:auto;overflow:visible}html:has(.home-screen){scroll-snap-type:none}}@media(prefers-reduced-motion:reduce){html:has(.home-screen){scroll-behavior:auto}}
+/* Two full viewport slides, animated independently of document scrolling. */
+.slide-dots{display:none}
+@media(min-width:1000px){
+html:has(.home-screen){height:100%;overflow:hidden;scroll-snap-type:none;scroll-behavior:auto}
+body:has(.home-screen){height:100svh;overflow:hidden}
+.home-screen,.thanks-screen{position:absolute;inset:0;width:100%;height:100svh;min-height:0;overflow:hidden;transition:transform .72s cubic-bezier(.65,0,.25,1),visibility .72s;will-change:transform}
+.home-screen{transform:translateY(0)}.thanks-screen{transform:translateY(100%);padding:0 5vw}
+body[data-slide="1"] .home-screen{transform:translateY(-100%)}body[data-slide="1"] .thanks-screen{transform:translateY(0)}
+.slide-dots{position:fixed;right:15px;top:50%;transform:translateY(-50%);z-index:20;display:flex;flex-direction:column;gap:8px}
+.slide-dots button{width:24px;height:24px;border:0;background:transparent;display:grid;place-items:center;padding:0;color:var(--muted)}.slide-dots button span{width:7px;height:7px;border:1px solid currentColor;border-radius:50%;transition:background .25s,transform .25s}.slide-dots button[aria-current="page"] span{background:var(--rust);border-color:var(--rust);transform:scale(1.4)}
+.thanks-screen .ack-main{max-width:1400px;padding:30px 0 20px;transform-origin:top center}
+.thanks-screen .ack-intro{position:relative}.thanks-screen .back-home{position:absolute;right:0;top:8px}.thanks-screen .ack-intro .eyebrow{margin:0}.thanks-screen .ack-intro h1{font-size:40px;margin:6px 0 8px;line-height:1.2}.thanks-screen .ack-lead{font-size:12px;max-width:none;margin:0 0 20px}
+.thanks-screen .institution-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:16px 22px;align-items:start}.thanks-screen .institution{padding:10px 0 0}.thanks-screen .logo-plate{height:52px;padding:8px;margin-bottom:8px}.thanks-screen .city{display:none}.thanks-screen .institution h2{font-size:10px;line-height:1.6;margin-bottom:8px}.thanks-screen .person{margin:8px 0}.thanks-screen .ack-main h3{font-size:20px;margin-bottom:3px}.thanks-screen .ack-main li{font-size:10px;line-height:1.6;margin:3px 0}.thanks-screen .sources{font-size:8px;line-height:1.5;display:inline}.thanks-screen .ack-section{margin-top:16px;padding-top:10px}.thanks-screen .ack-section>h2{font-size:20px;margin:0 0 9px}.thanks-screen .community-grid{gap:22px}.thanks-screen .resource-grid{gap:22px}.thanks-screen .resource{display:grid;grid-template-columns:100px 1fr;column-gap:12px;align-items:start}.thanks-screen .resource .logo-plate{grid-row:1/5;height:58px;margin:0}.thanks-screen .resource p{font-size:9px;line-height:1.5}.thanks-screen .resource h3{font-size:20px}.thanks-screen .ack-provenance{font-size:8px;line-height:1.5;margin:12px 0 0;max-width:none}
+}
+@media(max-width:999px){.thanks-screen{height:auto;min-height:0;overflow:visible}body:has(.home-screen),html:has(.home-screen){scrollbar-width:none}body:has(.home-screen)::-webkit-scrollbar,html:has(.home-screen)::-webkit-scrollbar{display:none}}
+@media(prefers-reduced-motion:reduce){.home-screen,.thanks-screen{transition:none}}
+/* Use the same page margins as the homepage, with naturally flowing cards. */
+@media(min-width:1000px){
+.thanks-screen{padding:0 3.3vw}
+.thanks-screen .ack-main{max-width:none;display:grid;grid-template-columns:1fr 1fr;column-gap:36px;padding:28px 0 20px}
+.thanks-screen .ack-intro,.thanks-screen .institution-grid,.thanks-screen .ack-provenance{grid-column:1/-1}
+.thanks-screen .institution-grid{display:block;columns:5;column-gap:24px}
+.thanks-screen .institution{break-inside:avoid;margin-bottom:18px;padding-top:12px}
+.thanks-screen .logo-plate{height:64px;margin-bottom:10px;padding:10px}
+.thanks-screen .institution h2{font-size:12px;line-height:1.5;margin-bottom:10px}
+.thanks-screen .ack-main h3{font-size:25px;margin-bottom:4px}
+.thanks-screen .ack-main li{font-size:12px;line-height:1.6;margin:5px 0}
+.thanks-screen .sources{font-size:9px}
+.thanks-screen .ack-lead{font-size:14px;margin-bottom:24px}
+.thanks-screen .ack-intro h1{font-size:48px}
+.thanks-screen .ack-section{margin-top:8px;padding-top:12px}
+.thanks-screen .ack-section>h2{font-size:24px;margin-bottom:12px}
+.thanks-screen .resource-grid{gap:18px}
+.thanks-screen .resource{grid-template-columns:80px 1fr;gap:0 10px}
+.thanks-screen .resource p{font-size:10px}
+.thanks-screen .resource h3{font-size:24px}
+.thanks-screen .ack-provenance{font-size:9px}
+}
+.slide-cue{display:none}
+@media(min-width:1000px){.slide-cue{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;color:var(--muted);font-size:10px;line-height:20px;z-index:2}.slide-cue svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}.slide-cue:hover{color:var(--rust)}}
+@keyframes cue-arrow{0%,100%{transform:translateY(-2px);opacity:.6}50%{transform:translateY(3px);opacity:1}}
+@media(min-width:1000px) and (prefers-reduced-motion:no-preference){.slide-cue svg{animation:cue-arrow 2.2s ease-in-out infinite}.slide-cue:hover svg{animation-play-state:paused}}

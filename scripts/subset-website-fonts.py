@@ -18,7 +18,7 @@ def main():
     parser.add_argument('--source-dir', type=Path, default=ROOT / '.cache/website-fonts')
     args = parser.parse_args()
     website = ROOT / 'website'
-    characters = ''.join(sorted(set(''.join((website / name).read_text() for name in ['index.html', 'zh/index.html', 'ui.js']))))
+    characters = ''.join(sorted(set(''.join((website / name).read_text() for name in ['index.html', 'zh/index.html', 'acknowledgements/index.html', 'zh/acknowledgements/index.html', 'ui.js']))))
     output = website / 'fonts'
     output.mkdir(exist_ok=True)
     specs = [

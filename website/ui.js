@@ -50,5 +50,5 @@
   });
   window.DCCCUI = { language, t, setTheme };
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', root.dataset.theme === 'dark' ? '#171b19' : '#f5f1e8');
-  if (redirectToZh) location.replace(new URL('zh/', location.href));
+  if (redirectToZh) location.replace(new URL(root.dataset.zhPath || 'zh/', location.href));
 })();

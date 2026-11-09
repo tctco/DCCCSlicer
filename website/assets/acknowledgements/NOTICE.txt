@@ -1,0 +1,34 @@
+Marks identify contributor affiliations; rights remain with their owners. Renji logo included at project owner request.
+
+assets/acknowledgements/xiangya.jpg
+Source: https://upload.wikimedia.org/wikipedia/zh/f/fc/%E6%B9%98%E9%9B%85%E5%8C%BB%E9%99%A2%E9%99%A2%E5%BE%BD.jpg
+
+assets/acknowledgements/zhejiang-second.png
+Source: https://www.z2hospital.com/images/logo.png
+
+assets/acknowledgements/west-china.png
+Source: https://www.wchscu.cn/Public/static/themes_yq/image/wmy/logo.png
+
+assets/acknowledgements/guangzhou-first.gif
+Source: https://www.gyfyyy.cn/html/images/logo1.gif
+
+assets/acknowledgements/qingdao-municipal.png
+Source: https://www.qdslyy.cn/images/logo.jpg?v=2025
+
+assets/acknowledgements/ustc-first.png
+Source: https://www.ahslyy.com.cn/cn/images/ydy_logo.png
+
+assets/acknowledgements/sun-yat-sen-seventh.svg
+Source: https://www.sysush.com/themes/sysush_cn/images/logo.svg
+
+assets/acknowledgements/wuhan-union.png
+Source: https://www.whuh.com/images/logo.png
+
+assets/acknowledgements/ruijin.jpg
+Source: https://www.rjh.com.cn/2018RJPortal/main/static/images/head_bg.jpg
+
+assets/acknowledgements/adni.png
+Source: https://adni.loni.usc.edu/wp-content/themes/adni_2023/images/adni-logo.png
+
+Renji: https://www.renji.com/assets/img/favicon.ico
+AIBL: https://aibl.org.au/wp-content/uploads/2022/12/AIBL-logo_colour-RGB.svg

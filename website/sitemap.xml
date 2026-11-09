@@ -12,4 +12,16 @@
     <xhtml:link rel="alternate" hreflang="zh-CN" href="https://brain.pet/zh/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://brain.pet/" />
   </url>
+  <url>
+    <loc>https://brain.pet/acknowledgements/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://brain.pet/acknowledgements/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://brain.pet/zh/acknowledgements/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://brain.pet/acknowledgements/" />
+  </url>
+  <url>
+    <loc>https://brain.pet/zh/acknowledgements/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://brain.pet/acknowledgements/" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://brain.pet/zh/acknowledgements/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://brain.pet/acknowledgements/" />
+  </url>
 </urlset>

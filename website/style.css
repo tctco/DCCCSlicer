@@ -45,3 +45,6 @@ h1,h2,h3,p,figure{margin:0}a{color:inherit;text-decoration:none}a:hover,button.i
 /* Commands remain code-like in either language; papers retain published titles. */
 code,pre,kbd,samp,.install code{font-family:Consolas,'Cascadia Mono','SFMono-Regular','Liberation Mono',monospace}
 :lang(zh-CN) .paper h3{font-family:'Libre Caslon Display',Georgia,serif;font-weight:400;letter-spacing:-.1px;line-height:1.22;text-wrap:pretty}
+.thanks-screen{height:100svh;scroll-margin-top:0;border-top:1px solid var(--line);background:var(--paper)}.thanks-screen iframe{width:100%;height:100%;border:0;display:block}
+@media(min-width:1000px){html:has(.thanks-screen){scroll-snap-type:y proximity}.thanks-screen{scroll-snap-align:start}}
+@media(max-width:999px){.thanks-screen{height:100svh;min-height:760px}}

@@ -8,6 +8,7 @@ from pathlib import Path
 import argparse
 import json
 import re
+from website_acknowledgements import build_pages
 
 ROOT = Path(__file__).resolve().parents[1] / 'website'
 TRANSLATIONS = {
@@ -63,7 +64,7 @@ TRANSLATIONS = {
 
 
 def generate():
-    source = (ROOT / 'index.html').read_text()
+    source = (ROOT / 'home-template.html').read_text()
     head, body = source.split('<body>', 1)
     for original, translated in TRANSLATIONS.items():
         if original not in body:
@@ -97,16 +98,37 @@ def generate():
     sitemap = '''<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 '''
-    for url in ['https://brain.pet/', 'https://brain.pet/zh/']:
+    for url in ['https://brain.pet/', 'https://brain.pet/zh/', 'https://brain.pet/acknowledgements/', 'https://brain.pet/zh/acknowledgements/']:
+        suffix = 'acknowledgements/' if 'acknowledgements' in url else ''
         sitemap += f'''  <url>
     <loc>{url}</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://brain.pet/" />
-    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://brain.pet/zh/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://brain.pet/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://brain.pet/{suffix}" />
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://brain.pet/zh/{suffix}" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://brain.pet/{suffix}" />
   </url>
 '''
     sitemap += '</urlset>\n'
-    return {ROOT / 'zh/index.html': result, ROOT / 'sitemap.xml': sitemap}
+    pages = build_pages(source, result)
+    for path, home, lang in [(ROOT / 'index.html', source, 'en'), (ROOT / 'zh/index.html', result, 'zh')]:
+        route = 'zh/acknowledgements/' if lang == 'zh' else 'acknowledgements/'
+        ack = pages[ROOT / route / 'index.html']
+        content = re.search(r'<main id="main" class="ack-main">(.*?)</main>', ack, re.S)[1]
+        content = content.replace('../../assets/', '../assets/') if lang == 'zh' else content.replace('../assets/', 'assets/')
+        content = re.sub(r'<a class="back-home".*?</a>', '<a class="back-home" href="#top">↑ DCCC</a>', content)
+        home = re.sub(r'<section id="thanks".*?</section>\s*', '', home, flags=re.S)
+        home = home.replace('<header class="masthead">', '<section class="home-screen" id="top"><header class="masthead">', 1)
+        end = home.index('</footer>') + len('</footer>')
+        home = home[:end] + '</section><section id="thanks" class="thanks-screen"><div class="ack-main">' + content + '</div></section>' + home[end:]
+        cue = 'View acknowledgements' if lang == 'en' else '查看致谢'
+        home = home.replace('</footer></section>', '</footer><a class="slide-cue" href="#thanks"><span>' + cue + '</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a></section>')
+        asset = '../' if lang == 'zh' else ''
+        home = home.replace('</head>', '<link rel="stylesheet" href="' + asset + 'acknowledgements.css"></head>')
+        labels = ['Project home', 'Acknowledgements'] if lang == 'en' else ['项目首页', '致谢']
+        dots = '<nav class="slide-dots" aria-label="' + ('Slide navigation' if lang == 'en' else '幻灯导航') + '">' + ''.join('<button type="button" data-slide="' + str(i) + '" aria-label="' + label + '" title="' + label + '"><span></span></button>' for i, label in enumerate(labels)) + '</nav>'
+        home = home.replace('</body>', dots + '</body>')
+        pages[path] = home
+    pages[ROOT / 'sitemap.xml'] = sitemap
+    return pages
 
 
 def main():
